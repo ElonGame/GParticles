@@ -1,0 +1,39 @@
+#version 430
+#extension GL_ARB_compute_shader : enable
+#extension GL_ARB_shader_storage_buffer_object : enable
+#extension GL_ARB_compute_variable_group_size : enable
+
+layout(binding = 1, offset = 0) uniform atomic_uint aliveParticles;
+layout(binding = 2, offset = 0) uniform atomic_uint emissionAttempts;
+layout(binding = 3, offset = 0) uniform atomic_uint created;
+
+layout(std430, binding = 11) buffer Lif
+{
+	float Lifetimes[];
+};
+layout(std430, binding = 12) buffer Pos
+{
+	vec4 Positions[];
+};
+
+layout(local_size_variable) in;
+
+uniform float initialLife;
+uniform uint toCreate;
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (Lifetimes[gid] < 0)
+	{
+		if (atomicCounterIncrement(emissionAttempts) < toCreate)
+		{
+			atomicCounterIncrement(aliveParticles);
+			atomicCounterIncrement(created);
+
+			Lifetimes[gid] = 2.0;
+			Positions[gid] = vec4(0);
+		}
+	}
+}
