@@ -1,8 +1,7 @@
 #pragma once
-#include <sdl2\glew.h>
+#include <glew\glew.h>
 #include <stdio.h>
 #include <string>
-
 #include <fstream>
 
 void initGL();

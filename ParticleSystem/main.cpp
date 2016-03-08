@@ -63,7 +63,11 @@ int main(int argc, char* args[])
 		}
 
 		pipeline.emit();
-		pipeline.update();
+
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+
+		pipeline.update((2.0*x / 1024.0f) - 1.0f, -((2.0*y / 576.0f) - 1.0f));
 		pipeline.render();
 
 		window.swapWindow();

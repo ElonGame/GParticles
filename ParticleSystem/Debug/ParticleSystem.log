@@ -1,1 +1,5 @@
-﻿  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\ParticleSystem (fountain)\Debug\ParticleSystem.exe
+﻿  Pipeline.cpp
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\pipeline.cpp(196): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\pipeline.cpp(245): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\pipeline.cpp(267): warning C4244: 'argument': conversion from 'GLuint' to 'GLfloat', possible loss of data
+  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

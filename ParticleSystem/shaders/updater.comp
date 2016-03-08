@@ -20,6 +20,8 @@ layout(std430, binding = 13) buffer Vel
 
 layout(local_size_variable) in;
 
+uniform vec2 mouseInput;
+
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
@@ -37,8 +39,11 @@ void main()
 		return;
 	}
 
-	/*dampen speed
-	Velocities[gid] *= 0.98;*/
+	/*dampen speed*/
+	Velocities[gid] *= 0.99;
+
+	vec2 attractionVec = mouseInput.xy - Positions[gid].xy;
+	Velocities[gid].xy += normalize(attractionVec) * 0.001;
 
 	Positions[gid].xyz += Velocities[gid].xyz;
 

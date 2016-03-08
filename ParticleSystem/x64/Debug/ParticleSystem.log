@@ -1,0 +1,52 @@
+﻿main.obj : error LNK2019: unresolved external symbol SDL_PollEvent referenced in function SDL_main
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewBindBuffer
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewBufferData
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewBufferSubData
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewGenBuffers
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewMapBuffer
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewUnmapBuffer
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewAttachShader
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewCreateProgram
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewCreateShader
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewEnableVertexAttribArray
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewGetAttribLocation
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewGetProgramiv
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewGetProgramiv
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewGetUniformLocation
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewLinkProgram
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewLinkProgram
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewUniform1f
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewUniformMatrix4fv
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewUseProgram
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewVertexAttribPointer
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewUniform1ui
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewDispatchComputeGroupSizeARB
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewMapBufferRange
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewMemoryBarrier
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewBindBufferBase
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewBindVertexArray
+Pipeline.obj : error LNK2001: unresolved external symbol __imp___glewGenVertexArrays
+PipelineUtil.obj : error LNK2019: unresolved external symbol __imp_glewInit referenced in function "void __cdecl initGL(void)" (?initGL@@YAXXZ)
+PipelineUtil.obj : error LNK2019: unresolved external symbol __imp_glewGetErrorString referenced in function "void __cdecl initGL(void)" (?initGL@@YAXXZ)
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewCompileShader
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewGetProgramInfoLog
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewGetShaderInfoLog
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewGetShaderiv
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewIsProgram
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewIsShader
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp___glewShaderSource
+PipelineUtil.obj : error LNK2001: unresolved external symbol __imp_glewExperimental
+Window.obj : error LNK2019: unresolved external symbol SDL_GetError referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_CreateWindow referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_DestroyWindow referenced in function "public: void __cdecl Window::quit(void)" (?quit@Window@@QEAAXXZ)
+Window.obj : error LNK2019: unresolved external symbol SDL_GL_SetAttribute referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_GL_CreateContext referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_GL_SetSwapInterval referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_GL_SwapWindow referenced in function "public: void __cdecl Window::swapWindow(void)" (?swapWindow@Window@@QEAAXXZ)
+Window.obj : error LNK2019: unresolved external symbol SDL_Init referenced in function "public: bool __cdecl Window::init(int,int)" (?init@Window@@QEAA_NHH@Z)
+Window.obj : error LNK2019: unresolved external symbol SDL_Quit referenced in function "public: void __cdecl Window::quit(void)" (?quit@Window@@QEAAXXZ)
+MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86\SDL2.lib : warning LNK4272: library machine type 'X86' conflicts with target machine type 'x64'
+C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86\SDL2main.lib : warning LNK4272: library machine type 'X86' conflicts with target machine type 'x64'
+C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew\glew32.lib : warning LNK4272: library machine type 'X86' conflicts with target machine type 'x64'
+C:\Users\Tiago\Desktop\PI\ParticleSystem\x64\Debug\ParticleSystem.exe : fatal error LNK1120: 46 unresolved externals

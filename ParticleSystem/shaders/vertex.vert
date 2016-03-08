@@ -14,5 +14,5 @@ void main()
 	lifetimeV = lifetime;
 	vec4 projectedCoords = projection * view * model * vec4(position.xyz, 1);
 	gl_Position = projectedCoords;
-	gl_PointSize = (position.z + 1.0) * 0.5 * 10;
+	/*gl_PointSize = (position.z + 1.0) * 0.5 * 10;*/
 }

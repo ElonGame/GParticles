@@ -1,5 +1,5 @@
 #pragma once
-#include <sdl2\glew.h>
+#include <glew\glew.h>
 #include <gl\GLU.h>
 #include <string>
 #include <fstream>
@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <chrono>
 #include <glm\glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
 #include "PipelineUtil.h"
 
 using ns = std::chrono::milliseconds;
@@ -30,7 +30,6 @@ public:
 	GLuint emissionAttempts = 0;
 	GLuint created = 0;
 	// buffer handles
-	GLuint indexSSBO = 0;
 	GLuint lifeSSBO = 0;
 	GLuint posSSBO = 0;
 	GLuint velSSBO = 0;
@@ -52,7 +51,7 @@ public:
 	bool initUpdaterProgram();
 	bool initRendererProgram();
 	void emit();
-	void update();
+	void update(float x, float y);
 	void render();
 };
 

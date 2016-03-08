@@ -14,18 +14,6 @@ bool Pipeline::initBuffers()
 {
 	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 
-	// index
-	glGenBuffers(1, &indexSSBO);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, indexSSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, numParticles * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
-
-	GLfloat *index = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, numParticles * sizeof(GLfloat), bufMask);
-	for (int i = 0; i < numParticles; i++)
-	{
-		index[i] = i;
-	}
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
 	// lifetime
 	glGenBuffers(1, &lifeSSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, lifeSSBO);
@@ -63,7 +51,7 @@ bool Pipeline::initBuffers()
 	{
 		velocities[i].vx = -0.01f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.01f + 0.01f)));
 		velocities[i].vy = -0.01f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.01f + 0.01f)));
-		velocities[i].vz = -0.01f + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (0.01f + 0.01f)));
+		velocities[i].vz = 0;
 		velocities[i].vw = 0;
 	}
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -242,17 +230,17 @@ void Pipeline::emit()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void Pipeline::update()
+void Pipeline::update(float x, float y)
 {
 	// bind buffers
 	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, aliveParticles);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, indexSSBO);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, lifeSSBO);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, posSSBO);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 13, velSSBO);
 
 	// udpate buffers
 	glUseProgram(updaterHandle);
+	glUniform2f(glGetUniformLocation(updaterHandle, "mouseInput"), x, y);
 	glDispatchComputeGroupSizeARB(	ceil((float)numParticles / workGroupSize), 1, 1,
 									workGroupSize, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -263,7 +251,7 @@ void Pipeline::update()
 ///////////////////////////////////////////////////////////////////////////////
 void Pipeline::render()
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(rendererHandle);
@@ -282,9 +270,10 @@ void Pipeline::render()
 	glm::mat4 view;
 	glm::mat4 projection;
 
-	model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f,-2.0f));
-	projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
+	//model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f,-5.0f));
+	//projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
+	projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
 
 	// Get their uniform location
 	GLint modelLoc = glGetUniformLocation(rendererHandle, "model");
