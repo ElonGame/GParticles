@@ -1,15 +1,19 @@
 #version 430
 
-uniform float alive;
+uniform float testuni;
 
-in float lifetimeV;
+in float lifetimesV;
+in vec4 colorsV;
 
 out vec4 LFragment;
 
 void main()
 {
-	if (lifetimeV > 0)
-		LFragment = vec4( 0.9, 0.9, 0.1, 1.0 );
-	else 
+	if (lifetimesV <= 0)
 		discard;
+
+	LFragment = colorsV;
+	/*if (testuni == 10)
+		LFragment = vec4( 1, 1, 1, 1.0 );	*/
+
 }

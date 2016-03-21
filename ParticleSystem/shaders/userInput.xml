@@ -1,0 +1,85 @@
+<project>
+	<resources>
+		<buffers>
+			<buffer name="lifetimes" elements=512 type="float"/>
+			<buffer name="positions" elements=512 type="vec4"/>
+			<buffer name="velocities" elements=512 type="vec4"/>
+			<buffer name="colors" elements=512 type="vec4"/>
+		</buffers>
+		<atomics>
+			<atomic name="aliveParticles" value=0 />
+			<atomic name="emissionAttempts" value=0/>
+		</atomics>
+		<uniforms>
+			<uniform name="testuni" type="float" value=10 />
+		</uniforms>
+	</resources>
+
+	<psystem name="rocket">
+		<emitter>
+			<resources>
+				<atomics>
+					<atomic name="aliveParticles" />
+					<atomic name="emissionAttempts" />
+				</atomics>
+				<buffers>
+					<buffer name="lifetimes" />
+					<buffer name="positions" />
+					<buffer name="velocities" />
+					<buffer name="colors" />
+				</buffers>
+				<uniforms>
+					<uniform name="testuni" />
+				</uniforms>
+			</resources>
+
+			<files>
+				<file path="shaders/emitter.comp" />
+			</files>
+		</emitter>
+
+		<updater>
+			<resources>
+				<atomics>
+					<atomic name="aliveParticles" />
+					<atomic name="emissionAttempts" />
+				</atomics>
+				<buffers>
+					<buffer name="lifetimes" />
+					<buffer name="velocities" />
+					<buffer name="positions" />
+					<buffer name="colors" />
+				</buffers>
+				<uniforms>
+				</uniforms>
+			</resources>
+
+			<files>
+				<file path="shaders/updater.comp" />
+			</files>
+		</updater>
+
+		<renderer>
+			<resources>
+				<atomics>
+				</atomics>
+				<buffers>
+					<buffer name="lifetimes" />
+					<buffer name="positions"/>
+					<buffer name="colors" />
+				</buffers>
+				<uniforms>
+					<uniform name="testuni" />
+				</uniforms>
+			</resources>
+
+			<vertfiles>
+				<file path="shaders/vertex.vert" />
+			</vertfiles>
+			<fragfiles>
+				<file path="shaders/frag.frag" />
+			</fragfiles>
+		</renderer>
+	</psystem>
+
+</project>

@@ -69,9 +69,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\toolkits\includes\;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
-    <LibraryPath>C:\toolkits\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
@@ -130,14 +130,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComputeProgram.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Pipeline.cpp" />
-    <ClCompile Include="PipelineUtil.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="ParticleSystemLoader.cpp" />
+    <ClCompile Include="RendererProgram.cpp" />
+    <ClCompile Include="tinyxml\tinystr.cpp" />
+    <ClCompile Include="tinyxml\tinyxml.cpp" />
+    <ClCompile Include="tinyxml\tinyxmlerror.cpp" />
+    <ClCompile Include="tinyxml\tinyxmlparser.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Pipeline.h" />
-    <ClInclude Include="PipelineUtil.h" />
+    <ClInclude Include="ComputeProgram.h" />
+    <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="ParticleSystemLoader.h" />
+    <ClInclude Include="RendererProgram.h" />
+    <ClInclude Include="tinyxml\tinystr.h" />
+    <ClInclude Include="tinyxml\tinyxml.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
