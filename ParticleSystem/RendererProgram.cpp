@@ -1,6 +1,7 @@
 #include "RendererProgram.h"
-
-
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
 
 RendererProgram::RendererProgram()
 {
@@ -11,7 +12,7 @@ RendererProgram::~RendererProgram()
 {
 }
 
-void RendererProgram::execute()
+void RendererProgram::execute(Camera cam)
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -22,6 +23,27 @@ void RendererProgram::execute()
 
 	// useUniforms
 	setUniforms();
+
+	// TODO: remove and make camera class
+	//glm::mat4 model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 projection;
+
+	//model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -2.0f));
+	view = cam.getViewMatrix();
+	projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
+
+	// Get their uniform location
+	GLint modelLoc = glGetUniformLocation(programhandle, "model");
+	GLint viewLoc = glGetUniformLocation(programhandle, "view");
+	GLint projLoc = glGetUniformLocation(programhandle, "projection");
+	// Pass the matrices to the shader
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
 
 	// render
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);

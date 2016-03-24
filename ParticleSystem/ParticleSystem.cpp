@@ -1,5 +1,4 @@
 #include "ParticleSystem.h"
-#include <iostream>
 
 ParticleSystem::ParticleSystem()
 {
@@ -10,7 +9,7 @@ ParticleSystem::~ParticleSystem()
 {
 }
 
-void ParticleSystem::execute()
+void ParticleSystem::execute(Camera c)
 {
 	auto timeSpan = timeClock::now() - lastStep;
 
@@ -23,7 +22,7 @@ void ParticleSystem::execute()
 	//std::cout << "Time: " << std::chrono::duration_cast<ms>(timeSpan).count() << std::endl;
 
 	updater.execute();
-	renderer.execute();
+	renderer.execute(c);
 }
 
 void ParticleSystem::printContents()

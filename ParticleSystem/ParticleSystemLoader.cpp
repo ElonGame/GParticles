@@ -322,6 +322,7 @@ bool ParticleSystemLoader::loadGLProgram(TiXmlElement* glpElement, ComputeProgra
 
 	// atomics
 	atomicUmap glpAtomicHandles;
+	std::vector<GLuint> glpAtmHandlesToReset;
 	std::string atmName;
 	TiXmlElement* atomic = resourcesHandle->FirstChildElement("atomics")->FirstChildElement();
 	for (; atomic; atomic = atomic->NextSiblingElement())
@@ -329,6 +330,13 @@ bool ParticleSystemLoader::loadGLProgram(TiXmlElement* glpElement, ComputeProgra
 		atomic->QueryStringAttribute("name", &atmName);
 
 		glpAtomicHandles.emplace(atmName, atomicHandles.at(atmName));
+
+		std::string resetValue;
+		if (atomic->QueryStringAttribute("reset", &resetValue) == TIXML_SUCCESS)
+		{
+			if (resetValue == "true")
+				glpAtmHandlesToReset.push_back(atomicHandles.at(atmName).id);
+		}
 	}
 
 	// buffers
@@ -400,7 +408,7 @@ bool ParticleSystemLoader::loadGLProgram(TiXmlElement* glpElement, ComputeProgra
 		glpBHandles.push_back(b.second.id);
 	}
 
-	glp = ComputeProgram(glpHandle, glpAtmHandles, glpBHandles, glpUniforms);
+	glp = ComputeProgram(glpHandle, glpAtmHandles, glpAtmHandlesToReset, glpBHandles, glpUniforms);
 
 	return true;
 }

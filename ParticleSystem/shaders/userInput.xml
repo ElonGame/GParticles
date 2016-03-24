@@ -11,16 +11,29 @@
 			<atomic name="emissionAttempts" value=0/>
 		</atomics>
 		<uniforms>
-			<uniform name="testuni" type="float" value=10 />
+			<uniform name="maxParticles" type="float" value=512 />
+			<uniform name="toCreate" type="float" value=3 />
 		</uniforms>
 	</resources>
 
 	<psystem name="rocket">
+		<!--> position, rotation, scale: x: number y: number z: number <-->
+		<position x=0 y=0 z=0 />
+		<rotation x=0 y=0 z=0 />
+		<scale x=0 y=0 z=0 />
+		<!--> lifetime: unit: "min", "sec", "millisec";
+						limit: number;
+						looping: "true", "false" <-->
+		<lifetime unit="sec" limit=10 looping="true"/>
+
+		<!--> ------------------------------------------------------------- <-->
+		<!--> GL PROGRAMS <-->
+		<!--> ------------------------------------------------------------- <-->
 		<emitter>
 			<resources>
 				<atomics>
 					<atomic name="aliveParticles" />
-					<atomic name="emissionAttempts" />
+					<atomic name="emissionAttempts" reset="true" />
 				</atomics>
 				<buffers>
 					<buffer name="lifetimes" />
@@ -29,7 +42,8 @@
 					<buffer name="colors" />
 				</buffers>
 				<uniforms>
-					<uniform name="testuni" />
+					<uniform name="maxParticles" />
+					<uniform name="toCreate" />
 				</uniforms>
 			</resources>
 
@@ -69,7 +83,6 @@
 					<buffer name="colors" />
 				</buffers>
 				<uniforms>
-					<uniform name="testuni" />
 				</uniforms>
 			</resources>
 

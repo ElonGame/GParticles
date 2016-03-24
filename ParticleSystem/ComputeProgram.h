@@ -9,8 +9,8 @@
 class ComputeProgram
 {
 public:
-	ComputeProgram(GLuint ph, const std::vector<GLuint> &ah, const std::vector<GLuint> &bh, const uniformUmap &u)
-		: programhandle(ph), atomicHandles(ah), bufferHandles(bh), uniforms(u) {};
+	ComputeProgram(GLuint ph, const std::vector<GLuint> &ah, const std::vector<GLuint> &ahtr, const std::vector<GLuint> &bh, const uniformUmap &u)
+		: programhandle(ph), atomicHandles(ah), atomicsToReset(ahtr), bufferHandles(bh), uniforms(u) {};
 	ComputeProgram();
 	~ComputeProgram();
 
@@ -19,6 +19,7 @@ public:
 private:
 	GLuint programhandle;
 	std::vector<GLuint> atomicHandles;
+	std::vector<GLuint> atomicsToReset;
 	uniformUmap uniforms;
 	std::vector<GLuint> bufferHandles;
 

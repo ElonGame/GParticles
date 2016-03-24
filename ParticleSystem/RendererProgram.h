@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include "Utils.h"
-
+#include "Camera.h"
 
 class RendererProgram
 {
@@ -17,7 +17,7 @@ public:
 	RendererProgram();
 	~RendererProgram();
 
-	void execute();
+	void execute(Camera cam);
 	void printContents();
 private:
 	GLuint programhandle;

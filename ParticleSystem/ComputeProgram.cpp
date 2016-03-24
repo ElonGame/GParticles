@@ -26,27 +26,21 @@ void ComputeProgram::execute()
 		4, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	//// see alive particles
+	// see alive particles
 	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicHandles[0]);
 	//GLuint *ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	//GLuint currentVal = ptr[0];
 	//printf("%d ALIVE\n", currentVal);
 
-	//// see emission count
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicHandles[1]);
-	//ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	//currentVal = ptr[0];
-	//printf("%d emissionTests\n", currentVal);
-
-	// emission count reset
+	// reset marked atomics
 	GLuint val = 0;
-	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, atomicHandles[1]);
-	glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &val);
-	glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
-
-	// TODO: See atomics, buffers marked for resets
+	for each (GLuint id in atomicsToReset)
+	{
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, id);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &val);
+		glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+	}
 }
 
 void ComputeProgram::printContents()
@@ -54,6 +48,11 @@ void ComputeProgram::printContents()
 	std::cout << ">> Compute program " << programhandle << std::endl;
 	std::cout << "Atomics" << std::endl;
 	for each (auto b in atomicHandles)
+	{
+		std::cout << b << std::endl;
+	}
+	std::cout << "Atomics to Reset" << std::endl;
+	for each (auto b in atomicsToReset)
 	{
 		std::cout << b << std::endl;
 	}

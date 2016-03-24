@@ -3,6 +3,7 @@
 #include <ratio>
 #include "RendererProgram.h"
 #include "ComputeProgram.h"
+#include "Camera.h"
 
 using timeClock = std::chrono::steady_clock;
 using timeP = std::chrono::time_point<timeClock>;
@@ -15,7 +16,7 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	void execute();
+	void execute(Camera c);
 	void printContents();
 
 	// emission globals
