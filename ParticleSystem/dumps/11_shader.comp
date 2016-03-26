@@ -3,27 +3,27 @@
 #extension GL_ARB_shader_storage_buffer_object : enable
 #extension GL_ARB_compute_variable_group_size : enable
 
-layout(binding = 0, offset = 0) uniform atomic_uint aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint emissionAttempts;
+layout(binding = 0, offset = 0) uniform atomic_uint explosion_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint explosion_emissionAttempts;
 
-layout(std430, binding = 2) buffer Lifetimes
+layout(std430, binding = 2) buffer Explosion_lifetimes
 {
-	float lifetimes[];
+	float explosion_lifetimes[];
 };
 
-layout(std430, binding = 3) buffer Velocities
+layout(std430, binding = 3) buffer Explosion_positions
 {
-	vec4 velocities[];
+	vec4 explosion_positions[];
 };
 
-layout(std430, binding = 4) buffer Positions
+layout(std430, binding = 4) buffer Explosion_velocities
 {
-	vec4 positions[];
+	vec4 explosion_velocities[];
 };
 
-layout(std430, binding = 5) buffer Colors
+layout(std430, binding = 5) buffer Explosion_colors
 {
-	vec4 colors[];
+	vec4 explosion_colors[];
 };
 
 layout(local_size_variable) in;
@@ -103,24 +103,17 @@ void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
 
-	if (lifetimes[gid] <= 0)
+	if (explosion_lifetimes[gid] <= 0)
 		return;
 
-	lifetimes[gid] -= 0.001;
+	explosion_lifetimes[gid] -= 0.001;
 
-	if (lifetimes[gid] <= 0)
+	if (explosion_lifetimes[gid] <= 0)
 	{
-		atomicCounterDecrement(aliveParticles);
+		atomicCounterDecrement(explosion_aliveParticles);
 		return;
 	}
 
-	positions[gid].xyz += velocities[gid].xyz;
-	positions[gid].a = 1;
-
-	if (positions[gid].x > 1) {velocities[gid].x *= -1; colors[gid].xy = colors[gid].yx;}
-	if (positions[gid].x < -1) {velocities[gid].x *= -1;  colors[gid].xy = colors[gid].yx;}
-	if (positions[gid].y > 1) {velocities[gid].y *= -1;  colors[gid].xy = colors[gid].yx;}
-	if (positions[gid].y < -1) {velocities[gid].y *= -1;  colors[gid].xy = colors[gid].yx;}
-	if (positions[gid].z > 1) {velocities[gid].z *= -1;  colors[gid].xy = colors[gid].yx;}
-	if (positions[gid].z < -1) {velocities[gid].z *= -1;  colors[gid].xy = colors[gid].yx;}
+	explosion_positions[gid].xyz += explosion_velocities[gid].xyz;
+	explosion_positions[gid].a = 1;
 }

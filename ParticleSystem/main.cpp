@@ -6,17 +6,12 @@
 // TODO: should this be here?
 float mSpeed = 0.01f;
 Camera c;
-ParticleSystem currentPS;
+std::vector<ParticleSystem> psContainer;
 
-
-ParticleSystem fetchParticleSystem()
+void fetchParticleSystems()
 {
 	// TODO: unbind current state and delete everything
-
-	ParticleSystemLoader psLoader = ParticleSystemLoader();
-	ParticleSystem ps = psLoader.loadParticleSystem("shaders/userInput.xml");
-	ps.printContents();
-	return ps;
+	ParticleSystemLoader::loadProject("shaders/userInput.xml", psContainer);
 }
 
 
@@ -51,7 +46,7 @@ bool processInput()
 	}
 	if (keystate[SDL_SCANCODE_R])
 	{
-		fetchParticleSystem();
+		fetchParticleSystems();
 	}
 
 	// process mouse input and position
@@ -61,8 +56,6 @@ bool processInput()
 	int mouseX, mouseY;
 	if (SDL_GetGlobalMouseState(&c.mouseX, &c.mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		//std::cout << "last: " << c.lastMouseX << ", " << c.lastMouseY << " --- current: " << c.mouseX << ", " << c.mouseY << std::endl;
-
 		c.processMouseMovement();
 	}
 	
@@ -88,13 +81,20 @@ int main(int argc, char* args[])
 	c = Camera();
 
 	// init ParticleSystem
-	currentPS = fetchParticleSystem();
-
+	fetchParticleSystems();
 
 	// system loop
 	while (processInput())
 	{
-		currentPS.execute(c);
+		// TODO: system ticks here
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		// process all particle system
+		for (int i = 0; i < psContainer.size(); i++)
+		{
+			psContainer[i].execute(c);
+		}
 
 		window.swapWindow();
 	}

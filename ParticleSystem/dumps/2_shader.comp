@@ -3,33 +3,33 @@
 #extension GL_ARB_shader_storage_buffer_object : enable
 #extension GL_ARB_compute_variable_group_size : enable
 
-layout(binding = 0, offset = 0) uniform atomic_uint aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint emissionAttempts;
+layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
 
-layout(std430, binding = 2) buffer Lifetimes
+layout(std430, binding = 2) buffer Rocket_lifetimes
 {
-	float lifetimes[];
+	float rocket_lifetimes[];
 };
 
-layout(std430, binding = 3) buffer Positions
+layout(std430, binding = 3) buffer Rocketpositions
 {
-	vec4 positions[];
+	vec4 rocketpositions[];
 };
 
-layout(std430, binding = 4) buffer Velocities
+layout(std430, binding = 4) buffer Rocket_velocities
 {
-	vec4 velocities[];
+	vec4 rocket_velocities[];
 };
 
-layout(std430, binding = 5) buffer Colors
+layout(std430, binding = 5) buffer Rocket_colors
 {
-	vec4 colors[];
+	vec4 rocket_colors[];
 };
 
 layout(local_size_variable) in;
 
-uniform float maxParticles;
-uniform float toCreate;
+uniform float rocket_maxParticles;
+uniform float rocket_toCreate;
 
 //
 // Description : Array and textureless GLSL 2D simplex noise function.
@@ -101,28 +101,31 @@ float snoise(vec2 v)
   g.yz = a0.yz * x12.xz + h.yz * x12.yw;
   return 130.0 * dot(m, g);
 }
+// TODO
+// cone position function
+// speed function
+// ccrr function
+
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
 
 	/*LIMITERS*/
-	if (atomicCounter(aliveParticles) >= maxParticles)
+	if (atomicCounter(rocket_aliveParticles) >= rocket_maxParticles)
 		return;
 
-
-
-	if (lifetimes[gid] <= 0)
+	if (rocket_lifetimes[gid] <= 0)
 	{
-		if (atomicCounterIncrement(emissionAttempts) < toCreate)
+		if (atomicCounterIncrement(rocket_emissionAttempts) < rocket_toCreate)
 		{
-			atomicCounterIncrement(aliveParticles);
+			atomicCounterIncrement(rocket_aliveParticles);
 
-			lifetimes[gid] = 1.0;
-			positions[gid] = vec4(0);
-			velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
+			rocket_lifetimes[gid] = 1.0;
+			rocketpositions[gid] = vec4(0);
+			rocket_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
 										snoise(vec2(gid+3,gid+4*gid)),
 										snoise(vec2(gid+7,gid+8*gid))) * 0.01;
-			colors[gid] = vec4(0.9,0.1,0.1,1);
+			rocket_colors[gid] = vec4(0.9,0.1,0.1,1);
 		}
 	}
 }

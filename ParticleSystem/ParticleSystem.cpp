@@ -11,7 +11,25 @@ ParticleSystem::~ParticleSystem()
 
 void ParticleSystem::execute(Camera c)
 {
-	auto timeSpan = timeClock::now() - lastStep;
+	if (dead)
+		return;
+
+	if (firstExec)
+	{
+		lifeStart = timeClock::now();
+		firstExec = false;
+	}
+
+	timeP currTime = timeClock::now();
+	auto age = currTime - lifeStart;
+	if (age > lifetime)
+		dead = true;
+
+	//std::cout << "LifeStart: " << std::chrono::time_point_cast<ms>(lifeStart).time_since_epoch().count() << std::endl;
+	//std::cout << "curretime: " << std::chrono::time_point_cast<ms>(currTime).time_since_epoch().count() << std::endl;
+	std::cout << "Time: " << std::chrono::duration_cast<ms>(age).count() << std::endl;
+
+	auto timeSpan = currTime - lastStep;
 
 	if (timeSpan > emissionStep)
 	{
@@ -22,7 +40,7 @@ void ParticleSystem::execute(Camera c)
 	//std::cout << "Time: " << std::chrono::duration_cast<ms>(timeSpan).count() << std::endl;
 
 	updater.execute();
-	renderer.execute(c);
+	renderer.execute(model, c);
 }
 
 void ParticleSystem::printContents()

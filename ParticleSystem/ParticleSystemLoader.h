@@ -7,53 +7,41 @@
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 
-struct bufferInfo
-{
-	GLuint id;
-	GLuint elements;
-	std::string type;
-};
-
-struct atomicInfo
-{
-	GLuint id;
-	GLuint initialValue;
-};
-
-//struct uniformInfo
-//{
-//	GLfloat value;
-//	std::string type;
-//};
 
 using bufferUmap = std::unordered_map<std::string, bufferInfo>;
 using atomicUmap = std::unordered_map<std::string, atomicInfo>;
 using uniformUmap = std::unordered_map<std::string, uniformInfo>;
 
+
 class ParticleSystemLoader
 {
 public:
-	ParticleSystemLoader();
-	~ParticleSystemLoader();
-
-	ParticleSystem loadParticleSystem(std::string filePath);
+	// parses file and fills psContainer with ParticleSystem objects
+	static bool loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer);
+	static ParticleSystem loadParticleSystem(TiXmlElement* psystemElement);
 
 private:
-	bufferUmap bufferHandles;
-	atomicUmap atomicHandles;
-	uniformUmap uniformHandles;
+	// global resources
+	static bufferUmap bufferHandles;
+	static atomicUmap atomicHandles;
+	static uniformUmap uniformHandles;
 
-	bool initBuffers(TiXmlElement* buffers);
-	bool initAtomics(TiXmlElement* atomics);
-	bool initUniforms(TiXmlElement* uniforms);
+	// global resource loading functions
+	static bool loadBuffers(TiXmlElement* buffers);
+	static bool loadAtomics(TiXmlElement* atomics);
+	static bool loadUniforms(TiXmlElement* uniforms);
+	static void loadProgramResources(TiXmlElement* resources, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
 
-	bool loadRenderer(TiXmlElement* glpElement, RendererProgram &rp);
-	bool loadGLProgram(TiXmlElement* glpElement, ComputeProgram &glp);
+	// shader program loading functions
+	static bool loadComputeProgram(TiXmlElement* glpElement, ComputeProgram &glp);
+	static bool loadRenderer(TiXmlElement* glpElement, RendererProgram &rp);
 
-	bool compileShaderFiles(GLuint shaderID, std::string header, std::string reservedFunctions, std::vector<std::string> filePaths, bool dumpToFile = false);
-	std::string generateHeader(atomicUmap glpAtomicHandles, bufferUmap glpBufferHandles, uniformUmap glpUniforms);
-	std::string fileToString(std::string filePath);
-	void printShaderLog(GLuint shader);
-	void printProgramLog(GLuint program);
+	// project loading utility functions
+	static bool compileShaderFiles(	GLuint shaderID, std::string header, std::string reservedFunctions,
+									std::vector<std::string> filePaths, bool dumpToFile = false);
+	static std::string generateHeader(atomicUmap glpAtomicHandles, bufferUmap glpBufferHandles, uniformUmap glpUniforms);
+	static std::string fileToString(std::string filePath);
+	static void printShaderLog(GLuint shader);
+	static void printProgramLog(GLuint program);
 };
 

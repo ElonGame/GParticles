@@ -17,7 +17,7 @@ public:
 	RendererProgram();
 	~RendererProgram();
 
-	void execute(Camera cam);
+	void execute(glm::mat4 &model, Camera cam);
 	void printContents();
 private:
 	GLuint programhandle;

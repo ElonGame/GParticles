@@ -3,6 +3,19 @@
 #include <iostream>
 #include <unordered_map>
 
+struct bufferInfo
+{
+	GLuint id;
+	GLuint elements;
+	std::string type;
+};
+
+struct atomicInfo
+{
+	GLuint id;
+	GLuint initialValue;
+};
+
 struct uniformInfo
 {
 	GLfloat value;

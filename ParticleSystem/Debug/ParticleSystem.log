@@ -1,4 +1,7 @@
-﻿  main.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(59): warning C4101: 'mouseX': unreferenced local variable
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(59): warning C4101: 'mouseY': unreferenced local variable
+﻿  ParticleSystemLoader.cpp
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(15): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
+  Generating Code...
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(50): warning C4715: 'ParticleSystemLoader::loadProject': not all control paths return a value
+  Skipping... (no relevant changes detected)
+  main.cpp
   ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

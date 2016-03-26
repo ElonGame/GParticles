@@ -1,0 +1,18 @@
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (rocket_lifetimes[gid] <= 0)
+		return;
+
+	rocket_lifetimes[gid] -= 0.001;
+
+	if (rocket_lifetimes[gid] <= 0)
+	{
+		atomicCounterDecrement(rocket_aliveParticles);
+		return;
+	}
+
+	rocketpositions[gid].xyz += rocket_velocities[gid].xyz;
+	rocketpositions[gid].a = 1;
+}

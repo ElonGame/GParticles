@@ -1,0 +1,28 @@
+// TODO
+// cone position function
+// speed function
+// ccrr function
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	/*LIMITERS*/
+	if (atomicCounter(rocket_aliveParticles) >= rocket_maxParticles)
+		return;
+
+	if (rocket_lifetimes[gid] <= 0)
+	{
+		if (atomicCounterIncrement(rocket_emissionAttempts) < rocket_toCreate)
+		{
+			atomicCounterIncrement(rocket_aliveParticles);
+
+			rocket_lifetimes[gid] = 1.0;
+			rocketpositions[gid] = vec4(0);
+			rocket_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
+										snoise(vec2(gid+3,gid+4*gid)),
+										snoise(vec2(gid+7,gid+8*gid))) * 0.01;
+			rocket_colors[gid] = vec4(0.9,0.1,0.1,1);
+		}
+	}
+}

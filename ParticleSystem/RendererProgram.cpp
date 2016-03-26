@@ -1,7 +1,5 @@
 #include "RendererProgram.h"
-#include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
-#include <glm\gtc\type_ptr.hpp>
+
 
 RendererProgram::RendererProgram()
 {
@@ -12,10 +10,8 @@ RendererProgram::~RendererProgram()
 {
 }
 
-void RendererProgram::execute(Camera cam)
+void RendererProgram::execute(glm::mat4 &model, Camera cam)
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(programhandle);
 
@@ -26,7 +22,6 @@ void RendererProgram::execute(Camera cam)
 
 	// TODO: remove and make camera class
 	//glm::mat4 model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 projection;
 
