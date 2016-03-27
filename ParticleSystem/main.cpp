@@ -1,17 +1,19 @@
 #include "Utils.h"
 #include "Window.h"
 #include "ParticleSystemLoader.h"
+#include "ParticleSystemManager.h"
 #include "Camera.h"
 
 // TODO: should this be here?
 float mSpeed = 0.01f;
 Camera c;
-std::vector<ParticleSystem> psContainer;
 
-void fetchParticleSystems()
+void fetchParticleSystems(ParticleSystemManager &psm)
 {
 	// TODO: unbind current state and delete everything
+	std::vector<ParticleSystem> psContainer;
 	ParticleSystemLoader::loadProject("shaders/userInput.xml", psContainer);
+	psm.setContainer(psContainer);
 }
 
 
@@ -43,10 +45,6 @@ bool processInput()
 	if (keystate[SDL_SCANCODE_S])
 	{
 		c.processKeyboard(Camera_Movement::BACKWARD, mSpeed);
-	}
-	if (keystate[SDL_SCANCODE_R])
-	{
-		fetchParticleSystems();
 	}
 
 	// process mouse input and position
@@ -80,8 +78,9 @@ int main(int argc, char* args[])
 	// init camera
 	c = Camera();
 
-	// init ParticleSystem
-	fetchParticleSystems();
+	// init ParticleSystemManager and load particle systems
+	ParticleSystemManager psManager = ParticleSystemManager();
+	fetchParticleSystems(psManager);
 
 	// system loop
 	while (processInput())
@@ -91,10 +90,7 @@ int main(int argc, char* args[])
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// process all particle system
-		for (int i = 0; i < psContainer.size(); i++)
-		{
-			psContainer[i].execute(c);
-		}
+		psManager.processParticles(c);
 
 		window.swapWindow();
 	}

@@ -1,16 +1,8 @@
 #pragma once
-#include <unordered_map>
 #include <fstream>
 #include "ParticleSystem.h"
-#include "ComputeProgram.h"
-#include "RendererProgram.h"
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
-
-
-using bufferUmap = std::unordered_map<std::string, bufferInfo>;
-using atomicUmap = std::unordered_map<std::string, atomicInfo>;
-using uniformUmap = std::unordered_map<std::string, uniformInfo>;
 
 
 class ParticleSystemLoader

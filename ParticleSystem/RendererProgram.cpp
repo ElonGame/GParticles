@@ -20,15 +20,8 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	// useUniforms
 	setUniforms();
 
-	// TODO: remove and make camera class
-	//glm::mat4 model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 view;
-	glm::mat4 projection;
-
-	//model = glm::rotate(model, -35.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -2.0f));
-	view = cam.getViewMatrix();
-	projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
+	glm::mat4 view = cam.getViewMatrix();
+	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
 
 	// Get their uniform location
 	GLint modelLoc = glGetUniformLocation(programhandle, "model");

@@ -24,8 +24,8 @@ const int offsetLimit = 1;
 class Camera
 {
 public:
-	int targetOffsetX = 0;
-	int targetOffsetY = 0;
+	//int targetOffsetX = 0;
+	//int targetOffsetY = 0;
 	int mouseX = 0;
 	int mouseY = 0;
 	int lastMouseX = 0;

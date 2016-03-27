@@ -12,12 +12,13 @@ using ms = std::chrono::milliseconds;
 class ParticleSystem
 {
 public:
-	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, unsigned int lif) : emitter(e), updater(u), renderer(r), model(m), lifetime(ms(lif)) {};
-	ParticleSystem();
+	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, unsigned int lif, bool lp)
+		: emitter(e), updater(u), renderer(r), model(m), lifetime(ms(lif)), infinite(lif == 0), looping(lp) {};
 	~ParticleSystem();
 
 	void execute(Camera c);
 	void printContents();
+	bool isAlive();
 
 	// emission
 	timeClock::duration emissionStep = ms(100);
@@ -29,9 +30,12 @@ private:
 	RendererProgram renderer;
 
 	glm::mat4 model;
-	// TODO: deal one leve above psLifetime
+
+	// lifetime
+	bool infinite = true;
+	bool looping = false;
 	timeClock::duration lifetime;
 	timeP lifeStart;
-	bool dead = false;
+	bool alive = true;
 	bool firstExec = true;
 };

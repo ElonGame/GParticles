@@ -1,9 +1,5 @@
 #include "ParticleSystem.h"
 
-ParticleSystem::ParticleSystem()
-{
-}
-
 
 ParticleSystem::~ParticleSystem()
 {
@@ -11,7 +7,7 @@ ParticleSystem::~ParticleSystem()
 
 void ParticleSystem::execute(Camera c)
 {
-	if (dead)
+	if (!alive)
 		return;
 
 	if (firstExec)
@@ -23,10 +19,12 @@ void ParticleSystem::execute(Camera c)
 	timeP currTime = timeClock::now();
 	auto age = currTime - lifeStart;
 	if (age > lifetime)
-		dead = true;
+		if (looping)
+			lifeStart = currTime;
+		else
+			alive = false;
 
-	//std::cout << "LifeStart: " << std::chrono::time_point_cast<ms>(lifeStart).time_since_epoch().count() << std::endl;
-	//std::cout << "curretime: " << std::chrono::time_point_cast<ms>(currTime).time_since_epoch().count() << std::endl;
+
 	std::cout << "Time: " << std::chrono::duration_cast<ms>(age).count() << std::endl;
 
 	auto timeSpan = currTime - lastStep;
@@ -48,4 +46,9 @@ void ParticleSystem::printContents()
 	emitter.printContents();
 	updater.printContents();
 	renderer.printContents();
+}
+
+bool ParticleSystem::isAlive()
+{
+	return alive;
 }

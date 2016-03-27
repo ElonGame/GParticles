@@ -5,7 +5,8 @@ bufferUmap ParticleSystemLoader::bufferHandles;
 atomicUmap ParticleSystemLoader::atomicHandles;
 uniformUmap ParticleSystemLoader::uniformHandles;
 
-
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer)
 {
 	// open file and get first element handle
@@ -80,21 +81,50 @@ ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemEle
 	// TODO: complete transform instead of only the position
 	glm::mat4 model = glm::mat4();
 	glm::vec3 pos = glm::vec3();
-	TiXmlElement* position = psystemElement->FirstChildElement("position");
-	position->QueryFloatAttribute("x", &pos.x);
-	position->QueryFloatAttribute("y", &pos.y);
-	position->QueryFloatAttribute("z", &pos.z);
+	TiXmlElement* transElement = psystemElement->FirstChildElement("position");
+	transElement->QueryFloatAttribute("x", &pos.x);
+	transElement->QueryFloatAttribute("y", &pos.y);
+	transElement->QueryFloatAttribute("z", &pos.z);
+
+	glm::vec3 rot = glm::vec3();
+	transElement = psystemElement->FirstChildElement("rotation");
+	transElement->QueryFloatAttribute("x", &rot.x);
+	transElement->QueryFloatAttribute("y", &rot.y);
+	transElement->QueryFloatAttribute("z", &rot.z);
+	float angle = 0;
+	transElement->QueryFloatAttribute("angle", &angle);
+
+	glm::vec3 scale = glm::vec3();
+	transElement = psystemElement->FirstChildElement("scale");
+	transElement->QueryFloatAttribute("x", &scale.x);
+	transElement->QueryFloatAttribute("y", &scale.y);
+	transElement->QueryFloatAttribute("z", &scale.z);
+
 	model = glm::translate(model, pos);
+	model = glm::rotate(model, glm::radians(angle), rot);
+	model = glm::scale(model, scale);
 
 	// lifetime
-	unsigned int lifetime;
-	std::string unit;
+	unsigned int lifetime = 0;
+	std::string str = "millisec";
+	bool looping = false;
 	TiXmlElement* lifetimeElem = psystemElement->FirstChildElement("lifetime");
-	lifetimeElem->QueryUnsignedAttribute("limit", &lifetime);
-	lifetimeElem->QueryStringAttribute("unit", &unit);
-	lifetime *= (unit == "millisec") ? 1 : 1000;
+	if (lifetimeElem->QueryUnsignedAttribute("limit", &lifetime) == TIXML_SUCCESS)
+	{
+		if (lifetimeElem->QueryStringAttribute("unit", &str) == TIXML_SUCCESS)
+		{
+			lifetime *= (str == "millisec") ? 1 : 1000;
+		}
 
-	return ParticleSystem(emitter, updater, renderer, model, lifetime);
+		if (lifetimeElem->QueryStringAttribute("looping", &str) == TIXML_SUCCESS)
+		{
+			looping = (str == "true");
+		}
+	}
+
+
+
+	return ParticleSystem(emitter, updater, renderer, model, lifetime, looping);
 }
 
 
@@ -293,7 +323,7 @@ bool ParticleSystemLoader::loadComputeProgram(TiXmlElement* glpElement, ComputeP
 	std::string header = generateHeader(cpAtomicHandles, cpBufferHandles, cpUniforms);
 	// fetch reserved functionality
 	// TODO: add more
-	std::string reservedFunctions = fileToString("reserved/noise2D.glsl");
+	std::string reservedFunctions = fileToString("reserved/noise2D.glsl") + fileToString("reserved/utilities.glsl");// +fileToString("reserved/generators.glsl");
 
 	// compile, attach and check link status
 	compileShaderFiles(cpShader, header, reservedFunctions, fPaths, true);
@@ -572,7 +602,7 @@ std::string ParticleSystemLoader::generateHeader(atomicUmap glpAtomicHandles, bu
 		res += "uniform " + uni.second.type + " " + uni.first + ";\n";
 	}
 
-	res += "\n";
+	res += "\nuint gid = gl_GlobalInvocationID.x;\n";
 
 	return res;
 }

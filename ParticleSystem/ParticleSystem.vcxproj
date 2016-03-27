@@ -135,6 +135,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ParticleSystemLoader.cpp" />
+    <ClCompile Include="ParticleSystemManager.cpp" />
     <ClCompile Include="RendererProgram.cpp" />
     <ClCompile Include="tinyxml\tinystr.cpp" />
     <ClCompile Include="tinyxml\tinyxml.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="ComputeProgram.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleSystemLoader.h" />
+    <ClInclude Include="ParticleSystemManager.h" />
     <ClInclude Include="RendererProgram.h" />
     <ClInclude Include="tinyxml\tinystr.h" />
     <ClInclude Include="tinyxml\tinyxml.h" />

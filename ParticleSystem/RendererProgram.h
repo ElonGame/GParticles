@@ -11,9 +11,7 @@ class RendererProgram
 {
 public:
 	RendererProgram(GLuint ph, const std::vector<GLuint> &ah, const GLuint &vao, const uniformUmap &u)
-		: programhandle(ph), atomicHandles(ah), vao(vao), uniforms(u)
-	{
-	};
+		: programhandle(ph), atomicHandles(ah), vao(vao), uniforms(u) {};
 	RendererProgram();
 	~RendererProgram();
 

@@ -22,7 +22,7 @@
 			<uniform name="rocket_maxParticles" type="float" value=10 />
 			<uniform name="rocket_toCreate" type="float" value=1 />
 
-			<uniform name="explosion_maxParticles" type="float" value=256 />
+			<uniform name="explosion_maxParticles" type="float" value=512 />
 			<uniform name="explosion_toCreate" type="float" value=256 />
 		</uniforms>
 	</resources>
@@ -30,12 +30,12 @@
 	<psystem name="rocket">
 		<!--> position, rotation, scale: x: number y: number z: number <-->
 		<position x=0 y=0 z=-1 />
-		<rotation x=0 y=0 z=0 />
-		<scale x=0 y=0 z=0 />
+		<rotation x=0 y=1 z=0 />
+		<scale x=1 y=1 z=1 />
 		<!--> lifetime: unit: "sec", "millisec";
 						limit: number;
 						looping: "true", "false" <-->
-		<lifetime unit="sec" limit=10 looping="true"/>
+		<lifetime unit="sec" limit=3 />
 
 		<!--> ------------------------------------------------------------- <-->
 		<!--> GL PROGRAMS <-->
@@ -107,11 +107,11 @@
 	</psystem>
 
 	<psystem name="explosion">
-		<position x=0 y=1.5 z=-5 />
-		<rotation x=0 y=0 z=0 />
-		<scale x=0 y=0 z=0 />
+		<position x=0 y=0 z=-3 />
+		<rotation x=0 y=0 z=1 angle=0/>
+		<scale x=1 y=1 z=1 />
 
-		<lifetime unit="sec" limit=10 looping="true"/>
+		<lifetime unit="sec" limit=4 looping="true"/>
 
 		<emitter>
 			<resources>

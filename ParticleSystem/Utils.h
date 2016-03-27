@@ -22,6 +22,8 @@ struct uniformInfo
 	std::string type;
 };
 
+using bufferUmap = std::unordered_map<std::string, bufferInfo>;
+using atomicUmap = std::unordered_map<std::string, atomicInfo>;
 using uniformUmap = std::unordered_map<std::string, uniformInfo>;
 
 namespace Utils
