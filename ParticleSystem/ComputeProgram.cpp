@@ -35,7 +35,7 @@ void ComputeProgram::execute()
 
 	// reset marked atomics
 	GLuint val = 0;
-	for each (GLuint id in atomicsToReset)
+	for each (auto id in atomicsToReset)
 	{
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, id);
 		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &val);
@@ -49,7 +49,7 @@ void ComputeProgram::printContents()
 	std::cout << "Atomics" << std::endl;
 	for each (auto b in atomicHandles)
 	{
-		std::cout << b << std::endl;
+		std::cout << b.first << " with binding " << b.second << std::endl;
 	}
 	std::cout << "Atomics to Reset" << std::endl;
 	for each (auto b in atomicsToReset)
@@ -59,7 +59,7 @@ void ComputeProgram::printContents()
 	std::cout << "Buffers" << std::endl;
 	for each (auto b in bufferHandles)
 	{
-		std::cout << b << std::endl;
+		std::cout << b.first << " with binding " << b.second << std::endl;
 	}
 	std::cout << "Uniforms" << std::endl;
 	for each (auto b in uniforms)
@@ -73,18 +73,16 @@ void ComputeProgram::printContents()
 ///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::bindResources()
 {
-	int bindingPoint = 0;
-
 	// bind atomics
-	for each (GLuint id in atomicHandles)
+	for each (auto idBind in atomicHandles)
 	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, bindingPoint++, id);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
 	}
 
 	// bind buffers
-	for each (GLuint id in bufferHandles)
+	for each (auto idBind in bufferHandles)
 	{
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint++, id);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, idBind.second, idBind.first);
 	}
 }
 

@@ -1,0 +1,35 @@
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	/*LIMITERS*/
+	// if emission would not exceed particle limit
+	if (atomicCounter(exp_aliveParticles) >= exp_maxParticles)
+		return;
+
+	// if particle not alive
+	if (exp_lifetimes[gid] <= 0)
+	{
+		// if there are explosions to be processed
+		uint ind = atomicCounter(rdpLast);
+		if (ind > 0)
+		{
+			// if there are explosion particles to be emitted
+			if (atomicCounterIncrement(exp_emissionAttempts) < exp_toCreate)
+			{
+				atomicCounterIncrement(exp_aliveParticles);
+
+				exp_lifetimes[gid] = 1.0;
+				exp_positions[gid] = rocketDeathPos[ind - 1];
+				exp_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
+											snoise(vec2(gid+3,gid+4*gid)),
+											snoise(vec2(gid+7,gid+8*gid))) * 0.01;
+				exp_colors[gid] = vec4(0.1,0.1,0.9,1);
+			}
+			else
+			{
+				atomicCounterDecrement(rdpLast);
+			}
+		}
+	}
+}

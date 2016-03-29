@@ -3,31 +3,59 @@
 #extension GL_ARB_shader_storage_buffer_object : enable
 #extension GL_ARB_compute_variable_group_size : enable
 
-layout(binding = 0, offset = 0) uniform atomic_uint explosion_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint explosion_emissionAttempts;
+////////////////////////////////////////////////////////////////////////////////
+// RESOURCES
+////////////////////////////////////////////////////////////////////////////////
 
-layout(std430, binding = 2) buffer Explosion_lifetimes
+layout(binding = 0, offset = 0) uniform atomic_uint res_exp_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint res_exp_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint exp_aliveParticles;
+layout(binding = 3, offset = 0) uniform atomic_uint exp_emissionAttempts;
+
+layout(std430, binding = 4) buffer Exp_velocities
 {
-	float explosion_lifetimes[];
+	vec4 exp_velocities[];
 };
 
-layout(std430, binding = 3) buffer Explosion_positions
+layout(std430, binding = 5) buffer Res_exp_lifetimes
 {
-	vec4 explosion_positions[];
+	float res_exp_lifetimes[];
 };
 
-layout(std430, binding = 4) buffer Explosion_velocities
+layout(std430, binding = 6) buffer Res_exp_positions
 {
-	vec4 explosion_velocities[];
+	vec4 res_exp_positions[];
 };
 
-layout(std430, binding = 5) buffer Explosion_colors
+layout(std430, binding = 7) buffer Res_exp_colors
 {
-	vec4 explosion_colors[];
+	vec4 res_exp_colors[];
+};
+
+layout(std430, binding = 8) buffer Exp_colors
+{
+	vec4 exp_colors[];
+};
+
+layout(std430, binding = 9) buffer Res_exp_velocities
+{
+	vec4 res_exp_velocities[];
+};
+
+layout(std430, binding = 10) buffer Exp_lifetimes
+{
+	float exp_lifetimes[];
+};
+
+layout(std430, binding = 11) buffer Exp_positions
+{
+	vec4 exp_positions[];
 };
 
 layout(local_size_variable) in;
 
+uniform float res_exp_maxParticles;
+uniform float res_exp_toCreate;
 
 uint gid = gl_GlobalInvocationID.x;
 //
@@ -110,17 +138,17 @@ float randInRange(vec2 seed, float minVal, float maxVal)
 {
 	uint gid = gl_GlobalInvocationID.x;
 
-	if (explosion_lifetimes[gid] <= 0)
+	if (exp_lifetimes[gid] <= 0)
 		return;
 
-	explosion_lifetimes[gid] -= 0.001;
+	exp_lifetimes[gid] -= 0.01;
 
-	if (explosion_lifetimes[gid] <= 0)
+	if (exp_lifetimes[gid] <= 0)
 	{
-		atomicCounterDecrement(explosion_aliveParticles);
+		atomicCounterDecrement(exp_aliveParticles);
 		return;
 	}
 
-	explosion_positions[gid].xyz += explosion_velocities[gid].xyz;
-	explosion_positions[gid].a = 1;
+	exp_positions[gid].xyz += exp_velocities[gid].xyz;
+	exp_positions[gid].a = 1;
 }

@@ -4,6 +4,13 @@
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 
+struct reservedResources
+{
+	std::string psystemName;
+	bufferUmap reservedBufferHandles;
+	atomicUmap reservedAtomicHandles;
+	uniformUmap reservedUniformHandles;
+};
 
 class ParticleSystemLoader
 {
@@ -13,25 +20,39 @@ public:
 	static ParticleSystem loadParticleSystem(TiXmlElement* psystemElement);
 
 private:
-	// global resources
-	static bufferUmap bufferHandles;
-	static atomicUmap atomicHandles;
-	static uniformUmap uniformHandles;
+	// global resource handles
+	static bufferUmap globalBufferHandles;
+	static atomicUmap globalAtomicHandles;
+	static uniformUmap globalUniformHandles;
 
 	// global resource loading functions
-	static bool loadBuffers(TiXmlElement* buffers);
-	static bool loadAtomics(TiXmlElement* atomics);
-	static bool loadUniforms(TiXmlElement* uniforms);
-	static void loadProgramResources(TiXmlElement* resources, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
+	static bool loadGlobalBuffers(TiXmlElement* buffers);
+	static bool loadGlobalAtomics(TiXmlElement* atomics);
+	static bool loadGlobalUniforms(TiXmlElement* uniforms);
+	static void loadGlobalProgramResources(TiXmlElement* resources, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
+
+
+
+	// reserved resource names
+	static std::vector<bufferInfo> reservedBufferInfo;
+	static std::vector<atomicInfo> reservedAtomicInfo;
+	static std::vector<uniformInfo> reservedUniformInfo;
+
+	// reserved resource loading functions
+	static bool collectReservedResourceInfo();
+	static bool loadReservedPSResources(reservedResources &rr);
+	static void loadReservedProgramResources(reservedResources &rr, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
+
+
 
 	// shader program loading functions
-	static bool loadComputeProgram(TiXmlElement* glpElement, ComputeProgram &glp);
+	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* glpElement, ComputeProgram &glp);
 	static bool loadRenderer(TiXmlElement* glpElement, RendererProgram &rp);
 
 	// project loading utility functions
 	static bool compileShaderFiles(	GLuint shaderID, std::string header, std::string reservedFunctions,
 									std::vector<std::string> filePaths, bool dumpToFile = false);
-	static std::string generateHeader(atomicUmap glpAtomicHandles, bufferUmap glpBufferHandles, uniformUmap glpUniforms);
+	static std::string generateHeader(atomicUmap &glpAtomicHandles, bufferUmap &glpBufferHandles, uniformUmap &glpUniforms);
 	static std::string fileToString(std::string filePath);
 	static void printShaderLog(GLuint shader);
 	static void printProgramLog(GLuint program);

@@ -8,18 +8,23 @@ struct bufferInfo
 	GLuint id;
 	GLuint elements;
 	std::string type;
+	std::string name;
+	GLuint binding;
 };
 
 struct atomicInfo
 {
 	GLuint id;
 	GLuint initialValue;
+	std::string name;
+	GLuint binding;
 };
 
 struct uniformInfo
 {
 	GLfloat value;
 	std::string type;
+	std::string name;
 };
 
 using bufferUmap = std::unordered_map<std::string, bufferInfo>;

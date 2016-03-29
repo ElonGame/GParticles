@@ -3,33 +3,67 @@
 #extension GL_ARB_shader_storage_buffer_object : enable
 #extension GL_ARB_compute_variable_group_size : enable
 
-layout(binding = 0, offset = 0) uniform atomic_uint explosion_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint explosion_emissionAttempts;
+////////////////////////////////////////////////////////////////////////////////
+// RESOURCES
+////////////////////////////////////////////////////////////////////////////////
 
-layout(std430, binding = 2) buffer Explosion_lifetimes
+layout(binding = 0, offset = 0) uniform atomic_uint res_exp_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint res_exp_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint exp_aliveParticles;
+layout(binding = 3, offset = 0) uniform atomic_uint exp_emissionAttempts;
+layout(binding = 4, offset = 0) uniform atomic_uint rdpLast;
+
+layout(std430, binding = 5) buffer Exp_velocities
 {
-	float explosion_lifetimes[];
+	vec4 exp_velocities[];
 };
 
-layout(std430, binding = 3) buffer Explosion_positions
+layout(std430, binding = 6) buffer Res_exp_lifetimes
 {
-	vec4 explosion_positions[];
+	float res_exp_lifetimes[];
 };
 
-layout(std430, binding = 4) buffer Explosion_velocities
+layout(std430, binding = 7) buffer Res_exp_positions
 {
-	vec4 explosion_velocities[];
+	vec4 res_exp_positions[];
 };
 
-layout(std430, binding = 5) buffer Explosion_colors
+layout(std430, binding = 8) buffer Res_exp_colors
 {
-	vec4 explosion_colors[];
+	vec4 res_exp_colors[];
+};
+
+layout(std430, binding = 9) buffer Exp_colors
+{
+	vec4 exp_colors[];
+};
+
+layout(std430, binding = 10) buffer RocketDeathPos
+{
+	vec4 rocketDeathPos[];
+};
+
+layout(std430, binding = 11) buffer Res_exp_velocities
+{
+	vec4 res_exp_velocities[];
+};
+
+layout(std430, binding = 12) buffer Exp_lifetimes
+{
+	float exp_lifetimes[];
+};
+
+layout(std430, binding = 13) buffer Exp_positions
+{
+	vec4 exp_positions[];
 };
 
 layout(local_size_variable) in;
 
-uniform float explosion_maxParticles;
-uniform float explosion_toCreate;
+uniform float res_exp_maxParticles;
+uniform float res_exp_toCreate;
+uniform float exp_toCreate;
+uniform float exp_maxParticles;
 
 uint gid = gl_GlobalInvocationID.x;
 //
@@ -108,100 +142,38 @@ float randInRange(vec2 seed, float minVal, float maxVal)
 	float val = snoise(seed);
 	float percentage = val * 0.5 + 0.5;
 	return mix(minVal, maxVal, percentage);
-}// TODO
-// ccrr function
-
-////////////////////////////////////////////////////////////////////////////////
-// values passed in as uniforms
-float radius = 1.0;
-float height = 1.0;
-bool coneBaseIsOrigin = true;
-bool positionsInVolume = false;
-
-void conePositionGenerator()
+}void main()
 {
-	// compute random y in range [0, height]
-	float y = randInRange(vec2(gid, gid * gid), 0, 1);
+	uint gid = gl_GlobalInvocationID.x;
 
-	// compute particle horizontal distance from cone axis
-	float newRadius = (radius * y) / height;
-	float dist = newRadius;
-	if (positionsInVolume)
-	{
-		dist = randInRange(vec2(gid + 3 , gid + 4 * gid), 0, newRadius);
-	}
-
-	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(vec2(gid+7,gid+8*gid) * 0.01, 0, 360);
-
-	// calculate corresponding x and z polar coordinates
-	float x = dist * sin(angle);
-	float z = dist * cos(angle);
-
-	// compute cone orientation
-	y = (coneBaseIsOrigin) ? height - y : y;
-
-	explosion_positions[gid] = vec4(x, y, z, 1);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-bool computeFromOrigin = false;
-bool randX = false;
-bool randY = false;
-bool randZ = false;
-float intensity = 0.01;
-bool randIntensity = false;
-float maxInt = 0.01;
-float minInt = 0;
-
-void velocityGenerator()
-{
-	vec3 vel = vec3(0);
-
-	// DIRECTION
-	// check if velocity should be computed in regards of psystem origin
-	if (computeFromOrigin) vel = explosion_positions[gid].xyz;
-
-	// check if any direction should be randomized
-	if (randX) vel.x = snoise(vec2(gid,gid*gid));
-	if (randY) vel.y = snoise(vec2(gid+3,gid+4*gid));
-	if (randZ) vel.z = snoise(vec2(gid+7,gid+8*gid) * 4);
-
-	// avoid normalizing a zero vector
-	if (vel != vec3(0)) vel = normalize(vel);
-
-	// INTENSITY
-	// check if intesity should be randomized
-	if (randIntensity)
-		intensity = randInRange(vec2(gid*gid,gid*gid), minInt, maxInt);
-
-	explosion_velocities[gid].xyz = vel * intensity;
-}
-
-void onEmission()
-{
-	explosion_lifetimes[gid] = 1.0;
-	/*explosion_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
-											snoise(vec2(gid+3,gid+4*gid)),
-											snoise(vec2(gid+7,gid+8*gid))) * 0.01;*/
-	conePositionGenerator();
-	velocityGenerator();
-	explosion_colors[gid] = vec4(0.1,0.9,0.1,1);
-}
-
-void main()
-{
 	/*LIMITERS*/
-	if (atomicCounter(explosion_aliveParticles) >= explosion_maxParticles)
+	// if emission would not exceed particle limit
+	if (atomicCounter(exp_aliveParticles) >= exp_maxParticles)
 		return;
 
-	if (explosion_lifetimes[gid] <= 0)
+	// if particle not alive
+	if (exp_lifetimes[gid] <= 0)
 	{
-		if (atomicCounterIncrement(explosion_emissionAttempts) < explosion_toCreate)
+		// if there are explosions to be processed
+		uint ind = atomicCounter(rdpLast);
+		if (ind > 0)
 		{
-			atomicCounterIncrement(explosion_aliveParticles);
+			// if there are explosion particles to be emitted
+			if (atomicCounterIncrement(exp_emissionAttempts) < exp_toCreate)
+			{
+				atomicCounterIncrement(exp_aliveParticles);
 
-			onEmission();
+				exp_lifetimes[gid] = 1.0;
+				exp_positions[gid] = rocketDeathPos[ind - 1];
+				exp_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
+											snoise(vec2(gid+3,gid+4*gid)),
+											snoise(vec2(gid+7,gid+8*gid))) * 0.01;
+				exp_colors[gid] = vec4(0.1,0.1,0.9,1);
+			}
+			else
+			{
+				atomicCounterDecrement(rdpLast);
+			}
 		}
 	}
 }

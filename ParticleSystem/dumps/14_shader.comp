@@ -1,14 +1,14 @@
 #version 430
 
-in float explosion_lifetimesV;
+in float exp_lifetimesV;
 in vec4 colorsV;
 
 out vec4 LFragment;
 
 void main()
 {
-	if (explosion_lifetimesV <= 0)
+	if (exp_lifetimesV <= 0)
 		discard;
 
-	LFragment = colorsV;
+	LFragment = vec4(colorsV.xyz, exp_lifetimesV);
 }

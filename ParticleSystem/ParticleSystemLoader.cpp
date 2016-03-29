@@ -1,14 +1,21 @@
 #include "ParticleSystemLoader.h"
 
 
-bufferUmap ParticleSystemLoader::bufferHandles;
-atomicUmap ParticleSystemLoader::atomicHandles;
-uniformUmap ParticleSystemLoader::uniformHandles;
+bufferUmap ParticleSystemLoader::globalBufferHandles;
+atomicUmap ParticleSystemLoader::globalAtomicHandles;
+uniformUmap ParticleSystemLoader::globalUniformHandles;
+
+std::vector<bufferInfo> ParticleSystemLoader::reservedBufferInfo;
+std::vector<atomicInfo> ParticleSystemLoader::reservedAtomicInfo;
+std::vector<uniformInfo> ParticleSystemLoader::reservedUniformInfo;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer)
 {
+	collectReservedResourceInfo();
+
 	// open file and get first element handle
 	TiXmlDocument doc(filePath);
 	if (!doc.LoadFile())
@@ -21,21 +28,21 @@ bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<Particl
 	TiXmlElement* projectElement = docHandle.FirstChildElement("project").ToElement();
 	
 
-	// initialize project resources
+	// load global project resources
 	TiXmlElement* resourcesElement = projectElement->FirstChildElement("resources");
-	if (!loadBuffers(resourcesElement->FirstChildElement("buffers")))
+	if (!loadGlobalBuffers(resourcesElement->FirstChildElement("buffers")))
 	{
 		printf("Unable to initialize buffers!\n");
 		return false;
 	}
 
-	if (!loadAtomics(resourcesElement->FirstChildElement("atomics")))
+	if (!loadGlobalAtomics(resourcesElement->FirstChildElement("atomics")))
 	{
 		printf("Unable to initialize atomics!\n");
 		return false;
 	}
 
-	if (!loadUniforms(resourcesElement->FirstChildElement("uniforms")))
+	if (!loadGlobalUniforms(resourcesElement->FirstChildElement("uniforms")))
 	{
 		printf("Unable to initialize uniforms!\n");
 		return false;
@@ -47,6 +54,7 @@ bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<Particl
 	for (; psystemElement; psystemElement = psystemElement->NextSiblingElement())
 	{
 		psContainer.push_back(loadParticleSystem(psystemElement));
+		psContainer.back().printContents();
 	}
 }
 
@@ -55,9 +63,18 @@ bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<Particl
 ///////////////////////////////////////////////////////////////////////////////
 ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemElement)
 {
+	reservedResources rr;
+	psystemElement->QueryStringAttribute("name", &rr.psystemName);
+
+	// load reserved resources
+	loadReservedPSResources(rr);
+
+
+	TiXmlElement* program;
 	// load emitter
 	ComputeProgram emitter;
-	if (!loadComputeProgram(psystemElement->FirstChildElement("emitter"), emitter))
+	program = psystemElement->FirstChildElement("emitter");
+	if (!loadComputeProgram(rr, program, emitter))
 	{
 		printf("Unable to load emitter!\n");
 	}
@@ -65,7 +82,8 @@ ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemEle
 
 	// load updater
 	ComputeProgram updater;
-	if (!loadComputeProgram(psystemElement->FirstChildElement("updater"), updater))
+	program = psystemElement->FirstChildElement("updater");
+	if (!loadComputeProgram(rr, program, updater))
 	{
 		printf("Unable to load updater!\n");
 	}
@@ -78,7 +96,7 @@ ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemEle
 		printf("Unable to load renderer!\n");
 	}
 
-	// TODO: complete transform instead of only the position
+	// transform
 	glm::mat4 model = glm::mat4();
 	glm::vec3 pos = glm::vec3();
 	TiXmlElement* transElement = psystemElement->FirstChildElement("position");
@@ -122,6 +140,7 @@ ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemEle
 		}
 	}
 
+	// TODO: add more psystem porperties
 
 
 	return ParticleSystem(emitter, updater, renderer, model, lifetime, looping);
@@ -130,7 +149,7 @@ ParticleSystem ParticleSystemLoader::loadParticleSystem(TiXmlElement* psystemEle
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ParticleSystemLoader::loadBuffers(TiXmlElement * buffers)
+bool ParticleSystemLoader::loadGlobalBuffers(TiXmlElement * buffers)
 {
 	if (!buffers)
 	{
@@ -155,12 +174,12 @@ bool ParticleSystemLoader::loadBuffers(TiXmlElement * buffers)
 		std::string bName;
 		buffer->QueryStringAttribute("name", &bName);
 
-		bufferHandles.emplace(bName, bi);
+		globalBufferHandles.emplace(bName, bi);
 
 		// initialize buffer
 		int bSize = bi.elements * ((bi.type == "vec4") ? 4 : 1);
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferHandles.at(bName).id);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalBufferHandles.at(bName).id);
 		glBufferData(	GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat),
 						NULL, GL_DYNAMIC_DRAW);
 
@@ -170,7 +189,7 @@ bool ParticleSystemLoader::loadBuffers(TiXmlElement * buffers)
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		std::cout << "loaded buffer " << bName << " with number " << bufferHandles.at(bName).id
+		std::cout << "loaded buffer " << bName << " with number " << globalBufferHandles.at(bName).id
 			<< ", " << bi.elements << " elements and size " << bSize << std::endl; // DUMP
 	}
 
@@ -180,7 +199,7 @@ bool ParticleSystemLoader::loadBuffers(TiXmlElement * buffers)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ParticleSystemLoader::loadAtomics(TiXmlElement * atomics)
+bool ParticleSystemLoader::loadGlobalAtomics(TiXmlElement * atomics)
 {
 	if (!atomics)
 	{
@@ -201,7 +220,7 @@ bool ParticleSystemLoader::loadAtomics(TiXmlElement * atomics)
 		std::string atmName;
 		atomic->QueryStringAttribute("name", &atmName);
 
-		atomicHandles.emplace(atmName, ai);
+		globalAtomicHandles.emplace(atmName, ai);
 
 		// initialize atomic buffer
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ai.id);
@@ -218,7 +237,7 @@ bool ParticleSystemLoader::loadAtomics(TiXmlElement * atomics)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ParticleSystemLoader::loadUniforms(TiXmlElement * uniforms)
+bool ParticleSystemLoader::loadGlobalUniforms(TiXmlElement * uniforms)
 {
 	if (!uniforms)
 	{
@@ -238,7 +257,7 @@ bool ParticleSystemLoader::loadUniforms(TiXmlElement * uniforms)
 		std::string uName;
 		uniform->QueryStringAttribute("name", &uName);
 
-		uniformHandles.emplace(uName, ui);
+		globalUniformHandles.emplace(uName, ui);
 
 		std::cout << "loaded uniform " << uName<< " of type " <<
 			ui.type << " and value " << ui.value << std::endl;
@@ -250,7 +269,154 @@ bool ParticleSystemLoader::loadUniforms(TiXmlElement * uniforms)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ParticleSystemLoader::loadProgramResources(TiXmlElement* resources, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset)
+bool ParticleSystemLoader::collectReservedResourceInfo()
+{
+	// open file and get resources element handle
+	TiXmlDocument doc("reserved/reservedResources.xml");
+	if (!doc.LoadFile())
+	{
+		printf("Failed to load file \"%s\"\n", doc);
+		return false;
+	}
+
+	TiXmlHandle docHandle(&doc);
+	TiXmlElement* resourcesElement = docHandle.FirstChildElement("resources").ToElement();
+
+	// collect buffer name, elements and type
+	TiXmlElement* buffer = resourcesElement->FirstChildElement("buffers")->FirstChildElement();
+	for (; buffer; buffer = buffer->NextSiblingElement())
+	{
+		bufferInfo bi;
+		buffer->QueryStringAttribute("name", &bi.name);
+		buffer->QueryUnsignedAttribute("elements", &bi.elements);
+		buffer->QueryStringAttribute("type", &bi.type);
+
+		reservedBufferInfo.push_back(bi);
+
+		std::cout << "RESERVED: collected buffer " << bi.name << ", with " << bi.elements << " elements and type " << bi.type << std::endl;
+	}
+
+	// collect atomic name and initialValue
+	TiXmlElement* atomic = resourcesElement->FirstChildElement("atomics")->FirstChildElement();
+	for (; atomic; atomic = atomic->NextSiblingElement())
+	{
+		atomicInfo ai;
+		atomic->QueryStringAttribute("name", &ai.name);
+		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
+
+		reservedAtomicInfo.push_back(ai);
+
+		std::cout << "RESERVED: collected atomic " << ai.name << " with initial value " << ai.initialValue << std::endl;
+	}
+
+	// collect uniform name, type and initial value
+	TiXmlElement* uniform = resourcesElement->FirstChildElement("uniforms")->FirstChildElement();
+	for (; uniform; uniform = uniform->NextSiblingElement())
+	{
+		uniformInfo ui;
+		uniform->QueryStringAttribute("name", &ui.name);
+		uniform->QueryStringAttribute("type", &ui.type);
+		uniform->QueryFloatAttribute("value", &ui.value);
+
+		reservedUniformInfo.push_back(ui);
+
+		std::cout << "RESERVED: collected uniform " << ui.name << ", with initial value " << ui.value << " and type " << ui.type << std::endl;
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+bool ParticleSystemLoader::loadReservedPSResources(reservedResources &rr)
+{
+	// load reserved atomics
+	for each (auto resAtmInfo in reservedAtomicInfo)
+	{
+		atomicInfo ai = resAtmInfo;
+
+		glGenBuffers(1, &ai.id);
+		std::string atmName = "res_" + rr.psystemName + ai.name;
+		
+		rr.reservedAtomicHandles.emplace(atmName, ai);
+
+		// initialize atomic buffer
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ai.id);
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ai.initialValue);
+
+		std::cout << "RESERVED: initalized atomic " << atmName << " with number " <<
+			ai.id << " and starting value " << ai.initialValue << std::endl;
+	}
+
+	// load reserved buffers
+	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
+
+	for each (auto resBufInfo in reservedBufferInfo)
+	{
+		bufferInfo bi = resBufInfo;
+
+		glGenBuffers(1, &bi.id);
+		std::string bName = "res_" + rr.psystemName + bi.name;
+
+		rr.reservedBufferHandles.emplace(bName, bi);
+
+		// initialize buffer
+		int bSize = bi.elements * ((bi.type == "vec4") ? 4 : 1);
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, bi.id);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
+
+		// fill buffer with default values
+		GLfloat *values = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bSize * sizeof(GLfloat), bufMask);
+		for (int i = 0; i < bSize; values[i++] = 0);
+
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+		std::cout << "RESERVED: initialized buffer " << bName << " with number " << bi.id
+			<< ", " << bi.elements << " elements and size " << bSize << std::endl; // DUMP
+	}
+
+	// load reserved uniforms
+	for each (auto resUniInfo in reservedUniformInfo)
+	{
+		uniformInfo ui = resUniInfo;
+
+		std::string uniName = "res_" + rr.psystemName + ui.name;
+
+		rr.reservedUniformHandles.emplace(uniName, ui);
+
+		std::cout << "RESERVED: initialized uniform " << uniName << " of type " <<
+			ui.type << " and value " << ui.value << std::endl;
+	}
+
+	return true;
+}
+
+void ParticleSystemLoader::loadReservedProgramResources(reservedResources &rr, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint>& aToReset)
+{
+	// atomics
+	for each (auto reservedAtm in rr.reservedAtomicHandles)
+	{
+		aum.emplace(reservedAtm.first, reservedAtm.second);
+	}
+
+	// buffers
+	for each (auto reservedBuf in rr.reservedBufferHandles)
+	{
+		bum.emplace(reservedBuf.first, reservedBuf.second);
+	}
+
+	// buffers
+	for each (auto reservedUni in rr.reservedUniformHandles)
+	{
+		uum.emplace(reservedUni.first, reservedUni.second);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void ParticleSystemLoader::loadGlobalProgramResources(TiXmlElement* resources, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset)
 {
 	// atomics
 	std::string atmName;
@@ -258,7 +424,7 @@ void ParticleSystemLoader::loadProgramResources(TiXmlElement* resources, atomicU
 	for (; atomic; atomic = atomic->NextSiblingElement())
 	{
 		atomic->QueryStringAttribute("name", &atmName);
-		aum.emplace(atmName, atomicHandles.at(atmName));
+		aum.emplace(atmName, globalAtomicHandles.at(atmName));
 
 		std::string resetValue;
 		if (atomic->QueryStringAttribute("reset", &resetValue) == TIXML_SUCCESS)
@@ -275,7 +441,7 @@ void ParticleSystemLoader::loadProgramResources(TiXmlElement* resources, atomicU
 	{
 		buffer->QueryStringAttribute("name", &bName);
 
-		bum.emplace(bName, bufferHandles.at(bName));
+		bum.emplace(bName, globalBufferHandles.at(bName));
 	}
 
 	// uniforms
@@ -285,14 +451,14 @@ void ParticleSystemLoader::loadProgramResources(TiXmlElement* resources, atomicU
 	{
 		uniform->QueryStringAttribute("name", &uName);
 
-		uum.emplace(uName, uniformHandles.at(uName));
+		uum.emplace(uName, globalUniformHandles.at(uName));
 	}
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool ParticleSystemLoader::loadComputeProgram(TiXmlElement* glpElement, ComputeProgram &glp)
+bool ParticleSystemLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* glpElement, ComputeProgram &glp)
 {
 	// parse and store program resource handles for later binding
 	TiXmlElement* resourcesElement = glpElement->FirstChildElement("resources");
@@ -301,7 +467,8 @@ bool ParticleSystemLoader::loadComputeProgram(TiXmlElement* glpElement, ComputeP
 	uniformUmap cpUniforms;
 	std::vector<GLuint> cpAtmHandlesToReset;
 
-	loadProgramResources(resourcesElement, cpAtomicHandles, cpBufferHandles, cpUniforms, cpAtmHandlesToReset);
+	loadReservedProgramResources(rr, cpAtomicHandles, cpBufferHandles, cpUniforms, cpAtmHandlesToReset);
+	loadGlobalProgramResources(resourcesElement, cpAtomicHandles, cpBufferHandles, cpUniforms, cpAtmHandlesToReset);
 
 
 	GLuint cpHandle = glCreateProgram();
@@ -340,16 +507,16 @@ bool ParticleSystemLoader::loadComputeProgram(TiXmlElement* glpElement, ComputeP
 	}
 
 	// create GLProgram, storing only the handles of buffers and atomics
-	std::vector<GLuint> cpAtmHandles;
+	std::vector<std::pair<GLuint, GLuint>> cpAtmHandles;
 	for each (auto atm in cpAtomicHandles)
 	{
-		cpAtmHandles.push_back(atm.second.id);
+		cpAtmHandles.push_back(std::make_pair(atm.second.id, atm.second.binding));
 	}
 
-	std::vector<GLuint> cpBHandles;
+	std::vector<std::pair<GLuint, GLuint>> cpBHandles;
 	for each (auto b in cpBufferHandles)
 	{
-		cpBHandles.push_back(b.second.id);
+		cpBHandles.push_back(std::make_pair(b.second.id, b.second.binding));
 	}
 
 	glp = ComputeProgram(cpHandle, cpAtmHandles, cpAtmHandlesToReset, cpBHandles, cpUniforms);
@@ -369,7 +536,7 @@ bool ParticleSystemLoader::loadRenderer(TiXmlElement* glpElement, RendererProgra
 	uniformUmap rendUniforms;
 	std::vector<GLuint> rendAtmHandlesToReset;
 
-	loadProgramResources(resourcesElement, rendAtomicHandles, rendBufferHandles, rendUniforms, rendAtmHandlesToReset);
+	loadGlobalProgramResources(resourcesElement, rendAtomicHandles, rendBufferHandles, rendUniforms, rendAtmHandlesToReset);
 
 
 	GLuint rpHandle = glCreateProgram();
@@ -424,10 +591,10 @@ bool ParticleSystemLoader::loadRenderer(TiXmlElement* glpElement, RendererProgra
 	}
 
 	// get correct atomics
-	std::vector<GLuint> rendAtmHandles;
+	std::vector<std::pair<GLuint, GLuint>> rendAtmHandles;
 	for each (auto atm in rendAtomicHandles)
 	{
-		rendAtmHandles.push_back(atm.second.id);
+		rendAtmHandles.push_back(std::make_pair(atm.second.id, atm.second.binding));
 	}
 
 	// generate vertex array object
@@ -568,26 +735,31 @@ void ParticleSystemLoader::printProgramLog(GLuint program)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string ParticleSystemLoader::generateHeader(atomicUmap glpAtomicHandles, bufferUmap cpBufferHandles, uniformUmap cpUniforms)
+std::string ParticleSystemLoader::generateHeader(atomicUmap &glpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms)
 {
 	std::string res =	"#version 430\n"
 						"#extension GL_ARB_compute_shader : enable\n"
 						"#extension GL_ARB_shader_storage_buffer_object : enable\n"
-						"#extension GL_ARB_compute_variable_group_size : enable\n\n";
+						"#extension GL_ARB_compute_variable_group_size : enable\n\n"
+						"////////////////////////////////////////////////////////////////////////////////\n"
+						"// RESOURCES\n"
+						"////////////////////////////////////////////////////////////////////////////////\n\n";
 
 	int i = 0;
-	// TODO: reserved atomics
-	for each (auto atm in glpAtomicHandles)
+	for (auto &atm : glpAtomicHandles)
 	{
+		atm.second.binding = i;
+
 		res +=	"layout(binding = " + std::to_string(i++) +
 				", offset = 0) uniform atomic_uint " + atm.first +";\n";
 	}
 
 	res += "\n";
 
-	// TODO: reserved buffers
-	for each(auto buf in cpBufferHandles)
+	for (auto &buf : cpBufferHandles)
 	{
+		buf.second.binding = i;
+
 		std::string aux = buf.first;
 		aux[0] = toupper(aux[0]);
 
@@ -597,12 +769,15 @@ std::string ParticleSystemLoader::generateHeader(atomicUmap glpAtomicHandles, bu
 
 	res += "layout(local_size_variable) in;\n\n";
 
-	for each (auto uni in cpUniforms)
+	for (auto &uni : cpUniforms)
 	{
 		res += "uniform " + uni.second.type + " " + uni.first + ";\n";
 	}
 
+	// TODO: put this on reserved header
 	res += "\nuint gid = gl_GlobalInvocationID.x;\n";
+
+//	std::cout << res << std::endl;
 
 	return res;
 }

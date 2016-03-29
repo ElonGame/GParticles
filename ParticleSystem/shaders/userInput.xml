@@ -6,24 +6,39 @@
 			<buffer name="rocket_velocities" elements=512 type="vec4"/>
 			<buffer name="rocket_colors" elements=512 type="vec4"/>
 
-			<buffer name="explosion_lifetimes" elements=512 type="float"/>
+			<buffer name="rocketDeathPos" elements=512 type="vec4"/>
+
+			<buffer name="exp_lifetimes" elements=512 type="float"/>
+			<buffer name="exp_positions" elements=512 type="vec4"/>
+			<buffer name="exp_velocities" elements=512 type="vec4"/>
+			<buffer name="exp_colors" elements=512 type="vec4"/>
+
+			<!--buffer name="explosion_lifetimes" elements=512 type="float"/>
 			<buffer name="explosion_positions" elements=512 type="vec4"/>
 			<buffer name="explosion_velocities" elements=512 type="vec4"/>
-			<buffer name="explosion_colors" elements=512 type="vec4"/>
+			<buffer name="explosion_colors" elements=512 type="vec4"/-->
 		</buffers>
 		<atomics>
 			<atomic name="rocket_aliveParticles" value=0 />
 			<atomic name="rocket_emissionAttempts" value=0/>
 
-			<atomic name="explosion_aliveParticles" value=0 />
-			<atomic name="explosion_emissionAttempts" value=0/>
+			<atomic name="rdpLast" value=0/>
+
+			<atomic name="exp_aliveParticles" value=0 />
+			<atomic name="exp_emissionAttempts" value=0/>
+
+			<!--atomic name="explosion_aliveParticles" value=0 />
+			<atomic name="explosion_emissionAttempts" value=0/-->
 		</atomics>
 		<uniforms>
 			<uniform name="rocket_maxParticles" type="float" value=10 />
 			<uniform name="rocket_toCreate" type="float" value=1 />
 
-			<uniform name="explosion_maxParticles" type="float" value=512 />
-			<uniform name="explosion_toCreate" type="float" value=256 />
+			<uniform name="exp_maxParticles" type="float" value=512 />
+			<uniform name="exp_toCreate" type="float" value=5 />
+
+			<!--uniform name="explosion_maxParticles" type="float" value=512 />
+			<uniform name="explosion_toCreate" type="float" value=512 /-->
 		</uniforms>
 	</resources>
 
@@ -35,7 +50,7 @@
 		<!--> lifetime: unit: "sec", "millisec";
 						limit: number;
 						looping: "true", "false" <-->
-		<lifetime unit="sec" limit=3 />
+		<lifetime unit="sec" limit=60 />
 
 		<!--> ------------------------------------------------------------- <-->
 		<!--> GL PROGRAMS <-->
@@ -68,12 +83,14 @@
 				<atomics>
 					<atomic name="rocket_aliveParticles" />
 					<atomic name="rocket_emissionAttempts" />
+					<atomic name="rdpLast" />
 				</atomics>
 				<buffers>
 					<buffer name="rocket_lifetimes" />
 					<buffer name="rocketpositions" />
 					<buffer name="rocket_velocities" />
 					<buffer name="rocket_colors" />
+					<buffer name="rocketDeathPos" />
 				</buffers>
 				<uniforms>
 				</uniforms>
@@ -106,7 +123,88 @@
 		</renderer>
 	</psystem>
 
-	<psystem name="explosion">
+	<psystem name="exp">
+		<!--> position, rotation, scale: x: number y: number z: number <-->
+		<position x=0 y=0 z=-1 />
+		<rotation x=0 y=1 z=0 />
+		<scale x=1 y=1 z=1 />
+		<!--> lifetime: unit: "sec", "millisec";
+						limit: number;
+						looping: "true", "false" <-->
+		<lifetime unit="sec" limit=60 />
+
+		<!--> ------------------------------------------------------------- <-->
+		<!--> GL PROGRAMS <-->
+		<!--> ------------------------------------------------------------- <-->
+		<emitter>
+			<resources>
+				<atomics>
+					<atomic name="exp_aliveParticles" />
+					<atomic name="exp_emissionAttempts" reset="true" />
+					<atomic name="rdpLast" reset="true" />
+				</atomics>
+				<buffers>
+					<buffer name="exp_lifetimes" />
+					<buffer name="exp_positions" />
+					<buffer name="exp_velocities" />
+					<buffer name="exp_colors" />
+					<buffer name="rocketDeathPos" />
+				</buffers>
+				<uniforms>
+					<uniform name="exp_maxParticles" />
+					<uniform name="exp_toCreate" />
+				</uniforms>
+			</resources>
+
+			<files>
+				<file path="shaders/fireworks/expEmitter.comp" />
+			</files>
+		</emitter>
+
+		<updater>
+			<resources>
+				<atomics>
+					<atomic name="exp_aliveParticles" />
+					<atomic name="exp_emissionAttempts" />
+				</atomics>
+				<buffers>
+					<buffer name="exp_lifetimes" />
+					<buffer name="exp_positions" />
+					<buffer name="exp_velocities" />
+					<buffer name="exp_colors" />
+				</buffers>
+				<uniforms>
+				</uniforms>
+			</resources>
+
+			<files>
+				<file path="shaders/fireworks/expUpdater.comp" />
+			</files>
+		</updater>
+
+		<renderer>
+			<resources>
+				<atomics>
+				</atomics>
+				<buffers>
+					<buffer name="exp_lifetimes" />
+					<buffer name="exp_positions"/>
+					<buffer name="exp_colors" />
+				</buffers>
+				<uniforms>
+				</uniforms>
+			</resources>
+
+			<vertfiles>
+				<file path="shaders/fireworks/expVertex.vert" />
+			</vertfiles>
+			<fragfiles>
+				<file path="shaders/fireworks/expFrag.frag" />
+			</fragfiles>
+		</renderer>
+	</psystem>
+
+	<!--psystem name="explosion">
 		<position x=0 y=0 z=-3 />
 		<rotation x=0 y=0 z=1 angle=0/>
 		<scale x=1 y=1 z=1 />
@@ -177,6 +275,6 @@
 				<file path="shaders/fireworks/explosionFrag.frag" />
 			</fragfiles>
 		</renderer>
-	</psystem>
+	</psystem-->
 
 </project>

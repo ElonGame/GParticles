@@ -5,11 +5,13 @@ void main()
 	if (rocket_lifetimes[gid] <= 0)
 		return;
 
-	rocket_lifetimes[gid] -= 0.001;
+	rocket_lifetimes[gid] -= 0.025;
 
 	if (rocket_lifetimes[gid] <= 0)
 	{
 		atomicCounterDecrement(rocket_aliveParticles);
+		uint index = atomicCounterIncrement(rdpLast);
+		rocketDeathPos[index] = rocketpositions[gid];
 		return;
 	}
 

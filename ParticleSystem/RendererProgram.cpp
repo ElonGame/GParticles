@@ -50,7 +50,7 @@ void RendererProgram::printContents()
 	std::cout << "Atomics" << std::endl;
 	for each (auto b in atomicHandles)
 	{
-		std::cout << b << std::endl;
+		std::cout << b.first << std::endl;
 	}
 	for each (auto b in uniforms)
 	{
@@ -71,9 +71,9 @@ void RendererProgram::bindResources()
 	int bindingPoint = 0;
 
 	// bind atomics
-	for each (GLuint id in atomicHandles)
+	for each (auto idBind in atomicHandles)
 	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, bindingPoint++, id);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
 	}
 }
 
