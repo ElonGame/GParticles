@@ -14,8 +14,6 @@ std::vector<uniformInfo> ParticleSystemLoader::reservedUniformInfo;
 ///////////////////////////////////////////////////////////////////////////////
 bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer)
 {
-	collectReservedResourceInfo();
-
 	// open file and get first element handle
 	TiXmlDocument doc(filePath);
 	if (!doc.LoadFile())
@@ -27,6 +25,10 @@ bool ParticleSystemLoader::loadProject(std::string filePath, std::vector<Particl
 	TiXmlHandle docHandle(&doc);
 	TiXmlElement* projectElement = docHandle.FirstChildElement("project").ToElement();
 	
+
+	// collect reserved resource default info
+	collectReservedResourceInfo();
+
 
 	// load global project resources
 	TiXmlElement* resourcesElement = projectElement->FirstChildElement("resources");

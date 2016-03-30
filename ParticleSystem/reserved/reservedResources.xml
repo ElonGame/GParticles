@@ -1,5 +1,5 @@
 <!--
-	psystem max particles defines n elements
+	psystem max particles defines n elements, senão é usado o default aqui indicado
 -->
 <resources>
 	<buffers>
@@ -13,7 +13,7 @@
 		<atomic name="_emissionAttempts" value=0 />
 	</atomics>
 	<uniforms>
-		<uniform name="_maxParticles" type="float" value=10 />
-		<uniform name="_toCreate" type="float" value=1 />
+		<uniform name="_maxParticles" type="float" value=10 /> <!-- TEM QUE SER DEFINIDO O VALUE-->
+		<uniform name="_toCreate" type="float" value=1 /> <!-- TEM QUE SER DEFINIDO O VALUE-->
 	</uniforms>
 </resources>
