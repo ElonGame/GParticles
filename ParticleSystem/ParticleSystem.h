@@ -12,8 +12,8 @@ using ms = std::chrono::milliseconds;
 class ParticleSystem
 {
 public:
-	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, unsigned int lif, bool lp)
-		: emitter(e), updater(u), renderer(r), model(m), lifetime(ms(lif)), infinite(lif == 0), looping(lp) {};
+	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, GLuint nwg, unsigned int lif, bool lp)
+		: emitter(e), updater(u), renderer(r), model(m), numWorkGroups(nwg), lifetime(ms(lif)), infinite(lif == 0), looping(lp) {};
 	~ParticleSystem();
 
 	void execute(Camera c);
@@ -30,6 +30,8 @@ private:
 	RendererProgram renderer;
 
 	glm::mat4 model;
+
+	GLuint numWorkGroups;
 
 	// lifetime
 	bool infinite = true;

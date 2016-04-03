@@ -7,55 +7,46 @@
 // RESOURCES
 ////////////////////////////////////////////////////////////////////////////////
 
-layout(binding = 0, offset = 0) uniform atomic_uint res_exp_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint res_exp_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint exp_aliveParticles;
-layout(binding = 3, offset = 0) uniform atomic_uint exp_emissionAttempts;
+layout(binding = 0, offset = 0) uniform atomic_uint exp_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint exp_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint rdpLast;
 
-layout(std430, binding = 4) buffer Exp_velocities
-{
-	vec4 exp_velocities[];
-};
-
-layout(std430, binding = 5) buffer Res_exp_lifetimes
-{
-	float res_exp_lifetimes[];
-};
-
-layout(std430, binding = 6) buffer Res_exp_positions
-{
-	vec4 res_exp_positions[];
-};
-
-layout(std430, binding = 7) buffer Res_exp_colors
-{
-	vec4 res_exp_colors[];
-};
-
-layout(std430, binding = 8) buffer Exp_colors
-{
-	vec4 exp_colors[];
-};
-
-layout(std430, binding = 9) buffer Res_exp_velocities
-{
-	vec4 res_exp_velocities[];
-};
-
-layout(std430, binding = 10) buffer Exp_lifetimes
+layout(std430, binding = 3) buffer Exp_lifetimes
 {
 	float exp_lifetimes[];
 };
 
-layout(std430, binding = 11) buffer Exp_positions
+layout(std430, binding = 4) buffer RdpActive
+{
+	float rdpActive[];
+};
+
+layout(std430, binding = 5) buffer Exp_positions
 {
 	vec4 exp_positions[];
 };
 
+layout(std430, binding = 6) buffer Exp_velocities
+{
+	vec4 exp_velocities[];
+};
+
+layout(std430, binding = 7) buffer Exp_colors
+{
+	vec4 exp_colors[];
+};
+
+layout(std430, binding = 8) buffer RdpPos
+{
+	vec4 rdpPos[];
+};
+
 layout(local_size_variable) in;
 
-uniform float res_exp_maxParticles;
-uniform float res_exp_toCreate;
+uniform float rdpSize;
+uniform float exp_maxParticles;
+uniform float exp_toCreate;
+uniform float rdpCreate;
 
 uint gid = gl_GlobalInvocationID.x;
 //
@@ -146,6 +137,8 @@ float randInRange(vec2 seed, float minVal, float maxVal)
 	if (exp_lifetimes[gid] <= 0)
 	{
 		atomicCounterDecrement(exp_aliveParticles);
+			rdpActive[gid] = 0;
+		
 		return;
 	}
 

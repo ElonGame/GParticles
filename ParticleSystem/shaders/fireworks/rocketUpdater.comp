@@ -10,11 +10,20 @@ void main()
 	if (rocket_lifetimes[gid] <= 0)
 	{
 		atomicCounterDecrement(rocket_aliveParticles);
-		uint index = atomicCounterIncrement(rdpLast);
-		rocketDeathPos[index] = rocketpositions[gid];
+
+		int created = 0;
+		int i = int(atomicCounterIncrement(rdpLast) * rdpCreate);
+		for (; i < rdpSize && created < rdpCreate; i++)
+		{
+			if (rdpActive[i] == 0)
+			{
+				rdpPos[i] = rocket_positions[gid];
+				rdpActive[i] = 1;
+				created++;
+			}
+		}
 		return;
 	}
 
-	rocketpositions[gid].xyz += rocket_velocities[gid].xyz;
-	rocketpositions[gid].a = 1;
+	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
 }

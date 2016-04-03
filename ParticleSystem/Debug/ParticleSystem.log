@@ -1,4 +1,1 @@
-﻿  main.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(54): warning C4101: 'mouseX': unreferenced local variable
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(54): warning C4101: 'mouseY': unreferenced local variable
-  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe
+﻿  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

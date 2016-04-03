@@ -10,6 +10,8 @@ void main()
 	if (exp_lifetimes[gid] <= 0)
 	{
 		atomicCounterDecrement(exp_aliveParticles);
+			rdpActive[gid] = 0;
+		
 		return;
 	}
 

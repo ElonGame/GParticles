@@ -9,12 +9,13 @@
 class ComputeProgram
 {
 public:
-	ComputeProgram(GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const std::vector<GLuint> &ahtr, const std::vector<std::pair<GLuint, GLuint>> &bh, const uniformUmap &u)
-		: programhandle(ph), atomicHandles(ah), atomicsToReset(ahtr), bufferHandles(bh), uniforms(u) {};
+	ComputeProgram(	GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const std::vector<GLuint> &ahtr,
+					const std::vector<std::pair<GLuint, GLuint>> &bh, const uniformUmap &u, GLuint &mp)
+		: programhandle(ph), atomicHandles(ah), atomicsToReset(ahtr), bufferHandles(bh), uniforms(u), maxParticles(mp) {};
 	ComputeProgram();
 	~ComputeProgram();
 
-	void execute();
+	void execute(GLuint numWorkGroups);
 	void printContents();
 private:
 	GLuint programhandle;
@@ -22,6 +23,8 @@ private:
 	std::vector<GLuint> atomicsToReset;
 	uniformUmap uniforms;
 	std::vector<std::pair<GLuint, GLuint>> bufferHandles;
+
+	GLuint maxParticles;
 
 	void bindResources();
 	void setUniforms();

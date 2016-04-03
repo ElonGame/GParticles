@@ -7,63 +7,46 @@
 // RESOURCES
 ////////////////////////////////////////////////////////////////////////////////
 
-layout(binding = 0, offset = 0) uniform atomic_uint res_exp_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint res_exp_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint exp_aliveParticles;
-layout(binding = 3, offset = 0) uniform atomic_uint exp_emissionAttempts;
-layout(binding = 4, offset = 0) uniform atomic_uint rdpLast;
+layout(binding = 0, offset = 0) uniform atomic_uint exp_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint exp_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint rdpLast;
 
-layout(std430, binding = 5) buffer Exp_velocities
-{
-	vec4 exp_velocities[];
-};
-
-layout(std430, binding = 6) buffer Res_exp_lifetimes
-{
-	float res_exp_lifetimes[];
-};
-
-layout(std430, binding = 7) buffer Res_exp_positions
-{
-	vec4 res_exp_positions[];
-};
-
-layout(std430, binding = 8) buffer Res_exp_colors
-{
-	vec4 res_exp_colors[];
-};
-
-layout(std430, binding = 9) buffer Exp_colors
-{
-	vec4 exp_colors[];
-};
-
-layout(std430, binding = 10) buffer RocketDeathPos
-{
-	vec4 rocketDeathPos[];
-};
-
-layout(std430, binding = 11) buffer Res_exp_velocities
-{
-	vec4 res_exp_velocities[];
-};
-
-layout(std430, binding = 12) buffer Exp_lifetimes
+layout(std430, binding = 3) buffer Exp_lifetimes
 {
 	float exp_lifetimes[];
 };
 
-layout(std430, binding = 13) buffer Exp_positions
+layout(std430, binding = 4) buffer RdpActive
+{
+	float rdpActive[];
+};
+
+layout(std430, binding = 5) buffer Exp_positions
 {
 	vec4 exp_positions[];
 };
 
+layout(std430, binding = 6) buffer Exp_velocities
+{
+	vec4 exp_velocities[];
+};
+
+layout(std430, binding = 7) buffer Exp_colors
+{
+	vec4 exp_colors[];
+};
+
+layout(std430, binding = 8) buffer RdpPos
+{
+	vec4 rdpPos[];
+};
+
 layout(local_size_variable) in;
 
-uniform float res_exp_maxParticles;
-uniform float res_exp_toCreate;
-uniform float exp_toCreate;
+uniform float rdpSize;
 uniform float exp_maxParticles;
+uniform float exp_toCreate;
+uniform float rdpCreate;
 
 uint gid = gl_GlobalInvocationID.x;
 //
@@ -142,7 +125,17 @@ float randInRange(vec2 seed, float minVal, float maxVal)
 	float val = snoise(seed);
 	float percentage = val * 0.5 + 0.5;
 	return mix(minVal, maxVal, percentage);
-}void main()
+}void create(uint gid)
+{
+	exp_lifetimes[gid] = 1.0;
+	exp_positions[gid] = rdpPos[gid];
+	exp_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
+								snoise(vec2(gid+3,gid+4*gid)),
+								snoise(vec2(gid+7,gid+8*gid))) * 0.01;
+	exp_colors[gid] = vec4(0.1,0.1,0.9,1);
+}
+
+void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
 
@@ -154,26 +147,13 @@ float randInRange(vec2 seed, float minVal, float maxVal)
 	// if particle not alive
 	if (exp_lifetimes[gid] <= 0)
 	{
-		// if there are explosions to be processed
-		uint ind = atomicCounter(rdpLast);
-		if (ind > 0)
+		// if a new particle should be created at index
+		if (rdpActive[gid] == 1)
 		{
-			// if there are explosion particles to be emitted
-			if (atomicCounterIncrement(exp_emissionAttempts) < exp_toCreate)
-			{
-				atomicCounterIncrement(exp_aliveParticles);
 
-				exp_lifetimes[gid] = 1.0;
-				exp_positions[gid] = rocketDeathPos[ind - 1];
-				exp_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
-											snoise(vec2(gid+3,gid+4*gid)),
-											snoise(vec2(gid+7,gid+8*gid))) * 0.01;
-				exp_colors[gid] = vec4(0.1,0.1,0.9,1);
-			}
-			else
-			{
-				atomicCounterDecrement(rdpLast);
-			}
+			atomicCounterIncrement(exp_aliveParticles);
+
+			create(gid);
 		}
 	}
 }

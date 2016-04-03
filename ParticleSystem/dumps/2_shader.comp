@@ -7,57 +7,46 @@
 // RESOURCES
 ////////////////////////////////////////////////////////////////////////////////
 
-layout(binding = 0, offset = 0) uniform atomic_uint res_rocket_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint rocket_aliveParticles;
-layout(binding = 2, offset = 0) uniform atomic_uint res_rocket_emissionAttempts;
-layout(binding = 3, offset = 0) uniform atomic_uint rocket_emissionAttempts;
+layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint rdpLast;
 
-layout(std430, binding = 4) buffer Res_rocket_lifetimes
-{
-	float res_rocket_lifetimes[];
-};
-
-layout(std430, binding = 5) buffer Res_rocket_positions
-{
-	vec4 res_rocket_positions[];
-};
-
-layout(std430, binding = 6) buffer Res_rocket_velocities
-{
-	vec4 res_rocket_velocities[];
-};
-
-layout(std430, binding = 7) buffer Res_rocket_colors
-{
-	vec4 res_rocket_colors[];
-};
-
-layout(std430, binding = 8) buffer Rocket_lifetimes
+layout(std430, binding = 3) buffer Rocket_lifetimes
 {
 	float rocket_lifetimes[];
 };
 
-layout(std430, binding = 9) buffer Rocketpositions
+layout(std430, binding = 4) buffer Rocket_positions
 {
-	vec4 rocketpositions[];
+	vec4 rocket_positions[];
 };
 
-layout(std430, binding = 10) buffer Rocket_velocities
-{
-	vec4 rocket_velocities[];
-};
-
-layout(std430, binding = 11) buffer Rocket_colors
+layout(std430, binding = 5) buffer Rocket_colors
 {
 	vec4 rocket_colors[];
 };
 
+layout(std430, binding = 6) buffer Rocket_velocities
+{
+	vec4 rocket_velocities[];
+};
+
+layout(std430, binding = 7) buffer RdpPos
+{
+	vec4 rdpPos[];
+};
+
+layout(std430, binding = 8) buffer RdpActive
+{
+	float rdpActive[];
+};
+
 layout(local_size_variable) in;
 
-uniform float res_rocket_maxParticles;
-uniform float res_rocket_toCreate;
-uniform float rocket_toCreate;
 uniform float rocket_maxParticles;
+uniform float rocket_toCreate;
+uniform float rdpCreate;
+uniform float rdpSize;
 
 uint gid = gl_GlobalInvocationID.x;
 //
@@ -166,7 +155,7 @@ void conePositionGenerator()
 	// compute cone orientation
 	y = (coneBaseIsOrigin) ? height - y : y;
 
-	rocketpositions[gid] = vec4(x, y, z, 1);
+	rocket_positions[gid] = vec4(x, y, z, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +174,7 @@ void velocityGenerator()
 
 	// DIRECTION
 	// check if velocity should be computed in regards of psystem origin
-	if (computeFromOrigin) vel = rocketpositions[gid].xyz;
+	if (computeFromOrigin) vel = rocket_positions[gid].xyz;
 
 	// check if any direction should be randomized
 	if (randX) vel.x = snoise(vec2(gid,gid*gid));
@@ -226,13 +215,6 @@ void main()
 			atomicCounterIncrement(rocket_aliveParticles);
 
 			onEmission();
-
-			/*rocket_lifetimes[gid] = snoise(vec2(gid,gid*gid)) + 2;
-			rocketpositions[gid] = vec4(0);
-			rocket_velocities[gid].xyz = vec3(	snoise(vec2(gid,gid*gid)),
-										snoise(vec2(gid+3,gid+4*gid)),
-										snoise(vec2(gid+7,gid+8*gid))) * 0.01;
-			rocket_colors[gid] = vec4(0.9,0.1,0.1,1);*/
 		}
 	}
 }

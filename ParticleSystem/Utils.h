@@ -1,6 +1,5 @@
 #pragma once
 #include <glew\glew.h>
-#include <iostream>
 #include <unordered_map>
 
 struct bufferInfo

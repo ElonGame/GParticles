@@ -12,7 +12,6 @@ RendererProgram::~RendererProgram()
 
 void RendererProgram::execute(glm::mat4 &model, Camera cam)
 {
-
 	glUseProgram(programhandle);
 
 	bindResources();
@@ -36,7 +35,9 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	// render
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glPointSize(3.0f);
+
 	glDrawArrays(GL_POINTS, 0, 512);
+
 
 	// unbind resources
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -50,8 +51,9 @@ void RendererProgram::printContents()
 	std::cout << "Atomics" << std::endl;
 	for each (auto b in atomicHandles)
 	{
-		std::cout << b.first << std::endl;
+		std::cout << b.first << " with binding " << b.second << std::endl;
 	}
+	std::cout << "Uniforms" << std::endl;
 	for each (auto b in uniforms)
 	{
 		std::cout << b.first << " " << b.second.type << " " << b.second.value << " " << std::endl;
@@ -68,10 +70,8 @@ void RendererProgram::bindResources()
 	glBindVertexArray(vao);
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	int bindingPoint = 0;
-
 	// bind atomics
-	for each (auto idBind in atomicHandles)
+	for (auto idBind : atomicHandles)
 	{
 		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
 	}
@@ -82,7 +82,7 @@ void RendererProgram::bindResources()
 ///////////////////////////////////////////////////////////////////////////////
 void RendererProgram::setUniforms()
 {
-	for each (auto u in uniforms)
+	for (auto u : uniforms)
 	{
 		int uLocation = glGetUniformLocation(programhandle, u.first.c_str());
 

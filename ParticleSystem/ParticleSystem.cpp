@@ -25,19 +25,18 @@ void ParticleSystem::execute(Camera c)
 			alive = false;
 
 
-	std::cout << "Time: " << std::chrono::duration_cast<ms>(age).count() << std::endl;
+	//std::cout << "Time: " << std::chrono::duration_cast<ms>(age).count() << std::endl;
 
 	auto timeSpan = currTime - lastStep;
 
 	if (timeSpan > emissionStep)
 	{
-		emitter.execute();
+		emitter.execute(numWorkGroups);
 
 		lastStep += emissionStep;
 	}
 	//std::cout << "Time: " << std::chrono::duration_cast<ms>(timeSpan).count() << std::endl;
-
-	updater.execute();
+	updater.execute(numWorkGroups);
 	renderer.execute(model, c);
 }
 

@@ -12,75 +12,39 @@
 -->
 	<resources>
 		<buffers>
-			<buffer name="rocket_lifetimes" elements=512 type="float"/>
-			<buffer name="rocketpositions" elements=512 type="vec4"/>
-			<buffer name="rocket_velocities" elements=512 type="vec4"/>
-			<buffer name="rocket_colors" elements=512 type="vec4"/>
-
-			<buffer name="rocketDeathPos" elements=512 type="vec4"/>
-
-			<buffer name="exp_lifetimes" elements=512 type="float"/>
-			<buffer name="exp_positions" elements=512 type="vec4"/>
-			<buffer name="exp_velocities" elements=512 type="vec4"/>
-			<buffer name="exp_colors" elements=512 type="vec4"/>
+			<buffer name="rdpPos" elements=512 type="vec4"/>
+			<buffer name="rdpActive" elements=512 type="float"/>
 		</buffers>
+		
 		<atomics>
-			<atomic name="rocket_aliveParticles" value=0 />
-			<atomic name="rocket_emissionAttempts" value=0/>
-
 			<atomic name="rdpLast" value=0/>
-
-			<atomic name="exp_aliveParticles" value=0 />
-			<atomic name="exp_emissionAttempts" value=0/>
 		</atomics>
-		<uniforms>
-			<uniform name="rocket_maxParticles" type="float" value=512 />
-			<uniform name="rocket_toCreate" type="float" value=1 />
 
-			<uniform name="exp_maxParticles" type="float" value=512 />
-			<uniform name="exp_toCreate" type="float" value=5 />
+		<uniforms>
+			<uniform name="rdpCreate" type="float" value=4/>
+			<uniform name="rdpSize" type="float" value=512/>
 		</uniforms>
 	</resources>
 
 	<psystem name="rocket">
-		<!--> position, rotation, scale: x: number y: number z: number <-->
-		<position x=0 y=0 z=-1 />
+		<position x=0 y=-0.5 z=-1 />
 		<rotation x=0 y=1 z=0 />
 		<scale x=1 y=1 z=1 />
-
+		<numWorkGroups value=1 />
 		<lifetime unit="sec" limit=60 />
 
-		<!--> ------------------------------------------------------------- <-->
-		<!--> LIMITERS <-->
-		<!--> ------------------------------------------------------------- <-->
+		<actions>
+			<uniformOverride name="rocket_maxParticles" value=10/>
+			<uniformOverride name="rocket_toCreate" value=1/>
+		</actions>
 
-		<limiters>
-			<!--> lifetime: unit: "sec", "millisec";
-				limit: number;
-				looping: "true", "false" <-->
-			<lifetime unit="sec" limit=60 />
-			<maxParticles value=512 />
-		</limiters>
 		<!--> ------------------------------------------------------------- <-->
 		<!--> GL PROGRAMS <-->
 		<!--> ------------------------------------------------------------- <-->
 		<emitter>
-			<resources>
-				<atomics>
-					<atomic name="rocket_aliveParticles" />
-					<atomic name="rocket_emissionAttempts" reset="true" />
-				</atomics>
-				<buffers>
-					<buffer name="rocket_lifetimes" />
-					<buffer name="rocketpositions" />
-					<buffer name="rocket_velocities" />
-					<buffer name="rocket_colors" />
-				</buffers>
-				<uniforms>
-					<uniform name="rocket_maxParticles" />
-					<uniform name="rocket_toCreate" />
-				</uniforms>
-			</resources>
+			<actions>
+				<resetAtomic name="rocket_emissionAttempts"/>
+			</actions>
 
 			<files>
 				<file path="shaders/fireworks/rocketEmitter.comp" />
@@ -88,41 +52,12 @@
 		</emitter>
 
 		<updater>
-			<resources>
-				<atomics>
-					<atomic name="rocket_aliveParticles" />
-					<atomic name="rocket_emissionAttempts" />
-					<atomic name="rdpLast" />
-				</atomics>
-				<buffers>
-					<buffer name="rocket_lifetimes" />
-					<buffer name="rocketpositions" />
-					<buffer name="rocket_velocities" />
-					<buffer name="rocket_colors" />
-					<buffer name="rocketDeathPos" />
-				</buffers>
-				<uniforms>
-				</uniforms>
-			</resources>
-
 			<files>
 				<file path="shaders/fireworks/rocketUpdater.comp" />
 			</files>
 		</updater>
 
 		<renderer>
-			<resources>
-				<atomics>
-				</atomics>
-				<buffers>
-					<buffer name="rocket_lifetimes" />
-					<buffer name="rocketpositions"/>
-					<buffer name="rocket_colors" />
-				</buffers>
-				<uniforms>
-				</uniforms>
-			</resources>
-
 			<vertfiles>
 				<file path="shaders/fireworks/rocketVertex.vert" />
 			</vertfiles>
@@ -132,31 +67,25 @@
 		</renderer>
 	</psystem>
 
-	<!--psystem name="exp">
-		<position x=0 y=0 z=-1 />
+	<psystem name="exp">
+		<position x=0 y=-0.5 z=-1 />
 		<rotation x=0 y=1 z=0 />
 		<scale x=1 y=1 z=1 />
+		<numWorkGroups value=1 />
 		<lifetime unit="sec" limit=60 />
 
+		<actions>
+			<uniformOverride name="exp_maxParticles" value=512/>
+			<uniformOverride name="exp_toCreate" value=4/>
+		</actions>
+
+
+
 		<emitter>
-			<resources>
-				<atomics>
-					<atomic name="exp_aliveParticles" />
-					<atomic name="exp_emissionAttempts" reset="true" />
-					<atomic name="rdpLast" reset="true" />
-				</atomics>
-				<buffers>
-					<buffer name="exp_lifetimes" />
-					<buffer name="exp_positions" />
-					<buffer name="exp_velocities" />
-					<buffer name="exp_colors" />
-					<buffer name="rocketDeathPos" />
-				</buffers>
-				<uniforms>
-					<uniform name="exp_maxParticles" />
-					<uniform name="exp_toCreate" />
-				</uniforms>
-			</resources>
+			<actions>
+				<resetAtomic name="exp_emissionAttempts"/>
+				<resetAtomic name="rdpLast"/>
+			</actions>
 
 			<files>
 				<file path="shaders/fireworks/expEmitter.comp" />
@@ -164,39 +93,12 @@
 		</emitter>
 
 		<updater>
-			<resources>
-				<atomics>
-					<atomic name="exp_aliveParticles" />
-					<atomic name="exp_emissionAttempts" />
-				</atomics>
-				<buffers>
-					<buffer name="exp_lifetimes" />
-					<buffer name="exp_positions" />
-					<buffer name="exp_velocities" />
-					<buffer name="exp_colors" />
-				</buffers>
-				<uniforms>
-				</uniforms>
-			</resources>
-
 			<files>
 				<file path="shaders/fireworks/expUpdater.comp" />
 			</files>
 		</updater>
 
 		<renderer>
-			<resources>
-				<atomics>
-				</atomics>
-				<buffers>
-					<buffer name="exp_lifetimes" />
-					<buffer name="exp_positions"/>
-					<buffer name="exp_colors" />
-				</buffers>
-				<uniforms>
-				</uniforms>
-			</resources>
-
 			<vertfiles>
 				<file path="shaders/fireworks/expVertex.vert" />
 			</vertfiles>
@@ -204,5 +106,5 @@
 				<file path="shaders/fireworks/expFrag.frag" />
 			</fragfiles>
 		</renderer>
-	</psystem-->
+	</psystem>
 </project>
