@@ -2,6 +2,7 @@
 	<buffers>
 		<buffer name="_lifetimes" elements=512 type="float"/>
 		<buffer name="_positions" elements=512 type="vec4"/>
+		<buffer name="_lastPositions" elements=512 type="vec4"/>
 		<buffer name="_velocities" elements=512 type="vec4"/>
 		<buffer name="_colors" elements=512 type="vec4"/>
 	</buffers>

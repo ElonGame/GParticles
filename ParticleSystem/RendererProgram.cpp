@@ -16,7 +16,6 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 
 	bindResources();
 
-	// useUniforms
 	setUniforms();
 
 	glm::mat4 view = cam.getViewMatrix();
@@ -45,6 +44,9 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	glUseProgram(NULL);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void RendererProgram::printContents()
 {
 	std::cout << ">> Renderer Program" << std::endl;

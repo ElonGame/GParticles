@@ -11,17 +11,28 @@ glm::mat4 Camera::getViewMatrix()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void Camera::processKeyboard(Camera_Movement direction, GLfloat deltaTime)
+void Camera::processKeyboard(Camera_Movement direction)
 {
-	GLfloat velocity = this->speed * deltaTime;
-	if (direction == FORWARD)
-		this->position += this->front * velocity;
-	if (direction == BACKWARD)
-		this->position -= this->front * velocity;
-	if (direction == LEFT)
-		this->position -= this->right * velocity;
-	if (direction == RIGHT)
-		this->position += this->right * velocity;
+	GLfloat velocity = speed;
+
+	switch (direction)
+	{
+		case FORWARD:
+			position += front * velocity;
+			break;
+
+		case BACKWARD:
+			position -= front * velocity;
+			break;
+
+		case LEFT:
+			position -= right * velocity;
+			break;
+
+		case RIGHT:
+			position += right * velocity;
+			break;
+	}
 }
 
 
@@ -51,16 +62,16 @@ void Camera::processMouseMovement()
 	//GLfloat xoffset = glm::clamp(targetOffsetX, -offsetLimit, offsetLimit);
 	//GLfloat yoffset = glm::clamp(targetOffsetY, -offsetLimit, offsetLimit);
 
-	this->yaw += (mouseX - lastMouseX) * mouseSensitivity;
-	this->pitch += (lastMouseY - mouseY) * mouseSensitivity;
+	yaw += (mouseX - lastMouseX) * mouseSensitivity;
+	pitch += (lastMouseY - mouseY) * mouseSensitivity;
 
 	// don't flip screen when pitch is out of bounds
-	if (this->pitch > 89.0f)
-		this->pitch = 89.0f;
-	if (this->pitch < -89.0f)
-		this->pitch = -89.0f;
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
 
-	this->updateCameraVectors();
+	updateCameraVectors();
 }
 
 

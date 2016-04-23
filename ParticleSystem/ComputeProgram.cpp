@@ -13,26 +13,23 @@ ComputeProgram::~ComputeProgram()
 
 void ComputeProgram::execute(GLuint numWorkGroups)
 {
-	// TODO: check if it can be placed after UseProgram
-	bindResources();
-
 	glUseProgram(programhandle);
 
-	// useUniforms
+	bindResources();
+
 	setUniforms();
 
-	// TODO: change hardcoded work groups
 	glDispatchComputeGroupSizeARB((float)maxParticles / numWorkGroups, 1, 1,
 		numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	// see alive particles
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicHandles[2].first);
-	GLuint *ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	GLuint currentVal = ptr[0];
-	if (programhandle == 1)
-		printf("%d LAST\n", currentVal);
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicHandles[2].first);
+	//GLuint *ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	//GLuint currentVal = ptr[0];
+	//if (programhandle == 1)
+	//	printf("%d LAST\n", currentVal);
 
 	// reset marked atomics
 	GLuint val = 0;
@@ -44,6 +41,9 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 	}
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::printContents()
 {
 	std::cout << ">> Compute program " << programhandle << std::endl;
@@ -87,6 +87,9 @@ void ComputeProgram::bindResources()
 	}
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::setUniforms()
 {
 	for each (auto u in uniforms)

@@ -27,15 +27,15 @@
 	</resources>
 
 	<psystem name="rocket">
-		<position x=0 y=-0.5 z=-1 />
+		<position x=0 y=0 z=-1 />
 		<rotation x=0 y=1 z=0 />
 		<scale x=1 y=1 z=1 />
 		<numWorkGroups value=1 />
-		<lifetime unit="sec" limit=60 />
+		<lifetime unit="sec" limit=3600 />
 
 		<actions>
-			<uniformOverride name="rocket_maxParticles" value=10/>
-			<uniformOverride name="rocket_toCreate" value=1/>
+			<uniformOverride name="rocket_maxParticles" value=100/>
+			<uniformOverride name="rocket_toCreate" value=100/>
 		</actions>
 
 		<!--> ------------------------------------------------------------- <-->
@@ -68,11 +68,11 @@
 	</psystem>
 
 	<psystem name="exp">
-		<position x=0 y=-0.5 z=-1 />
+		<position x=0 y=0 z=-1 />
 		<rotation x=0 y=1 z=0 />
 		<scale x=1 y=1 z=1 />
 		<numWorkGroups value=1 />
-		<lifetime unit="sec" limit=60 />
+		<lifetime unit="sec" limit=3600 />
 
 		<actions>
 			<uniformOverride name="exp_maxParticles" value=512/>

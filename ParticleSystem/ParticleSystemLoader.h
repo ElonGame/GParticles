@@ -17,19 +17,21 @@ class ParticleSystemLoader
 public:
 	// parses file and fills psContainer with ParticleSystem objects
 	static bool loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer);
-	static ParticleSystem loadParticleSystem(TiXmlElement* psystemElement);
 
 private:
+	static ParticleSystem loadParticleSystem(TiXmlElement* psystemElement);
+
 	// global resource handles
-	static bufferUmap globalBufferHandles;
-	static atomicUmap globalAtomicHandles;
-	static uniformUmap globalUniformHandles;
+	static bufferUmap globalBufferInfo;
+	static atomicUmap globalAtomicInfo;
+	static uniformUmap globalUniformInfo;
 
 	// global resource loading functions
 	static bool loadGlobalBuffers(TiXmlElement* buffers);
 	static bool loadGlobalAtomics(TiXmlElement* atomics);
 	static bool loadGlobalUniforms(TiXmlElement* uniforms);
-	static void loadGlobalProgramResources(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
+	static void addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
+	static void addAtomicResets(TiXmlElement* actionsElement, atomicUmap &aum, std::vector<GLuint> &aToReset);
 
 
 
@@ -46,13 +48,13 @@ private:
 
 
 	// shader program loading functions
-	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* programElement, ComputeProgram &glp);
+	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* programElement, ComputeProgram &cp);
 	static bool loadRenderer(reservedResources &rr, TiXmlElement* programElement, RendererProgram &rp);
 
 	// project loading utility functions
 	static bool compileShaderFiles(	GLuint shaderID, std::string header, std::string reservedFunctions,
 									std::vector<std::string> filePaths, bool dumpToFile = false);
-	static std::string generateComputeHeader(atomicUmap &glpAtomicHandles, bufferUmap &glpBufferHandles, uniformUmap &glpUniforms);
+	static std::string generateComputeHeader(atomicUmap &cpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms);
 	static std::string fileToString(std::string filePath);
 	static void printShaderLog(GLuint shader);
 	static void printProgramLog(GLuint program);

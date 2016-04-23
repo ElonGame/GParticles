@@ -16,27 +16,32 @@ layout(std430, binding = 3) buffer Rocket_lifetimes
 	float rocket_lifetimes[];
 };
 
-layout(std430, binding = 4) buffer Rocket_positions
+layout(std430, binding = 4) buffer Rocket_lastPositions
+{
+	vec4 rocket_lastPositions[];
+};
+
+layout(std430, binding = 5) buffer Rocket_positions
 {
 	vec4 rocket_positions[];
 };
 
-layout(std430, binding = 5) buffer Rocket_colors
+layout(std430, binding = 6) buffer Rocket_colors
 {
 	vec4 rocket_colors[];
 };
 
-layout(std430, binding = 6) buffer Rocket_velocities
+layout(std430, binding = 7) buffer Rocket_velocities
 {
 	vec4 rocket_velocities[];
 };
 
-layout(std430, binding = 7) buffer RdpPos
+layout(std430, binding = 8) buffer RdpPos
 {
 	vec4 rdpPos[];
 };
 
-layout(std430, binding = 8) buffer RdpActive
+layout(std430, binding = 9) buffer RdpActive
 {
 	float rdpActive[];
 };
@@ -120,19 +125,26 @@ float snoise(vec2 v)
   return 130.0 * dot(m, g);
 }
 ////////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+// -- Utilities --
+////////////////////////////////////////////////////////////////////////////////
 float randInRange(vec2 seed, float minVal, float maxVal)
 {
 	float val = snoise(seed);
 	float percentage = val * 0.5 + 0.5;
 	return mix(minVal, maxVal, percentage);
-}////////////////////////////////////////////////////////////////////////////////
-// values passed in as uniforms
+}
+
+// -- Emission --
+////////////////////////////////////////////////////////////////////////////////
 float radius = 0.0001;
 float height = 0.0001;
 bool coneBaseIsOrigin = false;
 bool positionsInVolume = true;
 
-void conePositionGenerator()
+vec4 conePositionGenerator()
 {
 	// compute random y in range [0, height]
 	float y = randInRange(vec2(gid, gid * gid), 0, 1);
@@ -155,7 +167,22 @@ void conePositionGenerator()
 	// compute cone orientation
 	y = (coneBaseIsOrigin) ? height - y : y;
 
-	rocket_positions[gid] = vec4(x, y, z, 1);
+	return vec4(x, y, z, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+vec4 spherePositionGenerator()
+{
+	// compute rotation angle (in degrees) around cone axis
+	float angle = randInRange(vec2(gid+7,gid+8*gid) * 0.01, 0, 360);
+	float angle2 = randInRange(vec2(gid+1,gid+8) * 0.01, 0, 180);
+
+	// calculate corresponding x and z polar coordinates
+	float x = radius * sin(angle) * cos(angle2);
+	float z = radius * cos(angle) * cos(angle2);
+	float y = radius * sin(angle) * sin(angle2);
+
+	return vec4(x, y, z, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,18 +190,18 @@ bool computeFromOrigin = true;
 bool randX = false;
 bool randY = false;
 bool randZ = false;
-float intensity = 0.01;
+float intensity = 0.005;
 bool randIntensity = false;
 float maxInt = 0.01;
 float minInt = 0;
 
-void velocityGenerator()
+vec3 velocityGenerator(vec3 position)
 {
 	vec3 vel = vec3(0);
 
 	// DIRECTION
 	// check if velocity should be computed in regards of psystem origin
-	if (computeFromOrigin) vel = rocket_positions[gid].xyz;
+	if (computeFromOrigin) vel = position;
 
 	// check if any direction should be randomized
 	if (randX) vel.x = snoise(vec2(gid,gid*gid));
@@ -189,14 +216,13 @@ void velocityGenerator()
 	if (randIntensity)
 		intensity = randInRange(vec2(gid*gid,gid*gid), minInt, maxInt);
 
-	rocket_velocities[gid].xyz = vel * intensity;
-}
-
-void onEmission()
+	return vel * intensity;
+}void onEmission()
 {
-	rocket_lifetimes[gid] = snoise(vec2(gid,gid*gid)) + 2;
-	conePositionGenerator();
-	velocityGenerator();
+	rocket_lifetimes[gid] = snoise(vec2(gid,gid*gid)) + 5;
+	rocket_positions[gid] = conePositionGenerator();
+	rocket_positions[gid] = spherePositionGenerator();
+	rocket_velocities[gid].xyz = velocityGenerator(rocket_positions[gid].xyz);
 	rocket_colors[gid] = vec4(0.9,0.1,0.1,1);
 }
 
