@@ -10,8 +10,8 @@
 class RendererProgram
 {
 public:
-	RendererProgram(GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const GLuint &vao, const uniformUmap &u)
-		: programhandle(ph), atomicHandles(ah), vao(vao), uniforms(u) {};
+	RendererProgram(const GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const GLuint vao, const GLuint tex, const uniformUmap &u)
+		: programhandle(ph), atomicHandles(ah), vao(vao), texture(tex), uniforms(u) {};
 	RendererProgram();
 	~RendererProgram();
 
@@ -22,6 +22,7 @@ private:
 	std::vector<std::pair<GLuint, GLuint>> atomicHandles;
 	uniformUmap uniforms;
 	GLuint vao;
+	GLuint texture;
 
 	void bindResources();
 	void setUniforms();

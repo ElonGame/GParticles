@@ -6,6 +6,7 @@ void main()
 		return;
 
 	rocket_lifetimes[gid] -= 0.025;
+	rocket_lineLifetime[gid] -= 0.025;
 
 	if (rocket_lifetimes[gid] <= 0)
 	{
@@ -25,5 +26,9 @@ void main()
 		return;
 	}
 
+	if (rocket_lineLifetime[gid] < 0)
+	{
+		rocket_lastPositions[gid].xyz += rocket_velocities[gid].xyz;
+	}
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
 }

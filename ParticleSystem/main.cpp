@@ -3,6 +3,8 @@
 #include "ParticleSystemLoader.h"
 #include "ParticleSystemManager.h"
 #include "Camera.h"
+#include <IL\il.h>
+#pragma comment(lib,"devil.lib")
 
 Camera c;
 
@@ -74,6 +76,8 @@ int main(int argc, char* args[])
 	// init opengl stuff
 	Utils::initGL();
 
+	ilInit();
+
 	// init camera
 	c = Camera();
 
@@ -81,12 +85,11 @@ int main(int argc, char* args[])
 	ParticleSystemManager psManager = ParticleSystemManager();
 	fetchParticleSystems(psManager);
 
-
 	// system loop
 	while (processEvents())
 	{
 		// TODO: system ticks here
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// process all particle system
 		psManager.processParticles(c);

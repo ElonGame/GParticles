@@ -1,6 +1,16 @@
 #pragma once
 #include <glew\glew.h>
+#include <sdl2\SDL.h>
 #include <unordered_map>
+
+struct rendererLoading
+{
+	std::vector<std::string> vsPath;
+	std::vector<std::string> fgPath;
+	std::vector<std::string> gmPath;
+	std::string rendertype;
+	std::string imagePath;
+};
 
 struct bufferInfo
 {
@@ -45,8 +55,15 @@ namespace Utils
 		// set viewport
 		glViewport(0, 0, 1024, 576);
 
+		//glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
+	}
+
+	inline void exitMessage(std::string title, std::string msg)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title.c_str(), msg.c_str(), NULL);
+		exit(0);
 	}
 }

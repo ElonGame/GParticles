@@ -1,0 +1,52 @@
+<psystem name="rocket">
+		<position x=0 y=0 z=-1 />
+		<rotation x=0 y=1 z=0 />
+		<scale x=1 y=1 z=1 />
+		<lifetime unit="sec" limit=4 />
+		<numWorkGroups value=1 />
+
+		<events>
+			<emission>
+				<controller>
+					<limit maxParticles=1024/>
+					<limit path="customLimiter.txt"/>
+
+					<rate particlesPerSecond=5/>
+					<burst emit=100 afterSeconds=3>
+				</controller>
+
+				<position primitive="sphere" radius=2 arcAngle=360/>
+				<!--position primitive="cone" radius=2 height=4/>
+				<position primitive="box" width=4 heigth=2/>
+				<position primitive="originPoint"/>
+				<position path="customPositionGenerator.txt" param1=1 param2=0.5 /-->
+
+				<attribute name="lifetimes" constant=3 />
+				<!--attribute name="lifetimes" randomMin=2 randomMax=4 />
+				<attribute path="customAttributeGenerator" /-->
+			</emission>
+
+			<update>
+				<function path="customUpdater.txt" param1=1 param2=0.5 />
+			</update>
+
+			<render>
+				<rendertype type="billboard" imagePath="myImage.png" orientation=vertical>
+				<sorting mode="closeFront"/>
+				<debug seeEmissionShape="true" seeTriangles="true" />
+				<vertexShader path="..."/>
+				<geometryShader path="..."/>
+				<fragmentShader path="..."/>
+			</render>
+		</events>
+
+</psystem>
+
+<!--
+	limit
+	position
+	attribute
+
+
+
+-->

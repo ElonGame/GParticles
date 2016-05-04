@@ -1,0 +1,11 @@
+<prefab>
+	<rendertype type="point" />
+	<color r=0.2 g=0.8 b=0.2 a=1.0 />
+
+	<vertfiles>
+		<file path="prefabs/simplePoint.vert" />
+	</vertfiles>
+	<fragfiles>
+		<file path="prefabs/simplePoint.frag" />
+	</fragfiles>
+</prefab>

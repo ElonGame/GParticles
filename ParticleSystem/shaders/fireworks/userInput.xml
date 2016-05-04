@@ -30,17 +30,14 @@
 		<position x=0 y=0 z=-1 />
 		<rotation x=0 y=1 z=0 />
 		<scale x=1 y=1 z=1 />
-		<numWorkGroups value=1 />
 		<lifetime unit="sec" limit=3600 />
+		<numWorkGroups value=1 />
 
 		<actions>
 			<uniformOverride name="rocket_maxParticles" value=100/>
 			<uniformOverride name="rocket_toCreate" value=100/>
 		</actions>
 
-		<!--> ------------------------------------------------------------- <-->
-		<!--> GL PROGRAMS <-->
-		<!--> ------------------------------------------------------------- <-->
 		<emitter>
 			<actions>
 				<resetAtomic name="rocket_emissionAttempts"/>
@@ -57,10 +54,16 @@
 			</files>
 		</updater>
 
-		<renderer>
+		<renderer prefab="prefabs/simpleLineRenderer.xml">
+
+			<rendertype type="billboard" imagePath="snow.png" orientation=vertical/>
+
 			<vertfiles>
 				<file path="shaders/fireworks/rocketVertex.vert" />
 			</vertfiles>
+			<geomfiles>
+				<file path="shaders/fireworks/rocketGeom.geom"/>
+			</geomfiles>
 			<fragfiles>
 				<file path="shaders/fireworks/rocketFrag.frag" />
 			</fragfiles>
@@ -99,6 +102,7 @@
 		</updater>
 
 		<renderer>
+			<rendertype type="point" />
 			<vertfiles>
 				<file path="shaders/fireworks/expVertex.vert" />
 			</vertfiles>

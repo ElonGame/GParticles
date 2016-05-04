@@ -41,6 +41,7 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	// unbind resources
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(NULL);
 }
 
@@ -77,6 +78,8 @@ void RendererProgram::bindResources()
 	{
 		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
 	}
+
+	glBindTexture(GL_TEXTURE_2D, texture);
 }
 
 

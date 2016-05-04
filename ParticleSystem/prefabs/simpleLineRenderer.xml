@@ -1,0 +1,14 @@
+<prefab>
+	<rendertype type="line" />
+	<color r=0.2 g=0.8 b=0.2 a=1.0 />
+
+	<vertfiles>
+		<file path="prefabs/simpleLine.vert" />
+	</vertfiles>
+	<geomfiles>
+		<file path="prefabs/simpleLine.geom" />
+	</geomfiles>
+	<fragfiles>
+		<file path="prefabs/simpleLine.frag" />
+	</fragfiles>
+</prefab>

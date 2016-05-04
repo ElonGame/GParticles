@@ -1,15 +1,11 @@
-﻿  main.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(53): warning C4101: 'mouseX': unreferenced local variable
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(53): warning C4101: 'mouseY': unreferenced local variable
-  ParticleSystemManager.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemmanager.cpp(16): warning C4018: '<': signed/unsigned mismatch
-  ParticleSystemLoader.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(21): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(284): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(394): warning C4244: '=': conversion from 'GLfloat' to 'GLuint', possible loss of data
-  ComputeProgram.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\computeprogram.cpp(28): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
+﻿  ParticleSystemLoader.cpp
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(20): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(269): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(389): warning C4244: '=': conversion from 'GLfloat' to 'GLuint', possible loss of data
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(625): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
   Generating Code...
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(60): warning C4715: 'ParticleSystemLoader::loadProject': not all control paths return a value
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(331): warning C4715: 'ParticleSystemLoader::collectReservedResourceInfo': not all control paths return a value
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(319): warning C4715: 'ParticleSystemLoader::collectReservedResourceInfo': not all control paths return a value
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(46): warning C4715: 'ParticleSystemLoader::loadProject': not all control paths return a value
+  Skipping... (no relevant changes detected)
+  main.cpp
   ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

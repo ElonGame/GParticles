@@ -71,7 +71,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
-    <LibraryPath>C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\devIL;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
