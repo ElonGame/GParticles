@@ -10,14 +10,14 @@ RendererProgram::~RendererProgram()
 {
 }
 
-void RendererProgram::execute(glm::mat4 &model, Camera cam)
+void RendererProgram::execute(glm::mat4 &modelMat, Camera cam)
 {
 	glUseProgram(programhandle);
 
 	bindResources();
 
 	setUniforms();
-
+	//glm::mat4 newModel = glm::scale(modelMat, glm::vec3(0.2f, 0.2f, 0.2f));
 	glm::mat4 view = cam.getViewMatrix();
 	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
 
@@ -26,7 +26,7 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	GLint viewLoc = glGetUniformLocation(programhandle, "view");
 	GLint projLoc = glGetUniformLocation(programhandle, "projection");
 	// Pass the matrices to the shader
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -35,12 +35,32 @@ void RendererProgram::execute(glm::mat4 &model, Camera cam)
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glPointSize(3.0f);
 
-	glDrawArrays(GL_POINTS, 0, 512);
+	if (renderType != "model")
+	{
+		glDrawArrays(GL_POINTS, 0, 512);
+		//glBindBuffer(GL_ARRAY_BUFFER, 8);
+		//GLfloat *ptr = (GLfloat *)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+		//glUnmapBuffer(GL_ARRAY_BUFFER);
+		//GLfloat currentVal = ptr[2];
+		//printf("%d LAST\n", currentVal);
+	}
+	else
+	{
 
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		
+		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0, 1);
+
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+
+	}
 
 	// unbind resources
-	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(NULL);
 }

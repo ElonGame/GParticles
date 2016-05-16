@@ -1,8 +1,8 @@
 #pragma once
-#include <IL\il.h>
-#pragma comment(lib,"devil.lib")
 #include <fstream>
 #include "ParticleSystem.h"
+#include "Texture.h"
+#include "Model.h"
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 
@@ -19,6 +19,7 @@ class ParticleSystemLoader
 public:
 	// parses file and fills psContainer with ParticleSystem objects
 	static bool loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer);
+	static bool compileShaderFiles(GLuint shaderID, std::vector<std::string> filePaths, std::string header = "");
 
 private:
 	static ParticleSystem loadParticleSystem(TiXmlElement* psystemE); // TODO: single psystem loading?
@@ -55,7 +56,8 @@ private:
 	// project loading utility functions
 	static void collectFPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
-	static bool compileShaderFiles(	GLuint shaderID, std::vector<std::string> filePaths, std::string header = "");
+	
+	static std::string createFinalShaderSource(std::vector<std::string> filePaths, std::string header = "");
 	static std::string generateComputeHeader(atomicUmap &cpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms);
 	static std::string fileToString(std::string filePath);
 	static void printShaderLog(GLuint shader);

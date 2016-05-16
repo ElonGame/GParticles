@@ -1,3 +1,34 @@
+void kill()
+{
+	rocket_lifetimes[gid] = -1;
+
+	atomicCounterDecrement(rocket_aliveParticles);
+
+	int created = 0;
+	int i = int(atomicCounterIncrement(rdpLast) * rdpCreate);
+	for (; i < rdpSize && created < rdpCreate; i++)
+	{
+		if (rdpActive[i] == 0)
+		{
+			rdpPos[i] = rocket_positions[gid];
+			rdpActive[i] = 1;
+			created++;
+		}
+	}
+}
+
+void bounce(vec3 normal)
+{
+	rocket_velocities[gid].xyz = reflect(rocket_velocities[gid].xyz, normal);
+}
+
+void stick()
+{
+	rocket_velocities[gid] = vec4(0);
+}
+
+uniform vec4 spheres[1];
+
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
@@ -10,19 +41,7 @@ void main()
 
 	if (rocket_lifetimes[gid] <= 0)
 	{
-		atomicCounterDecrement(rocket_aliveParticles);
-
-		int created = 0;
-		int i = int(atomicCounterIncrement(rdpLast) * rdpCreate);
-		for (; i < rdpSize && created < rdpCreate; i++)
-		{
-			if (rdpActive[i] == 0)
-			{
-				rdpPos[i] = rocket_positions[gid];
-				rdpActive[i] = 1;
-				created++;
-			}
-		}
+		kill();
 		return;
 	}
 
@@ -31,4 +50,19 @@ void main()
 		rocket_lastPositions[gid].xyz += rocket_velocities[gid].xyz;
 	}
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
+
+	// Collisions
+	for (int i = 0; i < 1; i++)
+	{
+		vec4 sphere = spheres[i];
+		if (distance(rocket_positions[gid].xyz, sphere.xyz) < 0.5 )
+		{
+			vec3 normal = normalize(rocket_positions[gid].xyz - sphere.xyz);
+			bounce(normal);
+			//kill();
+			stick();
+		}
+	}
+
+
 }

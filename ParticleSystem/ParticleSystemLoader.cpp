@@ -1,4 +1,5 @@
 #include "ParticleSystemLoader.h"
+#include "Shader.h"
 
 bufferUmap ParticleSystemLoader::globalBufferInfo;
 atomicUmap ParticleSystemLoader::globalAtomicInfo;
@@ -502,20 +503,20 @@ bool ParticleSystemLoader::loadComputeProgram(reservedResources &rr, TiXmlElemen
 	addAtomicResets(actionsE, cpAtomicHandles, cpAtmHandlesToReset);
 
 	GLuint cpHandle = glCreateProgram();
-	GLuint cpShader = glCreateShader(GL_COMPUTE_SHADER);
 
 	// parse file paths that compose final shader
 	std::vector<std::string> fPaths;
 	collectFPaths(programE, "files", fPaths);
 
-
-	// generate shader header from resource info and fetch reserved functionality
-	std::string header = generateComputeHeader(cpAtomicHandles, cpBufferHandles, cpUniforms);
-	header += fileToString("reserved/utilities.glsl"); // TODO: add more
+	// shader source = header (from resource info) + reserved functionality + filepaths source
+	std::string shaderSource = generateComputeHeader(cpAtomicHandles, cpBufferHandles, cpUniforms);
+	shaderSource += fileToString("reserved/utilities.glsl");
+	shaderSource += createFinalShaderSource(fPaths);
 
 	// compile, attach and check link status
-	compileShaderFiles(cpShader, fPaths, header);
-	glAttachShader(cpHandle, cpShader);
+	Shader cpShader("compute", shaderSource);
+
+	glAttachShader(cpHandle, cpShader.getId());
 	glLinkProgram(cpHandle);
 
 	GLint programSuccess = GL_FALSE;
@@ -566,10 +567,20 @@ void ParticleSystemLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement*
 
 		if (rl.rendertype == "billboard")
 		{
-			res = renderType->QueryStringAttribute("imagePath", &rl.imagePath);
+			res = renderType->QueryStringAttribute("path", &rl.path);
 			if (res != TIXML_SUCCESS)
 			{
-				std::string msg = "Must supply imagePath to billboard rendertype on line " + std::to_string(renderType->Row());
+				std::string msg = "Must supply image path to billboard rendertype on line " + std::to_string(renderType->Row());
+				Utils::exitMessage("Invalid Input", msg);
+			}
+		}
+
+		if (rl.rendertype == "model")
+		{
+			res = renderType->QueryStringAttribute("path", &rl.path);
+			if (res != TIXML_SUCCESS)
+			{
+				std::string msg = "Must supply directory path to model rendertype on line " + std::to_string(renderType->Row());
 				Utils::exitMessage("Invalid Input", msg);
 			}
 		}
@@ -620,14 +631,14 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 	programE->QueryStringAttribute("prefab", &st);
 	
 	TiXmlDocument doc(st);
-	if (!doc.LoadFile())
+	if (doc.LoadFile())
 	{
-		printf("Unavailable prefab in file\"%s\"\n", doc);
+		TiXmlHandle docHandle(&doc);
+		programE = docHandle.FirstChild("prefab").ToElement();
+		getRendererXMLInfo(rl, programE);
 	}
 
-	TiXmlHandle docHandle(&doc);
-	programE = docHandle.FirstChild("prefab").ToElement();
-	getRendererXMLInfo(rl, programE);
+
 
 	// parse and store program resource info for later binding
 	//TiXmlElement* resourcesElement = programE->FirstChildElement("resources");
@@ -636,8 +647,8 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 	bufferUmap rendBuffers = rr.reservedBufferInfo;
 	uniformUmap rendUniforms = rr.reservedUniformInfo;
 	std::vector<GLuint> rendAtmHandlesToReset;
-	GLuint texture = 0;
-
+	Texture texture;
+	Model model;
 
 	addGlobalProgramResources(rendAtomics, rendBuffers, rendUniforms);
 	//addAtomicResets(resourcesElement, rendAtomics, rendAtmHandlesToReset);
@@ -650,39 +661,7 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 		rendAtmHandles.push_back(std::make_pair(atm.second.id, bindingPoint++));
 	}
 
-	// renderType
-	// TODO: add more
-	if (rl.rendertype == "billboard")
-	{
-		// load image
-		unsigned int im, tw, th;
-		unsigned char *imageData;
-		ilGenImages(1, &im);
-		ilBindImage(im);
-		ilLoadImage((ILstring)rl.imagePath.c_str());
-		tw = ilGetInteger(IL_IMAGE_WIDTH);
-		th = ilGetInteger(IL_IMAGE_HEIGHT);
-		ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-		imageData = ilGetData();
 
-		// create texture
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-
-		// set texture options
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		// load image into texture
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		ilBindImage(0);
-		ilDeleteImages(1, &im);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
 
 
 	GLuint rpHandle = glCreateProgram();
@@ -692,16 +671,17 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for vertex shader");
 	}
-	GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
-	compileShaderFiles(rpVertShader, rl.vsPath);
-	glAttachShader(rpHandle, rpVertShader);
+	std::string source = createFinalShaderSource(rl.vsPath);
+	Shader rpVertShader("vertex", source);
+	rpVertShader.dumpToFile();
+	glAttachShader(rpHandle, rpVertShader.getId());
 
 	// geometry shader
 	if (!rl.gmPath.empty())
 	{
-		GLuint rpGeomShader = glCreateShader(GL_GEOMETRY_SHADER);
-		compileShaderFiles(rpGeomShader, rl.gmPath);
-		glAttachShader(rpHandle, rpGeomShader);
+		source = createFinalShaderSource(rl.gmPath);
+		Shader rpGeomShader("geometry", source);
+		glAttachShader(rpHandle, rpGeomShader.getId());
 	}
 
 	// frag shader
@@ -709,9 +689,9 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for fragment shader");
 	}
-	GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	compileShaderFiles(rpFragShader, rl.fgPath);
-	glAttachShader(rpHandle, rpFragShader);
+	source = createFinalShaderSource(rl.fgPath);
+	Shader rpFragShader("fragment", source);
+	glAttachShader(rpHandle, rpFragShader.getId());
 
 
 
@@ -726,12 +706,59 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 		return false;
 	}
 
+
+	// renderType
+	if (rl.rendertype == "billboard")
+	{
+		texture.setImage(rl.path);
+	}
+	else if (rl.rendertype == "model")
+	{
+		model = Model((GLchar*)rl.path.c_str());
+
+	}
+
+
 	// generate vertex array object
-	GLuint vao;
+	GLuint vao, ebo, vbo;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	// add buffers to vao
+	if (rl.rendertype == "model")
+	{
+		glGenBuffers(1, &ebo);
+		glGenBuffers(1, &vbo);
+		// model first mesh
+		Mesh mesh = model.meshes[0];
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex),
+			&mesh.vertices[0], GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(GLuint),
+			&mesh.indices[0], GL_STATIC_DRAW);
+
+		// Vertex Positions
+		glEnableVertexAttribArray(0);
+		GLint posLocation = glGetAttribLocation(rpHandle, "position");
+		glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+
+		// Vertex Normals
+		glEnableVertexAttribArray(1);
+		GLint norLocation = glGetAttribLocation(rpHandle, "normal");
+		glVertexAttribPointer(norLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+			(GLvoid*)offsetof(Vertex, normal));
+
+		// Vertex TexCoords
+		glEnableVertexAttribArray(2);
+		GLint tcLocation = glGetAttribLocation(rpHandle, "texCoords");
+		glVertexAttribPointer(tcLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+			(GLvoid*)offsetof(Vertex, texCoords));
+	}
+
+
+	// add instance buffers to vao
 	for (auto b : rendBuffers)
 	{
 		GLint location = glGetAttribLocation(rpHandle, b.first.c_str());
@@ -739,9 +766,17 @@ bool ParticleSystemLoader::loadRenderer(reservedResources &rr, TiXmlElement* pro
 		glEnableVertexAttribArray(location);
 		GLuint elemType = (b.second.type == "float") ? 1 : 4;
 		glVertexAttribPointer(location, elemType, GL_FLOAT, 0, 0, 0);
+
+		if (rl.rendertype == "model")
+		{
+			// tell OpenGL this is an instanced vertex attribute
+			glVertexAttribDivisor(location, 1); 
+		}
 	}
 
-	rp = RendererProgram(rpHandle, rendAtmHandles, vao, texture, rendUniforms);
+	glBindVertexArray(0);
+
+	rp = RendererProgram(rpHandle, rendAtmHandles, vao, texture.getId(), rendUniforms, rl.rendertype, model);
 
 	return true;
 }
@@ -860,6 +895,22 @@ void ParticleSystemLoader::printProgramLog(GLuint program)
 		printf("Name %d is not a program\n", program);
 	}
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+std::string ParticleSystemLoader::createFinalShaderSource(std::vector<std::string> fPaths, std::string header)
+{
+	// parse file fragments into string
+	std::string shaderString = header;
+	for (std::string fPath : fPaths)
+	{
+		shaderString = shaderString + fileToString(fPath);
+	}
+	std::cout << shaderString << std::endl;
+	return shaderString;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

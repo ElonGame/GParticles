@@ -2,6 +2,15 @@
 #include <glew\glew.h>
 #include <sdl2\SDL.h>
 #include <unordered_map>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
+struct Vertex
+{
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec2 texCoords;
+};
 
 struct rendererLoading
 {
@@ -9,7 +18,7 @@ struct rendererLoading
 	std::vector<std::string> fgPath;
 	std::vector<std::string> gmPath;
 	std::string rendertype;
-	std::string imagePath;
+	std::string path;
 };
 
 struct bufferInfo
@@ -55,8 +64,6 @@ namespace Utils
 		// set viewport
 		glViewport(0, 0, 1024, 576);
 
-		//glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
 	}

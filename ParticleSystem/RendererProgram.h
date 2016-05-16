@@ -6,16 +6,19 @@
 #include <string>
 #include "Utils.h"
 #include "Camera.h"
+#include "Model.h"
 
 class RendererProgram
 {
 public:
-	RendererProgram(const GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const GLuint vao, const GLuint tex, const uniformUmap &u)
-		: programhandle(ph), atomicHandles(ah), vao(vao), texture(tex), uniforms(u) {};
+	RendererProgram(const GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah,
+					const GLuint vao, const GLuint tex, const uniformUmap &u, std::string rt,
+					Model &m)
+		: programhandle(ph), atomicHandles(ah), vao(vao), texture(tex), uniforms(u), renderType(rt), model(m) {};
 	RendererProgram();
 	~RendererProgram();
 
-	void execute(glm::mat4 &model, Camera cam);
+	void execute(glm::mat4 &modelMat, Camera cam);
 	void printContents();
 private:
 	GLuint programhandle;
@@ -23,7 +26,9 @@ private:
 	uniformUmap uniforms;
 	GLuint vao;
 	GLuint texture;
-
+	Model model;
+	std::string renderType;
+	
 	void bindResources();
 	void setUniforms();
 };

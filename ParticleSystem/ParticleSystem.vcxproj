@@ -71,7 +71,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
-    <LibraryPath>C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\devIL;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\sdl2\x86;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\devIL;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\glew;C:\Users\Tiago\Desktop\PI\ParticleSystem\libs\assimp;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Users\Tiago\Desktop\PI\ParticleSystem\includes;$(IncludePath)</IncludePath>
@@ -85,7 +85,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;assimpd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -133,10 +133,14 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ComputeProgram.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ParticleSystemLoader.cpp" />
     <ClCompile Include="ParticleSystemManager.cpp" />
     <ClCompile Include="RendererProgram.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="tinyxml\tinystr.cpp" />
     <ClCompile Include="tinyxml\tinyxml.cpp" />
     <ClCompile Include="tinyxml\tinyxmlerror.cpp" />
@@ -146,10 +150,14 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ComputeProgram.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ParticleSystemLoader.h" />
     <ClInclude Include="ParticleSystemManager.h" />
     <ClInclude Include="RendererProgram.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="tinyxml\tinystr.h" />
     <ClInclude Include="tinyxml\tinyxml.h" />
     <ClInclude Include="Utils.h" />

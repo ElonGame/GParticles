@@ -102,4 +102,11 @@ void ComputeProgram::setUniforms()
 			; // TODO: support vec4
 			  // TODO: support mat4
 	}
+
+
+	const GLfloat sArray[4] =
+	{
+		0,3.2,0, 1
+	};
+	glUniform4fv(glGetUniformLocation(programhandle, "spheres"), 1, sArray);
 }
