@@ -9,49 +9,50 @@
 
 layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
 layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint rdpLast;
+layout(binding = 2, offset = 0) uniform atomic_uint rocket_randomCounter;
+layout(binding = 3, offset = 0) uniform atomic_uint rdpLast;
 
-layout(std430, binding = 3) buffer Rocket_lifetimes
+layout(std430, binding = 4) buffer Rocket_lifetimes
 {
 	float rocket_lifetimes[];
 };
 
-layout(std430, binding = 4) buffer Rocket_lastPositions
+layout(std430, binding = 5) buffer Rocket_lastPositions
 {
 	vec4 rocket_lastPositions[];
 };
 
-layout(std430, binding = 5) buffer Rocket_lineLifetime
+layout(std430, binding = 6) buffer Rocket_lineLifetime
 {
 	float rocket_lineLifetime[];
 };
 
-layout(std430, binding = 6) buffer Rocket_positions
+layout(std430, binding = 7) buffer Rocket_positions
 {
 	vec4 rocket_positions[];
 };
 
-layout(std430, binding = 7) buffer Rocket_colors
+layout(std430, binding = 8) buffer Rocket_colors
 {
 	vec4 rocket_colors[];
 };
 
-layout(std430, binding = 8) buffer Rocket_velocities
+layout(std430, binding = 9) buffer Rocket_velocities
 {
 	vec4 rocket_velocities[];
 };
 
-layout(std430, binding = 9) buffer Rocket_texCoords
+layout(std430, binding = 10) buffer Rocket_texCoords
 {
 	vec2 rocket_texCoords[];
 };
 
-layout(std430, binding = 10) buffer RdpPos
+layout(std430, binding = 11) buffer RdpPos
 {
 	vec4 rdpPos[];
 };
 
-layout(std430, binding = 11) buffer RdpActive
+layout(std430, binding = 12) buffer RdpActive
 {
 	float rdpActive[];
 };
@@ -62,6 +63,8 @@ uniform float rocket_maxParticles;
 uniform float rocket_toCreate;
 uniform float rdpCreate;
 uniform float rdpSize;
+uniform int timet;
+uniform vec2 mouse;
 
 uint gid = gl_GlobalInvocationID.x;
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +142,13 @@ float snoise(vec2 v)
   return 130.0 * dot(m, g);
 }
 
+float randInRange(float minVal, float maxVal)
+{
+	float val = snoise(vec2(atomicCounterIncrement(rocket_randomCounter)));
+	float percentage = val * 0.5 + 0.5;
+	return mix(minVal, maxVal, percentage);
+}
+
 float randInRange(vec2 seed, float minVal, float maxVal)
 {
 	float val = snoise(seed);
@@ -195,15 +205,15 @@ vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 {
 	float radius = maxRadius;
 	if (positionsInVolume)
-		radius = randInRange(vec2(gid,gid*gid), 0, maxRadius);
+		radius = randInRange(0, maxRadius);
 
 	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(vec2(gid+7,gid+8*gid) * 0.01, 0, 360);
-	float angle2 = randInRange(vec2(gid+1,gid+8) * 0.01, 0, 180);
+	float angle = randInRange(0, 360);
+	float angle2 = randInRange(0, 180);
 
 	// calculate corresponding x and z polar coordinates
 	float x = radius * sin(angle) * cos(angle2);
-	float z = radius * cos(angle) * cos(angle2);
+	float z = radius * cos(angle);
 	float y = radius * sin(angle) * sin(angle2);
 
 	return vec4(x, y, z, 1);
@@ -215,9 +225,9 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
 	vec3 vel = dir;
 
 	// check if any direction should be randomized
-	if (randomize.x > 0) vel.x = snoise(vec2(gid,gid*gid));
-	if (randomize.y > 0) vel.y = snoise(vec2(gid+3,gid+4*gid));
-	if (randomize.z > 0) vel.z = snoise(vec2(gid+7,gid+8*gid) * 4);
+	if (randomize.x > 0) vel.x = randInRange(-1,1);
+	if (randomize.y > 0) vel.y = randInRange(-1,1);
+	if (randomize.z > 0) vel.z = randInRange(-1,1);
 
 	// avoid normalizing a zero vector
 	if (vel != vec3(0)) vel = normalize(vel);
@@ -263,6 +273,7 @@ void stick()
 
 uniform vec4 spheres[1];
 
+
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
@@ -278,25 +289,8 @@ void main()
 		kill();
 		return;
 	}
-
-	if (rocket_lineLifetime[gid] < 0)
-	{
-		rocket_lastPositions[gid].xyz += rocket_velocities[gid].xyz;
-	}
+	
+	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
-
-	// Collisions
-	for (int i = 0; i < 1; i++)
-	{
-		vec4 sphere = spheres[i];
-		if (distance(rocket_positions[gid].xyz, sphere.xyz) < 0.5 )
-		{
-			vec3 normal = normalize(rocket_positions[gid].xyz - sphere.xyz);
-			bounce(normal);
-			//kill();
-			stick();
-		}
-	}
-
-
+	rocket_positions[gid].x += (mouse.x - 0.5);
 }

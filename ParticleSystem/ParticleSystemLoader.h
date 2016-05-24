@@ -34,7 +34,7 @@ private:
 	static bool loadGlobalAtomics(TiXmlHandle atomics);
 	static bool loadGlobalUniforms(TiXmlHandle uniforms);
 	static void addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
-	static void addAtomicResets(TiXmlElement* actionsElement, atomicUmap &aum, std::vector<GLuint> &aToReset);
+	static void loadIterationResourceOverrides(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
 
 
 	// reserved resource info
@@ -45,6 +45,7 @@ private:
 	// reserved resource loading functions
 	static bool collectReservedResourceInfo();
 	static bool loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE);
+	static void loadInitialResourceOverrides(reservedResources &rr, TiXmlElement* psystemE);
 	static void loadReservedProgramResources(reservedResources &rr, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
 
 

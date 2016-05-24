@@ -5,13 +5,14 @@
 #include <iostream>
 #include <string>
 #include "Utils.h"
+#include "GlobalData.h"
 
 class ComputeProgram
 {
 public:
-	ComputeProgram(	GLuint ph, const std::vector<std::pair<GLuint, GLuint>> &ah, const std::vector<GLuint> &ahtr,
-					const std::vector<std::pair<GLuint, GLuint>> &bh, const uniformUmap &u, GLuint &mp)
-		: programhandle(ph), atomicHandles(ah), atomicsToReset(ahtr), bufferHandles(bh), uniforms(u), maxParticles(mp) {};
+	ComputeProgram(	GLuint ph, const atomicUmap &ah, const bufferUmap &bh,
+					const uniformUmap &u, GLuint &mp)
+		: programhandle(ph), atomics(ah), buffers(bh), uniforms(u), maxParticles(mp) {};
 	ComputeProgram();
 	~ComputeProgram();
 
@@ -19,10 +20,9 @@ public:
 	void printContents();
 private:
 	GLuint programhandle;
-	std::vector<std::pair<GLuint, GLuint>> atomicHandles;
-	std::vector<GLuint> atomicsToReset;
+	atomicUmap atomics;
 	uniformUmap uniforms;
-	std::vector<std::pair<GLuint, GLuint>> bufferHandles;
+	bufferUmap buffers;
 
 	GLuint maxParticles;
 

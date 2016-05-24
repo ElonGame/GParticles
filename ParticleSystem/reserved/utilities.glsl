@@ -73,6 +73,13 @@ float snoise(vec2 v)
   return 130.0 * dot(m, g);
 }
 
+float randInRange(float minVal, float maxVal)
+{
+	float val = snoise(vec2(atomicCounterIncrement(rocket_randomCounter)));
+	float percentage = val * 0.5 + 0.5;
+	return mix(minVal, maxVal, percentage);
+}
+
 float randInRange(vec2 seed, float minVal, float maxVal)
 {
 	float val = snoise(seed);
@@ -129,15 +136,15 @@ vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 {
 	float radius = maxRadius;
 	if (positionsInVolume)
-		radius = randInRange(vec2(gid,gid*gid), 0, maxRadius);
+		radius = randInRange(0, maxRadius);
 
 	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(vec2(gid+7,gid+8*gid) * 0.01, 0, 360);
-	float angle2 = randInRange(vec2(gid+1,gid+8) * 0.01, 0, 180);
+	float angle = randInRange(0, 360);
+	float angle2 = randInRange(0, 180);
 
 	// calculate corresponding x and z polar coordinates
 	float x = radius * sin(angle) * cos(angle2);
-	float z = radius * cos(angle) * cos(angle2);
+	float z = radius * cos(angle);
 	float y = radius * sin(angle) * sin(angle2);
 
 	return vec4(x, y, z, 1);
@@ -149,9 +156,9 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
 	vec3 vel = dir;
 
 	// check if any direction should be randomized
-	if (randomize.x > 0) vel.x = snoise(vec2(gid,gid*gid));
-	if (randomize.y > 0) vel.y = snoise(vec2(gid+3,gid+4*gid));
-	if (randomize.z > 0) vel.z = snoise(vec2(gid+7,gid+8*gid) * 4);
+	if (randomize.x > 0) vel.x = randInRange(-1,1);
+	if (randomize.y > 0) vel.y = randInRange(-1,1);
+	if (randomize.z > 0) vel.z = randInRange(-1,1);
 
 	// avoid normalizing a zero vector
 	if (vel != vec3(0)) vel = normalize(vel);

@@ -29,6 +29,7 @@ void stick()
 
 uniform vec4 spheres[1];
 
+
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
@@ -44,25 +45,7 @@ void main()
 		kill();
 		return;
 	}
-
-	if (rocket_lineLifetime[gid] < 0)
-	{
-		rocket_lastPositions[gid].xyz += rocket_velocities[gid].xyz;
-	}
+	
+	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
-
-	// Collisions
-	for (int i = 0; i < 1; i++)
-	{
-		vec4 sphere = spheres[i];
-		if (distance(rocket_positions[gid].xyz, sphere.xyz) < 0.5 )
-		{
-			vec3 normal = normalize(rocket_positions[gid].xyz - sphere.xyz);
-			bounce(normal);
-			//kill();
-			stick();
-		}
-	}
-
-
 }

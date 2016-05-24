@@ -1,7 +1,3 @@
-﻿  ParticleSystemLoader.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(21): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(270): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(390): warning C4244: '=': conversion from 'GLfloat' to 'GLuint', possible loss of data
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(47): warning C4715: 'ParticleSystemLoader::loadProject': not all control paths return a value
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(320): warning C4715: 'ParticleSystemLoader::collectReservedResourceInfo': not all control paths return a value
+﻿  ComputeProgram.cpp
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\computeprogram.cpp(22): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
   ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

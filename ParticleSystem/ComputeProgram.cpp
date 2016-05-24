@@ -1,7 +1,6 @@
 #include "ComputeProgram.h"
 
 
-
 ComputeProgram::ComputeProgram()
 {
 }
@@ -32,12 +31,15 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 	//	printf("%d LAST\n", currentVal);
 
 	// reset marked atomics
-	GLuint val = 0;
-	for each (auto id in atomicsToReset)
+	for (auto a : atomics)
 	{
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, id);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &val);
-		glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+		if (a.second.reset)
+		{
+			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, a.second.id);
+			glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
+							&a.second.initialValue);
+			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+		}
 	}
 }
 
@@ -48,22 +50,24 @@ void ComputeProgram::printContents()
 {
 	std::cout << ">> Compute program " << programhandle << std::endl;
 	std::cout << "Atomics" << std::endl;
-	for each (auto b in atomicHandles)
+	for (auto b : atomics)
 	{
-		std::cout << b.first << " with binding " << b.second << std::endl;
+		std::cout << b.first << " with id " << b.second.id << ".";
+		if (b.second.reset)
+		{
+			std::cout << " [OVERRIDEN] to " << b.second.initialValue << " every iteration.";
+		}
+		
+		std::cout << std::endl;
 	}
-	std::cout << "Atomics to Reset" << std::endl;
-	for each (auto b in atomicsToReset)
-	{
-		std::cout << b << std::endl;
-	}
+
 	std::cout << "Buffers" << std::endl;
-	for each (auto b in bufferHandles)
+	for (auto b : buffers)
 	{
-		std::cout << b.first << " with binding " << b.second << std::endl;
+		std::cout << b.first << " with binding " << b.second.id << std::endl;
 	}
 	std::cout << "Uniforms" << std::endl;
-	for each (auto b in uniforms)
+	for (auto b : uniforms)
 	{
 		std::cout << b.first << " " << b.second.type << " " << b.second.value << " " << std::endl;
 	}
@@ -75,15 +79,15 @@ void ComputeProgram::printContents()
 void ComputeProgram::bindResources()
 {
 	// bind atomics
-	for each (auto idBind in atomicHandles)
+	for each (auto a in atomics)
 	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, a.second.binding, a.second.id);
 	}
 
 	// bind buffers
-	for each (auto idBind in bufferHandles)
+	for each (auto b in buffers)
 	{
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, idBind.second, idBind.first);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, b.second.binding, b.second.id);
 	}
 }
 
@@ -92,7 +96,7 @@ void ComputeProgram::bindResources()
 ///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::setUniforms()
 {
-	for each (auto u in uniforms)
+	for (auto u : uniforms)
 	{
 		int uLocation = glGetUniformLocation(programhandle, u.first.c_str());
 
@@ -103,10 +107,9 @@ void ComputeProgram::setUniforms()
 			  // TODO: support mat4
 	}
 
+	int timeLoc = glGetUniformLocation(programhandle, "timet");
+	glUniform1ui(timeLoc, GlobalData::getInstance().getCurrentTimeMillis());
 
-	const GLfloat sArray[4] =
-	{
-		0,3.2,0, 1
-	};
-	glUniform4fv(glGetUniformLocation(programhandle, "spheres"), 1, sArray);
+	int mouseLoc = glGetUniformLocation(programhandle, "mouse");
+	glUniform2f(mouseLoc, GlobalData::getInstance().getMouseXY(true).x, GlobalData::getInstance().getMouseXY(true).y);
 }

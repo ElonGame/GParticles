@@ -1,0 +1,152 @@
+void kill()
+{
+	rocket_lifetimes[gid] = -1;
+
+	atomicCounterDecrement(rocket_aliveParticles);
+
+	int created = 0;
+	int i = int(atomicCounterIncrement(rdpLast) * rdpCreate);
+	for (; i < rdpSize && created < rdpCreate; i++)
+	{
+		if (rdpActive[i] == 0)
+		{
+			rdpPos[i] = rocket_positions[gid];
+			rdpActive[i] = 1;
+			created++;
+		}
+	}
+}
+
+void bounce(vec3 normal)
+{
+	rocket_velocities[gid].xyz = reflect(rocket_velocities[gid].xyz, normal);
+}
+
+void stick()
+{
+	rocket_velocities[gid] = vec4(0);
+}
+
+uniform vec4 spheres[1];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+float cageRadius = 3;
+float agentRadius = 1;
+float tooCloseRadius = 0.45;
+float centerMassLimit = 0.7;
+float maxAlignChange = 0.00003;
+float maxTooCloseChange = 0.00006;
+float maxCenterMassChange = 0.00001;
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (rocket_lifetimes[gid] <= 0)
+		return;
+
+	rocket_lifetimes[gid] -= 0.025;
+	rocket_lineLifetime[gid] -= 0.025;
+
+	if (rocket_lifetimes[gid] <= 0)
+	{
+		kill();
+		return;
+	}
+
+	/*if (rocket_lineLifetime[gid] < 0)
+	{
+	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
+	}*/
+
+	// check if touches cage
+	if (distance(vec3(0), rocket_positions[gid].xyz) + agentRadius > cageRadius)
+	{
+		bounce(normalize(-rocket_velocities[gid].xyz));
+		rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
+		rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
+	}
+	else
+	{
+		// check neighbours and align
+		float agentsInRange = 0;
+		vec3 alignDir = vec3(0);
+		vec3 neighboursAvgPos = vec3(0);
+		vec3 centreMass = vec3(0);
+		float tooCloseAgents = 0;
+		vec3 tooCloseDir = vec3(0);
+		for (int i = 0; i < rocket_maxParticles && rocket_lifetimes[i] > 0; i++)
+		{
+			// if in range, process
+			float dist = distance(rocket_positions[i].xyz, rocket_positions[gid].xyz);
+			if (dist < agentRadius)
+			{
+				alignDir += rocket_velocities[i].xyz;
+				if (dist > centerMassLimit)
+				{
+					neighboursAvgPos += rocket_positions[i].xyz;
+				}
+				agentsInRange++;
+
+				if (dist < tooCloseRadius && i != gid)
+				{
+					tooCloseDir = tooCloseDir + (rocket_positions[i].xyz - rocket_positions[gid].xyz);
+					tooCloseAgents++;
+				}
+			}
+		}
+
+
+		if (tooCloseAgents > 0)
+		{
+			tooCloseDir = -normalize(tooCloseDir / tooCloseAgents);
+			rocket_velocities[gid].xyz += clamp(tooCloseDir, -vec3(maxTooCloseChange), vec3(maxTooCloseChange));
+		}
+		else
+		{
+			alignDir = normalize(alignDir / agentsInRange);
+			rocket_velocities[gid].xyz += clamp(alignDir, -vec3(maxAlignChange), vec3(maxAlignChange));
+
+			neighboursAvgPos /= alignDir;
+			centreMass = normalize(neighboursAvgPos - rocket_positions[gid].xyz);
+			rocket_velocities[gid].xyz += clamp(centreMass, -vec3(maxCenterMassChange), vec3(maxCenterMassChange));
+		}
+		rocket_velocities[gid].xyz = normalize(rocket_velocities[gid].xyz) * 0.005;
+
+
+		rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
+		rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
+	}
+
+	// Collisions
+	/*for (int i = 0; i < 1; i++)
+	{
+		vec4 sphere = spheres[i];
+		if (distance(rocket_positions[gid].xyz, sphere.xyz) < 0.5 )
+		{
+			vec3 normal = normalize(rocket_positions[gid].xyz - sphere.xyz);
+			bounce(normal);
+			//kill();
+			stick();
+		}
+	}*/
+}

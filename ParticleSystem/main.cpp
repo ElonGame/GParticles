@@ -16,7 +16,9 @@ void fetchParticleSystems(ParticleSystemManager &psm)
 	// TODO: unbind current state and delete everything
 
 	std::vector<ParticleSystem> psContainer;
-	ParticleSystemLoader::loadProject("shaders/fireworks/userInput.xml", psContainer);
+	//ParticleSystemLoader::loadProject("shaders/droplets/droplets.xml", psContainer);
+	//ParticleSystemLoader::loadProject("shaders/boids/boids.xml", psContainer);
+	ParticleSystemLoader::loadProject("shaders/test/_test.xml", psContainer);
 
 	psm.setContainer(psContainer);
 }
@@ -55,12 +57,13 @@ bool processEvents()
 	// process mouse input and position
 	c.lastMouseX = c.mouseX;
 	c.lastMouseY = c.mouseY;
-	int mouseX, mouseY;
 	// set new camera target only if left button is pressed
 	if (SDL_GetMouseState(&c.mouseX, &c.mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
 		c.processMouseMovement();
 	}
+
+	GlobalData::getInstance().setMouseXY(c.mouseX, c.mouseY);
 	
 	return true;
 }
@@ -76,6 +79,8 @@ int main(int argc, char* args[])
 		return 1;
 	}
 
+	GlobalData::getInstance().setWindowDimensions(1024, 576);
+
 	// init opengl stuff
 	Utils::initGL();
 
@@ -88,9 +93,7 @@ int main(int argc, char* args[])
 	ParticleSystemManager psManager = ParticleSystemManager();
 	fetchParticleSystems(psManager);
 
-
-
-
+	
 
 
 	Model myModel = Model();
@@ -137,24 +140,26 @@ int main(int argc, char* args[])
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
-		glEnable(GL_BLEND);
 
-		// process all particle system
-		psManager.processParticles(c);
-		glDisable(GL_BLEND);
 
 		glUseProgram(modelProgram);
 
 		glm::mat4 projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
 		glm::mat4 view = c.getViewMatrix();
 		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(0,-0.2f,-3.0f));
+		model = glm::translate(model, glm::vec3(0,0.0f,0.0f));
 		//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		myModel.draw();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
+		//myModel.draw();
+
+		glEnable(GL_BLEND);
+
+		// process all particle system
+		psManager.processParticles(c);
+		glDisable(GL_BLEND);
 
 		glUseProgram(NULL);
 		glDisable(GL_DEPTH_TEST);

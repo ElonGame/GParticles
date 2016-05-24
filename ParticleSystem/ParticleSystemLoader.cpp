@@ -161,26 +161,27 @@ bool ParticleSystemLoader::loadGlobalBuffers(TiXmlHandle buffers)
 		// parse buffer info and store <name, bufferInfo> pair
 		glGenBuffers(1, &bi.id);
 		buffer->QueryUnsignedAttribute("elements", &bi.elements);
+		buffer->QueryStringAttribute("name", &bi.name);
 		buffer->QueryStringAttribute("type", &bi.type);
-		std::string bName;
-		buffer->QueryStringAttribute("name", &bName);
 
-		globalBufferInfo.emplace(bName, bi);
+		globalBufferInfo.emplace(bi.name, bi);
 
 		// initialize buffer
 		int bSize = bi.elements * ((bi.type == "vec4") ? 4 : 1);
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalBufferInfo.at(bName).id);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalBufferInfo.at(bi.name).id);
 		glBufferData(	GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat),
 						NULL, GL_DYNAMIC_DRAW);
 
 		// fill buffer with default values
 		GLfloat *values = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bSize * sizeof(GLfloat), bufMask);
+		
 		for (int i = 0; i < bSize; values[i++] = 0);
 
+		
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		std::cout << "(GLOBAL) INIT: buffer " << bName << " with number " << globalBufferInfo.at(bName).id
+		std::cout << "(GLOBAL) INIT: buffer " << bi.name << " with number " << globalBufferInfo.at(bi.name).id
 			<< ", " << bi.elements << " elements and size " << bSize << std::endl; // DUMP
 	}
 
@@ -208,17 +209,16 @@ bool ParticleSystemLoader::loadGlobalAtomics(TiXmlHandle atomics)
 		// parse atomic info and store <name, atomicInfo> pair
 		glGenBuffers(1, &ai.id);
 		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
-		std::string atmName;
-		atomic->QueryStringAttribute("name", &atmName);
+		atomic->QueryStringAttribute("name", &ai.name);
 
-		globalAtomicInfo.emplace(atmName, ai);
+		globalAtomicInfo.emplace(ai.name, ai);
 
 		// initialize atomic buffer
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ai.id);
 		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ai.initialValue);
 
-		std::cout << "(GLOBAL) INIT: atomic " << atmName << " with number " <<
+		std::cout << "(GLOBAL) INIT: atomic " << ai.name << " with number " <<
 			ai.id << " and starting value " << ai.initialValue << std::endl; // DUMP
 	}
 
@@ -244,14 +244,13 @@ bool ParticleSystemLoader::loadGlobalUniforms(TiXmlHandle uniforms)
 		uniformInfo ui;
 
 		// parse uniform and store <name, atomicInfo> pair
-		uniform->QueryFloatAttribute("value", &ui.value);
+		uniform->QueryStringAttribute("name", &ui.name);
 		uniform->QueryStringAttribute("type", &ui.type);
-		std::string uName;
-		uniform->QueryStringAttribute("name", &uName);
+		uniform->QueryFloatAttribute("value", &ui.value);
 
-		globalUniformInfo.emplace(uName, ui);
+		globalUniformInfo.emplace(ui.name, ui);
 
-		std::cout << "(GLOBAL) INIT: uniform " << uName<< " of type " <<
+		std::cout << "(GLOBAL) INIT: uniform " << ui.name<< " of type " <<
 			ui.type << " and value " << ui.value << std::endl; // DUMP
 	}
 
@@ -275,8 +274,8 @@ bool ParticleSystemLoader::collectReservedResourceInfo()
 	TiXmlHandle resourcesH = docHandle.FirstChild("resources").ToElement();
 
 	// collect buffer name, elements and type
-	TiXmlElement* buffer = resourcesH.FirstChild("buffers").FirstChild().ToElement();
-	for (; buffer; buffer = buffer->NextSiblingElement())
+	TiXmlElement* buffer = resourcesH.FirstChild("buffer").ToElement();
+	for (; buffer; buffer = buffer->NextSiblingElement("buffer"))
 	{
 		bufferInfo bi;
 		buffer->QueryStringAttribute("name", &bi.name);
@@ -290,8 +289,8 @@ bool ParticleSystemLoader::collectReservedResourceInfo()
 	}
 
 	// collect atomic name and initialValue
-	TiXmlElement* atomic = resourcesH.FirstChild("atomics").FirstChild().ToElement();
-	for (; atomic; atomic = atomic->NextSiblingElement())
+	TiXmlElement* atomic = resourcesH.FirstChild("atomic").ToElement();
+	for (; atomic; atomic = atomic->NextSiblingElement("atomic"))
 	{
 		atomicInfo ai;
 		atomic->QueryStringAttribute("name", &ai.name);
@@ -304,8 +303,8 @@ bool ParticleSystemLoader::collectReservedResourceInfo()
 	}
 
 	// collect uniform name, type and initial value
-	TiXmlElement* uniform = resourcesH.FirstChild("uniforms").FirstChild().ToElement();
-	for (; uniform; uniform = uniform->NextSiblingElement())
+	TiXmlElement* uniform = resourcesH.FirstChild("uniform").ToElement();
+	for (; uniform; uniform = uniform->NextSiblingElement("uniform"))
 	{
 		uniformInfo ui;
 		uniform->QueryStringAttribute("name", &ui.name);
@@ -324,7 +323,7 @@ bool ParticleSystemLoader::collectReservedResourceInfo()
 ///////////////////////////////////////////////////////////////////////////////
 bool ParticleSystemLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE)
 {
-	// get psystem name and max particles
+	// get psystem name
 	std::string psystemName;
 	int res = psystemE->QueryStringAttribute("name", &psystemName);
 	if (res != TIXML_SUCCESS)
@@ -333,114 +332,112 @@ bool ParticleSystemLoader::loadReservedPSResources(reservedResources &rr, TiXmlE
 		Utils::exitMessage("Invalid Input", msg);
 	}
 
-	// TODO: don't do this here
-	// collect uniform overrides
-	std::unordered_map<std::string, GLfloat> uniOverrides;
-	TiXmlElement* uOverride = psystemE->FirstChildElement("actions")->FirstChildElement("uniformOverride");
-	for (; uOverride; uOverride = uOverride->NextSiblingElement())
-	{
-		std::pair<std::string, GLfloat> pair;
-		uOverride->QueryStringAttribute("name", &pair.first);
-		uOverride->QueryFloatAttribute("value", &pair.second);
-
-		uniOverrides.insert(pair);
-	}
-
-
-	// load reserved atomics
+	// load default reserved atomics, uniforms and buffers
 	for (auto resAtmInfo : reservedAtomicInfo)
 	{
 		atomicInfo ai = resAtmInfo;
-
-		glGenBuffers(1, &ai.id);
 		ai.name = psystemName + ai.name;
+		ai.reset = false;
 		
 		rr.reservedAtomicInfo.emplace(ai.name, ai);
-
-		// initialize atomic buffer
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ai.id);
-		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ai.initialValue);
-
-		std::cout << "INIT: atomic " << ai.name << " with number " <<
-			ai.id << " and starting value " << ai.initialValue << std::endl; // DUMP
 	}
 
-
-	// load reserved uniforms
 	for (auto resUniInfo : reservedUniformInfo)
 	{
 		uniformInfo ui = resUniInfo;
+		ui.name = psystemName + ui.name;
 
-		std::string uniName = psystemName + ui.name;
+		rr.reservedUniformInfo.emplace(ui.name, ui);
 
-		// check if uniform value should be overriden
-		auto findResult = uniOverrides.find(uniName);
-		if (findResult != uniOverrides.end())
-			ui.value = uniOverrides.at(uniName);
-
-		rr.reservedUniformInfo.emplace(uniName, ui);
-
-		std::cout << "INIT: uniform " << uniName << " of type " <<
+		std::cout << "INIT: uniform " << ui.name << " of type " <<
 			ui.type << " and value " << ui.value << std::endl; // DUMP
 	}
-
-	
-	// load reserved buffers
-	rr.maxParticles = rr.reservedUniformInfo.at(psystemName + "_maxParticles").value;
-	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 
 	for (auto resBufInfo : reservedBufferInfo)
 	{
 		bufferInfo bi = resBufInfo;
+		bi.name = psystemName + bi.name;
 
-		glGenBuffers(1, &bi.id);
-		std::string bName = psystemName + bi.name;
+		rr.reservedBufferInfo.emplace(bi.name, bi);
+	}
 
-		rr.reservedBufferInfo.emplace(bName, bi);
 
-		// initialize buffer
+	// check and apply resource value overrides
+	loadInitialResourceOverrides(rr, psystemE);
+
+
+	// initialize reserved atomic buffers
+	for (auto &ab : rr.reservedAtomicInfo)
+	{
+		glGenBuffers(1, &ab.second.id);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ab.second.id);
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ab.second.initialValue);
+
+		std::cout << "INIT: atomic " << ab.second.name << " with number " <<
+			ab.second.id << " and starting value " << ab.second.initialValue << std::endl; // DUMP
+	}
+
+	
+	// get psystem max particles and initialize reserved buffers
+	rr.maxParticles = rr.reservedUniformInfo.at(psystemName + "_maxParticles").value;
+	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
+
+	for (auto &bi : rr.reservedBufferInfo)
+	{
 		if (rr.maxParticles != 0)
 		{
-			bi.elements = rr.maxParticles;
+			bi.second.elements = rr.maxParticles;
 		}
 	
 		int multiplier = 1;
-		if (bi.type == "vec4")
+		if (bi.second.type == "vec4")
 		{
 			multiplier = 4;
 		}
-		else if (bi.type == "vec2")
+		else if (bi.second.type == "vec2")
 		{
 			multiplier = 2;
 		}
 
-		int bSize = bi.elements * multiplier;
+		int bSize = bi.second.elements * multiplier;
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, bi.id);
+		glGenBuffers(1, &bi.second.id);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, bi.second.id);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
 
 		// fill buffer with default values
 		GLfloat *values = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bSize * sizeof(GLfloat), bufMask);
 
 		for (int i = 0; i < bSize; values[i++] = 0);
-		/*for (int i = 0, j = 0; i < bSize; i++, j++)
-		{
-			values[i] = bi.defaultVal[j];
-
-			if (j == multiplier - 1)
-			{
-				j = -1;
-			}
-		}*/
 
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-		std::cout << "INIT: buffer " << bName << " with number " << bi.id
-			<< ", " << bi.elements << " elements and size " << bSize << std::endl; // DUMP
+		std::cout << "INIT: buffer " << bi.second.name << " with number " << bi.second.id
+			<< ", " << bi.second.elements << " elements and size " << bSize << std::endl; // DUMP
 	}
 
 	return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void ParticleSystemLoader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement * psystemE)
+{
+	TiXmlElement* resE = psystemE->FirstChildElement("override");
+	std::string resType, resName;
+	for (; resE; resE = resE->NextSiblingElement("override"))
+	{
+		resE->QueryStringAttribute("type", &resType);
+		resE->QueryStringAttribute("name", &resName);
+
+		if (resType == "uniform")
+		{
+			resE->QueryFloatAttribute("value",
+				&rr.reservedUniformInfo.at(resName).value);
+		}
+	}
 }
 
 
@@ -470,19 +467,30 @@ void ParticleSystemLoader::addGlobalProgramResources(atomicUmap &aum, bufferUmap
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ParticleSystemLoader::addAtomicResets(TiXmlElement* actionsElement, atomicUmap &aum, std::vector<GLuint> &aToReset)
+void ParticleSystemLoader::loadIterationResourceOverrides(
+	TiXmlElement * programE, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
 {
-	if (actionsElement != nullptr)
+	if (programE == nullptr) { return; }
+
+	TiXmlElement* resE = programE->FirstChildElement("override");
+	
+	if (resE == nullptr) { return; }
+
+	std::string resType, resName, resValue;
+	for (; resE; resE = resE->NextSiblingElement())
 	{
-		std::string atmToReset;
-		TiXmlElement* atomicReset = actionsElement->FirstChildElement("resetAtomic");
-		if (atomicReset != nullptr)
+		resE->QueryStringAttribute("type", &resType);
+		resE->QueryStringAttribute("name", &resName);
+		resE->QueryStringAttribute("value", &resValue);
+
+		if (resType == "atomic")
 		{
-			for (; atomicReset; atomicReset = atomicReset->NextSiblingElement())
-			{
-				atomicReset->QueryStringAttribute("name", &atmToReset);
-				aToReset.push_back(aum.at(atmToReset).id);
-			}
+			aum.at(resName).reset = true;
+			aum.at(resName).initialValue = std::stoul(resValue, nullptr, 0);
+		}
+		else if (resType == "uniform")
+		{ 
+			uum.at(resName).value = std::stof(resValue);
 		}
 	}
 }
@@ -493,23 +501,28 @@ void ParticleSystemLoader::addAtomicResets(TiXmlElement* actionsElement, atomicU
 bool ParticleSystemLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE, ComputeProgram &cp)
 {
 	// parse and store program resource info for later binding
-	TiXmlElement* actionsE = programE->FirstChildElement("actions");
-	atomicUmap cpAtomicHandles = rr.reservedAtomicInfo;
-	bufferUmap cpBufferHandles = rr.reservedBufferInfo;
+	// start by adding the program reserved resources
+	atomicUmap cpAtomics = rr.reservedAtomicInfo;
+	bufferUmap cpBuffers = rr.reservedBufferInfo;
 	uniformUmap cpUniforms = rr.reservedUniformInfo;
-	std::vector<GLuint> cpAtmHandlesToReset;
 
-	addGlobalProgramResources(cpAtomicHandles, cpBufferHandles, cpUniforms);
-	addAtomicResets(actionsE, cpAtomicHandles, cpAtmHandlesToReset);
+	// then, add the program global resources
+	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
+	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
+	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
 
+	// and mark the indicated resources to be reset every iteration
+	loadIterationResourceOverrides(programE, cpAtomics, cpBuffers, cpUniforms);
+
+	// create shader program
 	GLuint cpHandle = glCreateProgram();
 
 	// parse file paths that compose final shader
 	std::vector<std::string> fPaths;
-	collectFPaths(programE, "files", fPaths);
+	collectFPaths(programE, "file", fPaths);
 
 	// shader source = header (from resource info) + reserved functionality + filepaths source
-	std::string shaderSource = generateComputeHeader(cpAtomicHandles, cpBufferHandles, cpUniforms);
+	std::string shaderSource = generateComputeHeader(cpAtomics, cpBuffers, cpUniforms);
 	shaderSource += fileToString("reserved/utilities.glsl");
 	shaderSource += createFinalShaderSource(fPaths);
 
@@ -527,21 +540,8 @@ bool ParticleSystemLoader::loadComputeProgram(reservedResources &rr, TiXmlElemen
 		printProgramLog(cpHandle);
 		return false;
 	}
-
-	// create CProgram, storing only the handles of buffers and atomics
-	std::vector<std::pair<GLuint, GLuint>> cpAtmHandles;
-	for (auto atm : cpAtomicHandles)
-	{
-		cpAtmHandles.push_back(std::make_pair(atm.second.id, atm.second.binding));
-	}
-
-	std::vector<std::pair<GLuint, GLuint>> cpBHandles;
-	for (auto b : cpBufferHandles)
-	{
-		cpBHandles.push_back(std::make_pair(b.second.id, b.second.binding));
-	}
 	
-	cp = ComputeProgram(cpHandle, cpAtmHandles, cpAtmHandlesToReset, cpBHandles, cpUniforms, rr.maxParticles);
+	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, cpUniforms, rr.maxParticles);
 
 	return true;
 }
@@ -587,9 +587,9 @@ void ParticleSystemLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement*
 	}
 
 	// collect shader file paths
-	collectFPaths(programE, "vertfiles", rl.vsPath);
-	collectFPaths(programE, "geomfiles", rl.gmPath);
-	collectFPaths(programE, "fragfiles", rl.fgPath);
+	collectFPaths(programE, "vertfile", rl.vsPath);
+	collectFPaths(programE, "geomfile", rl.gmPath);
+	collectFPaths(programE, "fragfile", rl.fgPath);
 }
 
 
@@ -604,12 +604,8 @@ void ParticleSystemLoader::collectFPaths(TiXmlElement* elem, const char *tag, st
 	if (fPathE == NULL)
 		return;
 	
-	fPathE = fPathE->FirstChildElement();
-	if (fPathE == NULL)
-		return;
-
 	std::string fragmentPath;
-	for (; fPathE; fPathE = fPathE->NextSiblingElement())
+	for (; fPathE; fPathE = fPathE->NextSiblingElement(tag))
 	{
 		fPathE->QueryStringAttribute("path", &fragmentPath);
 		target.push_back(fragmentPath);
@@ -907,7 +903,6 @@ std::string ParticleSystemLoader::createFinalShaderSource(std::vector<std::strin
 	{
 		shaderString = shaderString + fileToString(fPath);
 	}
-	std::cout << shaderString << std::endl;
 	return shaderString;
 }
 
@@ -952,6 +947,9 @@ std::string ParticleSystemLoader::generateComputeHeader(atomicUmap &cpAtomicHand
 	{
 		res += "uniform " + uni.second.type + " " + uni.first + ";\n";
 	}
+
+	res += "uniform int timet;\n";
+	res += "uniform vec2 mouse;\n";
 
 	// TODO: put this on reserved header
 	res += "\nuint gid = gl_GlobalInvocationID.x;\n";

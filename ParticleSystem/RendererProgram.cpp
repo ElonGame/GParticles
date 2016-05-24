@@ -20,15 +20,20 @@ void RendererProgram::execute(glm::mat4 &modelMat, Camera cam)
 	//glm::mat4 newModel = glm::scale(modelMat, glm::vec3(0.2f, 0.2f, 0.2f));
 	glm::mat4 view = cam.getViewMatrix();
 	glm::mat4 projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
+	glm::mat4 normalMat = view * modelMat;
+	normalMat = glm::transpose(glm::inverse(normalMat));
+
 
 	// Get their uniform location
 	GLint modelLoc = glGetUniformLocation(programhandle, "model");
 	GLint viewLoc = glGetUniformLocation(programhandle, "view");
 	GLint projLoc = glGetUniformLocation(programhandle, "projection");
+	GLint normalMatLoc = glGetUniformLocation(programhandle, "normalMatrix");
 	// Pass the matrices to the shader
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(normalMat));
 
 
 	// render
@@ -50,7 +55,7 @@ void RendererProgram::execute(glm::mat4 &modelMat, Camera cam)
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 		
-		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0, 1);
+		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0, 30);
 
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);

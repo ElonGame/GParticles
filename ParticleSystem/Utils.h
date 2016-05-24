@@ -24,25 +24,26 @@ struct rendererLoading
 struct bufferInfo
 {
 	GLuint id;
+	GLuint binding;
 	GLuint elements;
 	std::string type;
 	std::string name;
-	GLuint binding;
 };
 
 struct atomicInfo
 {
 	GLuint id;
-	GLuint initialValue;
-	std::string name;
 	GLuint binding;
+	std::string name;
+	GLuint initialValue;
+	bool reset;
 };
 
 struct uniformInfo
 {
-	GLfloat value;
-	std::string type;
 	std::string name;
+	std::string type;
+	GLfloat value;
 };
 
 using bufferUmap = std::unordered_map<std::string, bufferInfo>;
