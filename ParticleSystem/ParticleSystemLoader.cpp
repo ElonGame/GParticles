@@ -1,5 +1,4 @@
 #include "ParticleSystemLoader.h"
-#include "Shader.h"
 
 bufferUmap ParticleSystemLoader::globalBufferInfo;
 atomicUmap ParticleSystemLoader::globalAtomicInfo;

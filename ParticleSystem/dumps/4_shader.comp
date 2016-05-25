@@ -292,5 +292,5 @@ void main()
 	
 	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
-	rocket_positions[gid].x += (mouse.x - 0.5);
+	//rocket_positions[gid].x += (mouse.x - 0.5);
 }

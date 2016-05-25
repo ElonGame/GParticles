@@ -148,7 +148,6 @@ int main(int argc, char* args[])
 		glm::mat4 view = c.getViewMatrix();
 		glm::mat4 model;
 		model = glm::translate(model, glm::vec3(0,0.0f,0.0f));
-		//model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -158,7 +157,7 @@ int main(int argc, char* args[])
 		glEnable(GL_BLEND);
 
 		// process all particle system
-		psManager.processParticles(c);
+		psManager.processParticles(c.getViewMatrix());
 		glDisable(GL_BLEND);
 
 		glUseProgram(NULL);

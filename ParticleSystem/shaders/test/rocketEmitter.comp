@@ -1,6 +1,6 @@
 void onEmission()
 {
-	rocket_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 10;
+	rocket_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 3;
 	rocket_positions[gid] = spherePositionGenerator(1.5, false);
 	//rocket_positions[gid] = conePositionGenerator(1,2,true,true);
 	//rocket_positions[gid] = vec4(0,0,0.1,1);

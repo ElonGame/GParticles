@@ -1,0 +1,15 @@
+﻿  Texture.cpp
+  Shader.cpp
+  RendererProgram.cpp
+  ParticleSystemManager.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\particlesystemmanager.cpp(16): warning C4018: '<': signed/unsigned mismatch
+  ParticleSystem.cpp
+  Model.cpp
+  Mesh.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\mesh.cpp(28): warning C4244: 'argument': conversion from 'GLuint' to 'GLfloat', possible loss of data
+  GlobalData.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\globaldata.cpp(12): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+  ComputeProgram.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\computeprogram.cpp(22): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
+  Generating Code...
+  GParticles.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\GParticles.lib

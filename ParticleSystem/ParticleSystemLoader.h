@@ -3,6 +3,7 @@
 #include "ParticleSystem.h"
 #include "Texture.h"
 #include "Model.h"
+#include "Shader.h"
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 
