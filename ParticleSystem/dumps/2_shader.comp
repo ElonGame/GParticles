@@ -9,60 +9,47 @@
 
 layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
 layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint rocket_randomCounter;
-layout(binding = 3, offset = 0) uniform atomic_uint rdpLast;
+layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
 
-layout(std430, binding = 4) buffer Rocket_lifetimes
+layout(std430, binding = 3) buffer Rocket_lifetimes
 {
 	float rocket_lifetimes[];
 };
 
-layout(std430, binding = 5) buffer Rocket_lastPositions
+layout(std430, binding = 4) buffer Rocket_lastPositions
 {
 	vec4 rocket_lastPositions[];
 };
 
-layout(std430, binding = 6) buffer Rocket_lineLifetime
+layout(std430, binding = 5) buffer Rocket_lineLifetime
 {
 	float rocket_lineLifetime[];
 };
 
-layout(std430, binding = 7) buffer Rocket_positions
+layout(std430, binding = 6) buffer Rocket_positions
 {
 	vec4 rocket_positions[];
 };
 
-layout(std430, binding = 8) buffer Rocket_colors
+layout(std430, binding = 7) buffer Rocket_colors
 {
 	vec4 rocket_colors[];
 };
 
-layout(std430, binding = 9) buffer Rocket_velocities
+layout(std430, binding = 8) buffer Rocket_velocities
 {
 	vec4 rocket_velocities[];
 };
 
-layout(std430, binding = 10) buffer Rocket_texCoords
+layout(std430, binding = 9) buffer Rocket_texCoords
 {
 	vec2 rocket_texCoords[];
-};
-
-layout(std430, binding = 11) buffer RdpPos
-{
-	vec4 rdpPos[];
-};
-
-layout(std430, binding = 12) buffer RdpActive
-{
-	float rdpActive[];
 };
 
 layout(local_size_variable) in;
 
 uniform float rocket_maxParticles;
 uniform float rocket_toCreate;
-uniform float rdpCreate;
-uniform float rdpSize;
 uniform int timet;
 uniform vec2 mouse;
 
@@ -144,7 +131,7 @@ float snoise(vec2 v)
 
 float randInRange(float minVal, float maxVal)
 {
-	float val = snoise(vec2(atomicCounterIncrement(rocket_randomCounter)));
+	float val = snoise(vec2(atomicCounterIncrement(randomCounter)));
 	float percentage = val * 0.5 + 0.5;
 	return mix(minVal, maxVal, percentage);
 }

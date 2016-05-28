@@ -1,0 +1,36 @@
+void onEmission()
+{
+	rocket_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 3;
+	rocket_positions[gid] = spherePositionGenerator(1.5, false);
+	//rocket_positions[gid] = conePositionGenerator(1,2,true,true);
+	//rocket_positions[gid] = vec4(0,0,0.1,1);
+	rocket_velocities[gid].xyz = vec3(0);//velocityGenerator(rocket_positions[gid].xyz, vec3(0), 0.005);
+	rocket_lastPositions[gid] = rocket_positions[gid];
+	rocket_lineLifetime[gid] = 0.5;
+	rocket_colors[gid] = vec4(0.9,0.1,0.1,1);
+	/*vec4(
+		snoise(vec2(gid,gid*gid)),
+		snoise(vec2(gid,45*gid)),
+		snoise(vec2(gid,gid)),
+		1);*/
+}
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	/*LIMITERS*/
+	if (atomicCounter(rocket_aliveParticles) >= rocket_maxParticles)
+		return;
+	// -> + LIMITERS
+
+	if (rocket_lifetimes[gid] <= 0)
+	{
+		if (atomicCounterIncrement(rocket_emissionAttempts) < rocket_toCreate)
+		{
+			atomicCounterIncrement(rocket_aliveParticles);
+
+			onEmission();
+		}
+	}
+}

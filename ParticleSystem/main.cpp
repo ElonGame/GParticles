@@ -1,7 +1,7 @@
 #include "Utils.h"
 #include "Window.h"
-#include "ParticleSystemLoader.h"
-#include "ParticleSystemManager.h"
+#include "GPLoader.h"
+#include "GPManager.h"
 #include "Camera.h"
 #include <IL\il.h>
 #pragma comment(lib,"devil.lib")
@@ -9,19 +9,6 @@
 
 Camera c;
 std::vector<Texture> g_textures;
-
-
-void fetchParticleSystems(ParticleSystemManager &psm)
-{
-	// TODO: unbind current state and delete everything
-
-	std::vector<ParticleSystem> psContainer;
-	//ParticleSystemLoader::loadProject("shaders/droplets/droplets.xml", psContainer);
-	//ParticleSystemLoader::loadProject("shaders/boids/boids.xml", psContainer);
-	ParticleSystemLoader::loadProject("shaders/test/_test.xml", psContainer);
-
-	psm.setContainer(psContainer);
-}
 
 
 bool processEvents()
@@ -89,9 +76,10 @@ int main(int argc, char* args[])
 	// init camera
 	c = Camera();
 
-	// init ParticleSystemManager and load particle systems
-	ParticleSystemManager psManager = ParticleSystemManager();
-	fetchParticleSystems(psManager);
+	// init GPManager and load xml project file
+	GPManager gpManager;
+	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
+	GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
 
 	
 
@@ -108,14 +96,14 @@ int main(int argc, char* args[])
 	GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
 	std::vector<std::string> paths1;
 	paths1.push_back(std::string("shaders/model.vert"));
-	ParticleSystemLoader::compileShaderFiles(rpVertShader, paths1);
+	GPLoader::compileShaderFiles(rpVertShader, paths1);
 	glAttachShader(modelProgram, rpVertShader);
 
 	// frag shader
 	GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
 	std::vector<std::string> paths2;
 	paths2.push_back(std::string("shaders/model.frag"));
-	ParticleSystemLoader::compileShaderFiles(rpFragShader, paths2);
+	GPLoader::compileShaderFiles(rpFragShader, paths2);
 	glAttachShader(modelProgram, rpFragShader);
 
 	glLinkProgram(modelProgram);
@@ -157,7 +145,7 @@ int main(int argc, char* args[])
 		glEnable(GL_BLEND);
 
 		// process all particle system
-		psManager.processParticles(c.getViewMatrix());
+		gpManager.processParticles(c.getViewMatrix());
 		glDisable(GL_BLEND);
 
 		glUseProgram(NULL);

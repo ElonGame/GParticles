@@ -75,7 +75,7 @@ float snoise(vec2 v)
 
 float randInRange(float minVal, float maxVal)
 {
-	float val = snoise(vec2(atomicCounterIncrement(rocket_randomCounter)));
+	float val = snoise(vec2(atomicCounterIncrement(randomCounter)));
 	float percentage = val * 0.5 + 0.5;
 	return mix(minVal, maxVal, percentage);
 }

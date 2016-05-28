@@ -18,6 +18,7 @@
 		
 		<atomics>
 			<atomic name="rdpLast" value=0/>
+			<atomic name="randomCounter" value=0 />
 		</atomics>
 
 		<uniforms>

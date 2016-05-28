@@ -1,16 +1,1 @@
-﻿  Window.cpp
-  tinyxmlparser.cpp
-  tinyxmlerror.cpp
-  tinyxml.cpp
-  tinystr.cpp
-  ParticleSystemLoader.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(20): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(268): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(382): warning C4244: '=': conversion from 'GLfloat' to 'GLuint', possible loss of data
-  main.cpp
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  Camera.cpp
-  Generating Code...
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(46): warning C4715: 'ParticleSystemLoader::loadProject': not all control paths return a value
-c:\users\tiago\desktop\pi\particlesystem\particlesystem\particlesystemloader.cpp(318): warning C4715: 'ParticleSystemLoader::collectReservedResourceInfo': not all control paths return a value
-  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe
+﻿  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe
