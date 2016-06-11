@@ -22,8 +22,8 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 		numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	// see alive particles
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomicHandles[2].first);
+	//// print random counter
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomics.at("randomCounter").id);
 	//GLuint *ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	//GLuint currentVal = ptr[0];

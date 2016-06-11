@@ -80,7 +80,7 @@ void RendererProgram::printContents()
 	std::cout << "Atomics" << std::endl;
 	for each (auto b in atomicHandles)
 	{
-		std::cout << b.first << " with binding " << b.second << std::endl;
+		std::cout << b.first << " with binding " << b.second.id << std::endl;
 	}
 	std::cout << "Uniforms" << std::endl;
 	for each (auto b in uniforms)
@@ -100,9 +100,9 @@ void RendererProgram::bindResources()
 	glEnableClientState(GL_VERTEX_ARRAY);
 
 	// bind atomics
-	for (auto idBind : atomicHandles)
+	for (auto atm : atomicHandles)
 	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, idBind.second, idBind.first);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, atm.second.binding, atm.second.id);
 	}
 
 	glBindTexture(GL_TEXTURE_2D, texture);

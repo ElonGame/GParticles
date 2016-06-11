@@ -1,4 +1,3 @@
-#version 430
 
 in float rocket_lifetimes;
 in vec4 rocket_positions;

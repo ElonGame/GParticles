@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS
+// UTILITIES
 ////////////////////////////////////////////////////////////////////////////////
 
-// -- Utilities --
+// Random Number Generation in range [-1,1]
 ////////////////////////////////////////////////////////////////////////////////
 // Description : Array and textureless GLSL 2D simplex noise function.
 //      Author : Ian McEwan, Ashima Arts.
@@ -73,6 +73,9 @@ float snoise(vec2 v)
   return 130.0 * dot(m, g);
 }
 
+
+// Returns a random float in the given range
+////////////////////////////////////////////////////////////////////////////////
 float randInRange(float minVal, float maxVal)
 {
 	float val = snoise(vec2(atomicCounterIncrement(randomCounter)));
@@ -80,96 +83,145 @@ float randInRange(float minVal, float maxVal)
 	return mix(minVal, maxVal, percentage);
 }
 
-float randInRange(vec2 seed, float minVal, float maxVal)
-{
-	float val = snoise(seed);
-	float percentage = val * 0.5 + 0.5;
-	return mix(minVal, maxVal, percentage);
-}
 
-vec2 randInRangeV2(vec2 seed, float minVal, float maxVal)
-{
-	return vec2(	randInRange(seed, minVal, maxVal),
-					randInRange(vec2(seed.x, seed.y*seed.y), minVal, maxVal)
-				);
-}
-
-vec3 randInRangeV3(vec2 seed, float minVal, float maxVal)
-{
-	return vec3(	randInRange(seed, minVal, maxVal),
-					randInRange(vec2(seed.x, seed.y*seed.y), minVal, maxVal),
-					randInRange(vec2(seed.x+3*seed.x, seed.y+45), minVal, maxVal)
-				);
-}
-
-
-// -- Emission --
+// Returns a vec2 with random components in the given range
 ////////////////////////////////////////////////////////////////////////////////
-vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin, bool positionsInVolume)
+vec2 randInRangeV2(float minVal, float maxVal)
 {
-	// compute random y in range [0, height]
-	float y = randInRange(vec2(gid, gid * gid), 0, 1);
-
-	// compute particle horizontal distance from cone axis
-	float newRadius = (radius * y) / height;
-	float dist = newRadius;
-	if (positionsInVolume)
-	{
-		dist = randInRange(vec2(gid + 3 , gid + 4 * gid), 0, newRadius);
-	}
-
-	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(vec2(gid+7,gid+8*gid) * 0.01, 0, 360);
-
-	// calculate corresponding x and z polar coordinates
-	float x = dist * sin(angle);
-	float z = dist * cos(angle);
-
-	// compute cone orientation
-	y = (coneBaseIsOrigin) ? height - y : y;
-
-	return vec4(x, y, z, 1);
+	return vec2(randInRange(minVal, maxVal),
+				randInRange(minVal, maxVal));
 }
 
+
+// Returns a vec3 with random components in the given range
 ////////////////////////////////////////////////////////////////////////////////
-vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
+vec3 randInRangeV3(float minVal, float maxVal)
 {
-	float radius = maxRadius;
-	if (positionsInVolume)
-		radius = randInRange(0, maxRadius);
-
-	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(0, 360);
-	float angle2 = randInRange(0, 180);
-
-	// calculate corresponding x and z polar coordinates
-	float x = radius * sin(angle) * cos(angle2);
-	float z = radius * cos(angle);
-	float y = radius * sin(angle) * sin(angle2);
-
-	return vec4(x, y, z, 1);
+	return vec3(randInRange(minVal, maxVal),
+				randInRange(minVal, maxVal),
+				randInRange(minVal, maxVal));
 }
 
+
+
+// Returns a matrix that describes the rotation around an arbitrary axis by the
+// given angle in radians
 ////////////////////////////////////////////////////////////////////////////////
-vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
+mat4 rotationMatrix(vec3 axis, float angle)
 {
-	vec3 vel = dir;
-
-	// check if any direction should be randomized
-	if (randomize.x > 0) vel.x = randInRange(-1,1);
-	if (randomize.y > 0) vel.y = randInRange(-1,1);
-	if (randomize.z > 0) vel.z = randInRange(-1,1);
-
-	// avoid normalizing a zero vector
-	if (vel != vec3(0)) vel = normalize(vel);
-
-	return vel * intensity;
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+    
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
 }
 
-vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
-{
-	float intensity = randInRange(vec2(gid*gid,gid*gid), minInt, maxInt);
 
-	return velocityGenerator(dir, randomize, intensity);
+
+// Returns a matrix constructed from the given direction axis that holds the
+// axis of a 3D space
+////////////////////////////////////////////////////////////////////////////////
+mat4 construct3DSpace(vec3 dir)
+{
+    dir = normalize(dir);
+    vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
+    vec3 up = normalize(cross(dir, right));
+    
+    return mat4(vec4(right, 0),
+                vec4(up, 0),
+                vec4(dir, 0),
+                vec4(0, 0, 0, 1));
 }
 
+
+
+// Returns new quad coordinates vector so they always face the XZ plane
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] billboardFaceXZ(vec4[4] quad, mat4 viewModel)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        quad[i].yz = quad[i].zy;
+        quad[i] = viewModel * quad[i];
+    }
+    
+    return quad;
+}
+
+
+
+// Returns new quad coordinates vector so they face the camera while also
+// aligning with the moving direction
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] billboardDirectionCamera(vec4[4] quad, vec3 dir, vec3 particleToCamera)
+{
+    dir = normalize(dir);
+    particleToCamera = normalize(particleToCamera);
+    vec3 up = normalize(cross(dir, particleToCamera));
+    vec3 right = normalize(cross(up, dir));
+    mat4 orientation = mat4(vec4(dir, 0),
+                            vec4(up, 0),
+                            vec4(right, 0),
+                            vec4(0, 0, 0, 1));
+    
+    for (int i = 0; i < 4; i++)
+        quad[i] =  orientation * quad[i];
+
+    return quad;
+}
+
+
+
+// Returns new quad coordinates vector so they always face the moving direction
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] billboardDirection(vec4[4] quad, vec3 dir)
+{
+    mat4 orientation = construct3DSpace(dir);
+
+    for (int i = 0; i < 4; i++)
+        quad[i] =  orientation * quad[i];
+
+    return quad;
+}
+
+
+
+// Returns new quad coordinates vector so they always face the up axis of the
+// moving direction
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] billboardDirectionUp(vec4[4] quad, vec3 dir)
+{
+    mat4 orientation = construct3DSpace(dir);
+
+    vec4 tmp = orientation[1];
+    orientation[1] = orientation[2];
+    orientation[2] = tmp;
+
+    for (int i = 0; i < 4; i++)
+        quad[i] =  orientation * quad[i];
+
+    return quad;
+}
+
+
+
+// Returns new quad coordinates vector so they always face the right axis of the
+// moving direction
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] billboardDirectionRight(vec4[4] quad, vec3 dir)
+{
+    mat4 orientation = construct3DSpace(dir);
+    
+    vec4 tmp = orientation[0];
+    orientation[0] = orientation[2];
+    orientation[2] = tmp;
+
+    for (int i = 0; i < 4; i++)
+        quad[i] =  orientation * quad[i];
+
+    return quad;
+}

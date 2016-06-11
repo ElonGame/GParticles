@@ -134,20 +134,16 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 	nWorkGroupE->QueryUnsignedAttribute("value", &numWorkGroups);
 
 	// lifetime
-	unsigned int lifetime = 0;
-	std::string str = "millisec";
-	bool looping = false;
+	unsigned int lifetime = 3600;
+	bool looping = true;
 	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
-	if (lifetimeE->QueryUnsignedAttribute("limit", &lifetime) == TIXML_SUCCESS)
+	if (lifetimeE->QueryUnsignedAttribute("value", &lifetime) == TIXML_SUCCESS)
 	{
-		if (lifetimeE->QueryStringAttribute("unit", &str) == TIXML_SUCCESS)
-		{
-			lifetime *= (str == "millisec") ? 1 : 1000;
-		}
+		lifetime *= 1000;
 
-		if (lifetimeE->QueryStringAttribute("looping", &str) == TIXML_SUCCESS)
+		if (lifetimeE->QueryBoolAttribute("looping", &looping) != TIXML_SUCCESS)
 		{
-			looping = (str == "true");
+			looping = true;
 		}
 	}
 
@@ -251,6 +247,7 @@ bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 		// parse atomic info and store <name, atomicInfo> pair
 		glGenBuffers(1, &ai.id);
 		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
+		ai.reset = false;
 
 		globalAtomicInfo.emplace(ai.name, ai);
 
@@ -607,6 +604,7 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	// shader source = header (from resource info) + reserved functionality + filepaths source
 	std::string shaderSource = generateComputeHeader(cpAtomics, cpBuffers, cpUniforms);
 	shaderSource += fileToString("reserved/utilities.glsl");
+	shaderSource += fileToString("reserved/emission.glsl");
 	shaderSource += createFinalShaderSource(fPaths);
 
 	// compile, attach and check link status
@@ -734,10 +732,9 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 
 	// create atomic binding points
 	int bindingPoint = 0;
-	std::vector<std::pair<GLuint, GLuint>> rendAtmHandles;
-	for (auto atm : rendAtomics)
+	for (auto &atm : rendAtomics)
 	{
-		rendAtmHandles.push_back(std::make_pair(atm.second.id, bindingPoint++));
+		atm.second.binding = bindingPoint++;
 	}
 
 
@@ -750,7 +747,9 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for vertex shader");
 	}
-	std::string source = createFinalShaderSource(rl.vsPath);
+	std::string header = generateRenderHeader(rendAtomics);
+	header += fileToString("reserved/utilities.glsl");
+	std::string source = createFinalShaderSource(rl.vsPath, header);
 	Shader rpVertShader("vertex", source);
 	rpVertShader.dumpToFile();
 	glAttachShader(rpHandle, rpVertShader.getId());
@@ -758,8 +757,9 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	// geometry shader
 	if (!rl.gmPath.empty())
 	{
-		source = createFinalShaderSource(rl.gmPath);
+		source =createFinalShaderSource(rl.gmPath, header);
 		Shader rpGeomShader("geometry", source);
+		rpGeomShader.dumpToFile();
 		glAttachShader(rpHandle, rpGeomShader.getId());
 	}
 
@@ -768,8 +768,9 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for fragment shader");
 	}
-	source = createFinalShaderSource(rl.fgPath);
+	source = createFinalShaderSource(rl.fgPath, header);
 	Shader rpFragShader("fragment", source);
+	rpFragShader.dumpToFile();
 	glAttachShader(rpHandle, rpFragShader.getId());
 
 
@@ -855,7 +856,7 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 
 	glBindVertexArray(0);
 
-	rp = RendererProgram(rpHandle, rendAtmHandles, vao, texture.getId(), rendUniforms, rl.rendertype, model);
+	rp = RendererProgram(rpHandle, rendAtomics, vao, texture.getId(), rendUniforms, rl.rendertype, model);
 
 	return true;
 }
@@ -987,6 +988,22 @@ std::string GPLoader::createFinalShaderSource(std::vector<std::string> fPaths, s
 		shaderString = shaderString + fileToString(fPath);
 	}
 	return shaderString;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+std::string GPLoader::generateRenderHeader(atomicUmap &atomics)
+{
+	std::string res = "#version 430\n";
+
+	for (auto &atm : atomics)
+	{
+		res += "layout(binding = " + std::to_string(atm.second.binding) +
+				", offset = 0) uniform atomic_uint " + atm.first + ";\n";
+	}
+
+	return res + "\n";
 }
 
 

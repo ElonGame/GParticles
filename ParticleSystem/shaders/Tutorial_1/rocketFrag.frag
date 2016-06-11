@@ -1,4 +1,3 @@
-#version 430
 
 in float rocket_lifetimesG;
 in vec4 colorsG;
