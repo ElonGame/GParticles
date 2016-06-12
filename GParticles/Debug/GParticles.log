@@ -1,11 +1,23 @@
-﻿  GPLoader.cpp
+﻿  GP_Uniform.cpp
+  GPLoader.cpp
 c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(20): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'TiXmlDocument'
 c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(186): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
 c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(242): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(288): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(322): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(351): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(379): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(463): warning C4244: '=': conversion from 'GLfloat' to 'GLuint', possible loss of data
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(347): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(381): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(410): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(438): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(522): warning C4244: '=': conversion from 'float' to 'GLuint', possible loss of data
+  Generating Code...
 c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(39): warning C4715: 'GPLoader::loadProject': not all control paths return a value
+  Compiling...
+  RendererProgram.cpp
+  ParticleSystem.cpp
+  GlobalData.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\globaldata.cpp(12): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+  GPManager.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gpmanager.cpp(15): warning C4018: '<': signed/unsigned mismatch
+  ComputeProgram.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\computeprogram.cpp(22): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
+  Generating Code...
   GParticles.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\GParticles.lib

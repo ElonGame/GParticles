@@ -5,6 +5,8 @@ void onEmission()
 	//rocket_positions[gid] = conePositionGenerator(1,2,false,true);
 	//rocket_positions[gid] = vec4(0,0,0.1,1);
 	rocket_velocities[gid].xyz = velocityGenerator(rocket_positions[gid].xyz, vec3(0), 0.0015);
+	if (uniTest[3].x == 13)
+	rocket_velocities[gid].xyz = vec3(0,0.01,0);
 	rocket_lastPositions[gid] = rocket_positions[gid];
 	rocket_lineLifetime[gid] = 0.5;
 	rocket_colors[gid] = vec4(0.9,0.1,0.1,1);

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="ComputeProgram.cpp" />
     <ClCompile Include="GlobalData.cpp" />
+    <ClCompile Include="GP_Uniform.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
@@ -37,6 +38,7 @@
   <ItemGroup>
     <ClInclude Include="ComputeProgram.h" />
     <ClInclude Include="GlobalData.h" />
+    <ClInclude Include="GP_Uniform.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ParticleSystem.h" />

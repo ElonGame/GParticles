@@ -6,7 +6,7 @@ uniformUmap GPLoader::globalUniformInfo;
 
 std::vector<bufferInfo> GPLoader::reservedBufferInfo;
 std::vector<atomicInfo> GPLoader::reservedAtomicInfo;
-std::vector<uniformInfo> GPLoader::reservedUniformInfo;
+std::vector<GP_Uniform> GPLoader::reservedUniformInfo;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -266,6 +266,65 @@ bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
+{
+	if (u.type == "uint")
+	{
+		int res = uElem->QueryUnsignedAttribute("value", (GLuint *)&u.value[0].x);
+		if (res != TIXML_SUCCESS || isnan(u.value[0].x))
+		{
+			std::string msg = "Must provide a value > -1 for uniform \"" + u.name
+							  + "\" on line " + std::to_string(uElem->Row());
+			Utils::exitMessage("Invalid Input", msg);
+		}
+	}
+	else if (u.type == "float")
+	{
+		int res = uElem->QueryFloatAttribute("value", &u.value[0].x);
+		if (res != TIXML_SUCCESS)
+		{
+			std::string msg = "Must provide a value for uniform \"" + u.name
+				+ "\" on line " + std::to_string(uElem->Row());
+			Utils::exitMessage("Invalid Input", msg);
+		}
+		std::cout << "VALUE PLACE IS: " << u.value[0].x << std::endl;
+	}
+	else if (u.type == "vec2")
+	{
+		uElem->QueryFloatAttribute("x", &u.value[0].x);
+		uElem->QueryFloatAttribute("y", &u.value[0].y);
+
+		std::cout << "VALUE PLACE IS: " << u.value[0].x << ", " << u.value[0].y << std::endl;
+	}
+	else if (u.type == "vec4")
+	{
+		// default is 0 if no value is provided
+		uElem->QueryFloatAttribute("x", &u.value[0].x);
+		uElem->QueryFloatAttribute("y", &u.value[0].y);
+		uElem->QueryFloatAttribute("z", &u.value[0].z);
+		uElem->QueryFloatAttribute("w", &u.value[0].w);
+
+		std::cout << "VALUE PLACE IS: " << u.value[0].x << ", " << u.value[0].y << ", "
+			<< u.value[0].z << ", " << u.value[0].w << std::endl;
+	}
+	else if (u.type == "mat4")
+	{
+		// default is identity matrix
+		for (int i = 0; i < 4; i++)
+		{
+			std::string l = std::to_string(i);
+			std::vector<std::string> attribute = { "x"+l, "y"+l, "z"+l, "w"+l };
+			uElem->QueryFloatAttribute(attribute[0].c_str(), &u.value[i].x);
+			uElem->QueryFloatAttribute(attribute[1].c_str(), &u.value[i].y);
+			uElem->QueryFloatAttribute(attribute[2].c_str(), &u.value[i].z);
+			uElem->QueryFloatAttribute(attribute[3].c_str(), &u.value[i].w);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 {
 	TiXmlElement* uniform = globalResH.FirstChild("uniform").ToElement();
@@ -278,7 +337,7 @@ bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 	// iterate through every uniform resource
 	for (; uniform; uniform = uniform->NextSiblingElement("uniform"))
 	{
-		uniformInfo ui;
+		GP_Uniform ui;
 
 		// skip uniform loading another has already been loaded with that name
 		uniform->QueryStringAttribute("name", &ui.name);
@@ -293,12 +352,12 @@ bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 		// parse uniform and store <name, atomicInfo> pair
 		uniform->QueryStringAttribute("name", &ui.name);
 		uniform->QueryStringAttribute("type", &ui.type);
-		uniform->QueryFloatAttribute("value", &ui.value);
+		queryValue(uniform, ui);
 
 		globalUniformInfo.emplace(ui.name, ui);
 
 		std::cout << "(GLOBAL) INIT: uniform " << ui.name<< " of type " <<
-			ui.type << " and value " << ui.value << std::endl; // DUMP
+			ui.type << " and value " << ui.value[0].x << std::endl; // DUMP
 	}
 
 	return true;
@@ -372,7 +431,7 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 	TiXmlElement* uniform = reservedResH.FirstChild("uniform").ToElement();
 	for (; uniform; uniform = uniform->NextSiblingElement("uniform"))
 	{
-		uniformInfo ui;
+		GP_Uniform ui;
 
 		// skip uniform loading another has already been loaded with that name
 		uniform->QueryStringAttribute("name", &ui.name);
@@ -389,12 +448,12 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 		}
 
 		uniform->QueryStringAttribute("type", &ui.type);
-		uniform->QueryFloatAttribute("value", &ui.value);
+		uniform->QueryFloatAttribute("value", &ui.value[0].x);
 
 		reservedUniformInfo.push_back(ui);
 
 		std::cout << "COLLECTED: uniform " << ui.name << ", with initial value "
-			<< ui.value << " and type " << ui.type << std::endl; // DUMP
+			<< ui.value[0].x << " and type " << ui.type << std::endl; // DUMP
 	}
 }
 
@@ -424,13 +483,13 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 
 	for (auto resUniInfo : reservedUniformInfo)
 	{
-		uniformInfo ui = resUniInfo;
+		GP_Uniform ui = resUniInfo;
 		ui.name = psystemName + ui.name;
 
 		rr.reservedUniformInfo.emplace(ui.name, ui);
 
 		std::cout << "INIT: uniform " << ui.name << " of type " <<
-			ui.type << " and value " << ui.value << std::endl; // DUMP
+			ui.type << " and value " << ui.value[0].x << std::endl; // DUMP
 	}
 
 	for (auto resBufInfo : reservedBufferInfo)
@@ -460,7 +519,7 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 
 	
 	// get psystem max particles and initialize reserved buffers
-	rr.maxParticles = rr.reservedUniformInfo.at(psystemName + "_maxParticles").value;
+	rr.maxParticles = rr.reservedUniformInfo.at(psystemName + "_maxParticles").value[0].x;
 	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 
 	for (auto &bi : rr.reservedBufferInfo)
@@ -515,7 +574,7 @@ void GPLoader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement
 		if (resType == "uniform")
 		{
 			resE->QueryFloatAttribute("value",
-				&rr.reservedUniformInfo.at(resName).value);
+				&rr.reservedUniformInfo.at(resName).value[0].x);
 		}
 	}
 }
@@ -570,7 +629,7 @@ void GPLoader::loadIterationResourceOverrides(
 		}
 		else if (resType == "uniform")
 		{ 
-			uum.at(resName).value = std::stof(resValue);
+			uum.at(resName).value[0].x = std::stof(resValue);
 		}
 	}
 }

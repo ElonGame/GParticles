@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
+#include "GP_Uniform.h"
 
 struct Vertex
 {
@@ -39,16 +40,17 @@ struct atomicInfo
 	bool reset;
 };
 
-struct uniformInfo
+/*struct uniformInfo
 {
 	std::string name;
 	std::string type;
 	GLfloat value;
-};
+	//GP
+};*/
 
 using bufferUmap = std::unordered_map<std::string, bufferInfo>;
 using atomicUmap = std::unordered_map<std::string, atomicInfo>;
-using uniformUmap = std::unordered_map<std::string, uniformInfo>;
+using uniformUmap = std::unordered_map<std::string, GP_Uniform>;
 
 namespace Utils
 {

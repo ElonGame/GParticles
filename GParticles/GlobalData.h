@@ -2,6 +2,7 @@
 #include <chrono>
 #include <ratio>
 #include <iostream>
+#include "Utils.h"
 
 using timeClock = std::chrono::steady_clock;
 using timeP = std::chrono::time_point<timeClock>;
@@ -20,6 +21,11 @@ public:
 	float getWindowWidth();
 	float getWindowHeight();
 
+	// resource functions
+	void addBuffer(bufferInfo);
+
+	bufferInfo getBuffer();
+
 	GlobalData(GlobalData const&)		= delete;
 	void operator=(GlobalData const&)	= delete;
 
@@ -28,6 +34,11 @@ private:
 	float mouseY;
 	float windowWidth;
 	float windowHeight;
+
+	// resources
+	bufferUmap buffers;
+	atomicUmap atomics;
+	uniformUmap uniforms;
 
 	GlobalData() {};
 };

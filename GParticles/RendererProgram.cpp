@@ -85,7 +85,7 @@ void RendererProgram::printContents()
 	std::cout << "Uniforms" << std::endl;
 	for each (auto b in uniforms)
 	{
-		std::cout << b.first << " " << b.second.type << " " << b.second.value << " " << std::endl;
+		std::cout << b.first << " " << b.second.type << " " << b.second.value[0].x << " " << std::endl;
 	}
 	std::cout << "vao " << vao << std::endl;
 
@@ -115,12 +115,6 @@ void RendererProgram::setUniforms()
 {
 	for (auto u : uniforms)
 	{
-		int uLocation = glGetUniformLocation(programhandle, u.first.c_str());
-
-		if (u.second.type == "float")
-			glUniform1f(uLocation, u.second.value);
-		else
-			; // TODO: support vec4
-			  // TODO: support mat4
+		u.second.bind(glGetUniformLocation(programhandle, u.first.c_str()));
 	}
 }

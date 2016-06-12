@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
+#include "GP_Uniform.h"
 
 struct reservedResources
 {
@@ -43,7 +44,7 @@ private:
 	// reserved resource info
 	static std::vector<bufferInfo> reservedBufferInfo;
 	static std::vector<atomicInfo> reservedAtomicInfo;
-	static std::vector<uniformInfo> reservedUniformInfo;
+	static std::vector<GP_Uniform> reservedUniformInfo;
 
 	// reserved resource loading functions
 	static void collectReservedResourceInfo(TiXmlHandle reservedResH);
@@ -67,5 +68,8 @@ private:
 	static std::string fileToString(std::string filePath);
 	static void printShaderLog(GLuint shader);
 	static void printProgramLog(GLuint program);
+
+
+	static void queryValue(TiXmlElement* uElem, GP_Uniform &u);
 };
 

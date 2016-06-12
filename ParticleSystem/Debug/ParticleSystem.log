@@ -1,1 +1,3 @@
-﻿  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe
+﻿  main.cpp
+c:\users\tiago\desktop\pi\particlesystem\particlesystem\main.cpp(52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  ParticleSystem.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\ParticleSystem.exe

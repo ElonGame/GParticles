@@ -10,7 +10,6 @@
 Camera c;
 std::vector<Texture> g_textures;
 
-
 bool processEvents()
 {
 	SDL_Event e;
@@ -54,7 +53,6 @@ bool processEvents()
 	
 	return true;
 }
-
 
 int main(int argc, char* args[])
 {
