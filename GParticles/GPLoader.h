@@ -30,7 +30,7 @@ private:
 	// global resource info
 	static bufferUmap globalBufferInfo;
 	static atomicUmap globalAtomicInfo;
-	static uniformUmap globalUniformInfo;
+	//static uniformUmap globalUniformInfo;
 	
 	// global resource loading functions
 	static void loadGlobalResources(TiXmlHandle globalResH);
@@ -62,7 +62,7 @@ private:
 	static void collectFPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
-	static std::string createFinalShaderSource(std::vector<std::string> filePaths, std::string header = "");
+	static std::string createFinalShaderSource(std::vector<std::string> filePaths);
 	static std::string generateRenderHeader(atomicUmap &atomics);
 	static std::string generateComputeHeader(atomicUmap &cpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms);
 	static std::string fileToString(std::string filePath);

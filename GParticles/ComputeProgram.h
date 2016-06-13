@@ -9,7 +9,7 @@ class ComputeProgram
 {
 public:
 	ComputeProgram(	GLuint ph, const atomicUmap &ah, const bufferUmap &bh,
-					const uniformUmap &u, GLuint &mp)
+					const std::vector<std::string> &u, GLuint &mp)
 		: programhandle(ph), atomics(ah), buffers(bh), uniforms(u), maxParticles(mp) {};
 	ComputeProgram();
 	~ComputeProgram();
@@ -19,11 +19,10 @@ public:
 private:
 	GLuint programhandle;
 	atomicUmap atomics;
-	uniformUmap uniforms;
+	std::vector<std::string> uniforms;
 	bufferUmap buffers;
 
 	GLuint maxParticles;
 
 	void bindResources();
-	void setUniforms();
 };

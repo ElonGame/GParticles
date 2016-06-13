@@ -11,27 +11,31 @@ using ms = std::chrono::milliseconds;
 class GlobalData
 {
 public:
-	static GlobalData& getInstance();
+	static GlobalData& get();
 
 	int getCurrentTimeMillis();
-	void setMouseXY(float x, float y);
 	void setWindowDimensions(float w, float h);
-	float getMouseX(bool normalized);
-	float getMouseY(bool normalized);
 	float getWindowWidth();
 	float getWindowHeight();
 
 	// resource functions
-	void addBuffer(bufferInfo);
+	//void addBuffer(bufferInfo b);
+	//void addAtomic(atomicInfo a);
+	void addUniform(GP_Uniform u);
+	//bufferInfo getBuffer(std::string name);
+	//atomicInfo getAtomic(std::string name);
+	bool setUniformValue(std::string name, float value);
+	bool setUniformValue(std::string name, glm::vec2 value);
+	bool setUniformValue(std::string name, glm::vec4 value);
+	bool setUniformValue(std::string name, glm::mat4 value);
+	bool getUniform(std::string name, GP_Uniform &u);
+	uniformUmap getUniformMap();
 
-	bufferInfo getBuffer();
 
 	GlobalData(GlobalData const&)		= delete;
 	void operator=(GlobalData const&)	= delete;
 
 private:
-	float mouseX;
-	float mouseY;
 	float windowWidth;
 	float windowHeight;
 

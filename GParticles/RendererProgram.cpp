@@ -18,8 +18,8 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	setUniforms();
 
-	GLfloat windowW = (GLfloat)GlobalData::getInstance().getWindowWidth();
-	GLfloat windowH = (GLfloat)GlobalData::getInstance().getWindowHeight();
+	GLfloat windowW = (GLfloat)GlobalData::get().getWindowWidth();
+	GLfloat windowH = (GLfloat)GlobalData::get().getWindowHeight();
 	glm::mat4 projection = glm::perspective(45.0f, windowW / windowH, 0.1f, 100.0f);
 
 	glm::mat4 normalMat = viewMat * modelMat;

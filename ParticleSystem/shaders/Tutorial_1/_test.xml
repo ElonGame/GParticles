@@ -17,11 +17,15 @@
 		<emitter>
 			<override type="atomic" name="rocket_emissionAttempts" value=0/>
 
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
 			<file path="shaders/Tutorial_1/rocketEmitter.comp" />
 		</emitter>
 
 
 		<updater>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
 			<file path="shaders/Tutorial_1/rocketUpdater.comp" />
 		</updater>
 
@@ -35,8 +39,9 @@
 				<file path="shaders/Tutorial_1/model.frag" />
 			</fragfiles-->
 			<rendertype type="billboard" path="snow.png" />
-		
+			
 			<vertfile path="shaders/Tutorial_1/rocketVertex.vert" />
+			<geomfile path="reserved/utilities.glsl" />
 			<geomfile path="shaders/Tutorial_1/rocketGeom.geom"/>
 			<fragfile path="shaders/Tutorial_1/rocketFrag.frag" />
 		</renderer>

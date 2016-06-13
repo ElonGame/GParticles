@@ -40,14 +40,6 @@ struct atomicInfo
 	bool reset;
 };
 
-/*struct uniformInfo
-{
-	std::string name;
-	std::string type;
-	GLfloat value;
-	//GP
-};*/
-
 using bufferUmap = std::unordered_map<std::string, bufferInfo>;
 using atomicUmap = std::unordered_map<std::string, atomicInfo>;
 using uniformUmap = std::unordered_map<std::string, GP_Uniform>;

@@ -22,7 +22,7 @@
 
 		<global>
 			<atomic name="randomCounter" value=0 />
-			<uniform name="uniTest" type="mat4" x3=13/>
+			<uniform name="uniTest" type="uint" value=13/>
 			<uniform name="mouseXY" type="vec2"/>
 		</global>
 

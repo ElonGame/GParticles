@@ -4,6 +4,8 @@
 
 GP_Uniform::GP_Uniform()
 {
+	// default to all 0's instead of identity matrix
+	value = glm::mat4(0);
 }
 
 

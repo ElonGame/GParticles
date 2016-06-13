@@ -2,7 +2,7 @@
 
 bufferUmap GPLoader::globalBufferInfo;
 atomicUmap GPLoader::globalAtomicInfo;
-uniformUmap GPLoader::globalUniformInfo;
+//uniformUmap GPLoader::globalUniformInfo;
 
 std::vector<bufferInfo> GPLoader::reservedBufferInfo;
 std::vector<atomicInfo> GPLoader::reservedAtomicInfo;
@@ -298,7 +298,6 @@ void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 	}
 	else if (u.type == "vec4")
 	{
-		// default is 0 if no value is provided
 		uElem->QueryFloatAttribute("x", &u.value[0].x);
 		uElem->QueryFloatAttribute("y", &u.value[0].y);
 		uElem->QueryFloatAttribute("z", &u.value[0].z);
@@ -309,7 +308,6 @@ void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 	}
 	else if (u.type == "mat4")
 	{
-		// default is identity matrix
 		for (int i = 0; i < 4; i++)
 		{
 			std::string l = std::to_string(i);
@@ -341,7 +339,7 @@ bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 
 		// skip uniform loading another has already been loaded with that name
 		uniform->QueryStringAttribute("name", &ui.name);
-		if (globalUniformInfo.find(ui.name) == globalUniformInfo.end() && !globalUniformInfo.empty())
+		if (GlobalData::get().getUniform(ui.name, ui))
 		{
 			printf("Skipping loading of uniform %s! Another uniform with the "
 				"same name has already been loaded!\n", ui.name);
@@ -354,7 +352,7 @@ bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 		uniform->QueryStringAttribute("type", &ui.type);
 		queryValue(uniform, ui);
 
-		globalUniformInfo.emplace(ui.name, ui);
+		GlobalData::get().addUniform(ui);
 
 		std::cout << "(GLOBAL) INIT: uniform " << ui.name<< " of type " <<
 			ui.type << " and value " << ui.value[0].x << std::endl; // DUMP
@@ -486,6 +484,7 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 		GP_Uniform ui = resUniInfo;
 		ui.name = psystemName + ui.name;
 
+		GlobalData::get().addUniform(ui);
 		rr.reservedUniformInfo.emplace(ui.name, ui);
 
 		std::cout << "INIT: uniform " << ui.name << " of type " <<
@@ -571,11 +570,9 @@ void GPLoader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement
 		resE->QueryStringAttribute("type", &resType);
 		resE->QueryStringAttribute("name", &resName);
 
-		if (resType == "uniform")
-		{
-			resE->QueryFloatAttribute("value",
-				&rr.reservedUniformInfo.at(resName).value[0].x);
-		}
+		queryValue(resE, rr.reservedUniformInfo.at(resName));
+
+		GlobalData::get().addUniform(rr.reservedUniformInfo.at(resName));
 	}
 }
 
@@ -597,7 +594,7 @@ void GPLoader::addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, unifo
 	}
 
 	// add global uniforms
-	for (auto guh : globalUniformInfo)
+	for (auto guh : GlobalData::get().getUniformMap())
 	{
 		uum.emplace(guh);
 	}
@@ -648,7 +645,8 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	// then, add the program global resources
 	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
 	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
-	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
+	uniformUmap uniforms = GlobalData::get().getUniformMap();
+	cpUniforms.insert(uniforms.begin(), uniforms.end());
 
 	// and mark the indicated resources to be reset every iteration
 	loadIterationResourceOverrides(programE, cpAtomics, cpBuffers, cpUniforms);
@@ -662,8 +660,6 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 
 	// shader source = header (from resource info) + reserved functionality + filepaths source
 	std::string shaderSource = generateComputeHeader(cpAtomics, cpBuffers, cpUniforms);
-	shaderSource += fileToString("reserved/utilities.glsl");
-	shaderSource += fileToString("reserved/emission.glsl");
 	shaderSource += createFinalShaderSource(fPaths);
 
 	// compile, attach and check link status
@@ -681,7 +677,13 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 		return false;
 	}
 	
-	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, cpUniforms, rr.maxParticles);
+	std::vector<std::string> uNames;
+	for (auto u : cpUniforms)
+	{
+		uNames.push_back(u.first);
+	}
+
+	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, uNames, rr.maxParticles);
 
 	return true;
 }
@@ -807,17 +809,16 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 		Utils::exitMessage("Invalid Input", "Must provide a file for vertex shader");
 	}
 	std::string header = generateRenderHeader(rendAtomics);
-	header += fileToString("reserved/utilities.glsl");
-	std::string source = createFinalShaderSource(rl.vsPath, header);
-	Shader rpVertShader("vertex", source);
+	std::string shaderSource = header + createFinalShaderSource(rl.vsPath);
+	Shader rpVertShader("vertex", shaderSource);
 	rpVertShader.dumpToFile();
 	glAttachShader(rpHandle, rpVertShader.getId());
 
 	// geometry shader
 	if (!rl.gmPath.empty())
 	{
-		source =createFinalShaderSource(rl.gmPath, header);
-		Shader rpGeomShader("geometry", source);
+		shaderSource = header + createFinalShaderSource(rl.gmPath);
+		Shader rpGeomShader("geometry", shaderSource);
 		rpGeomShader.dumpToFile();
 		glAttachShader(rpHandle, rpGeomShader.getId());
 	}
@@ -827,8 +828,8 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for fragment shader");
 	}
-	source = createFinalShaderSource(rl.fgPath, header);
-	Shader rpFragShader("fragment", source);
+	shaderSource = header + createFinalShaderSource(rl.fgPath);
+	Shader rpFragShader("fragment", shaderSource);
 	rpFragShader.dumpToFile();
 	glAttachShader(rpHandle, rpFragShader.getId());
 
@@ -1038,10 +1039,10 @@ void GPLoader::printProgramLog(GLuint program)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GPLoader::createFinalShaderSource(std::vector<std::string> fPaths, std::string header)
+std::string GPLoader::createFinalShaderSource(std::vector<std::string> fPaths)
 {
 	// parse file fragments into string
-	std::string shaderString = header;
+	std::string shaderString = "";
 	for (std::string fPath : fPaths)
 	{
 		shaderString = shaderString + fileToString(fPath);

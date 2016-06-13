@@ -16,8 +16,6 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 
 	bindResources();
 
-	setUniforms();
-
 	glDispatchComputeGroupSizeARB((float)maxParticles / numWorkGroups, 1, 1,
 		numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -67,9 +65,13 @@ void ComputeProgram::printContents()
 		std::cout << b.first << " with binding " << b.second.id << std::endl;
 	}
 	std::cout << "Uniforms" << std::endl;
-	for (auto b : uniforms)
+	for (auto uName : uniforms)
 	{
-		std::cout << b.first << " " << b.second.type << " " << b.second.value[0].x << " " << std::endl;
+		GP_Uniform u;
+		if (GlobalData::get().getUniform(uName, u))
+		{
+			std::cout << u.name << " " << u.type << " " << u.value[0].x << " " << std::endl;
+		}
 	}
 }
 
@@ -89,21 +91,14 @@ void ComputeProgram::bindResources()
 	{
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, b.second.binding, b.second.id);
 	}
-}
 
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-void ComputeProgram::setUniforms()
-{
-	for (auto u : uniforms)
+	// bind uniforms
+	for (auto uName : uniforms)
 	{
-		u.second.bind(glGetUniformLocation(programhandle, u.first.c_str()));
+		GP_Uniform u;
+		if (GlobalData::get().getUniform(uName, u))
+		{
+			u.bind(glGetUniformLocation(programhandle, uName.c_str()));
+		}
 	}
-
-	int timeLoc = glGetUniformLocation(programhandle, "timet");
-	glUniform1ui(timeLoc, GlobalData::getInstance().getCurrentTimeMillis());
-
-	int mouseLoc = glGetUniformLocation(programhandle, "mouse");
-	glUniform2f(mouseLoc, GlobalData::getInstance().getMouseX(true), GlobalData::getInstance().getMouseY(true));
 }

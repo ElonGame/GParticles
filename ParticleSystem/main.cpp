@@ -49,8 +49,21 @@ bool processEvents()
 		c.processMouseMovement();
 	}
 
-	GlobalData::getInstance().setMouseXY(c.mouseX, c.mouseY);
-	
+	/*GP_Uniform u;
+	GlobalData::get().getUniform("mouseXY", u);
+	u.value[0] = glm::vec4(	c.mouseX / GlobalData::get().getWindowWidth(),
+							c.mouseY / GlobalData::get().getWindowHeight(),
+							0, 0);
+	GlobalData::get().addUniform(u);*/
+
+	//GlobalData::get().setUniform("mouseXY", -1 / GlobalData::get().getWindowWidth());
+
+	glm::vec2 asd = glm::vec2(0.1f, 0);
+
+	GlobalData::get().setUniformValue("mouseXY", asd);
+	//GlobalData::get().setUniformValue("uniTest", 13);
+
+
 	return true;
 }
 
@@ -64,7 +77,7 @@ int main(int argc, char* args[])
 		return 1;
 	}
 
-	GlobalData::getInstance().setWindowDimensions(1024, 576);
+	GlobalData::get().setWindowDimensions(1024, 576);
 
 	// init opengl stuff
 	Utils::initGL();
@@ -78,8 +91,6 @@ int main(int argc, char* args[])
 	GPManager gpManager;
 	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
 	GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
-
-	
 
 
 	Model myModel = Model();
@@ -122,11 +133,17 @@ int main(int argc, char* args[])
 	// system loop
 	while (processEvents())
 	{
+		// user uniform manual control
+		/*GP_Uniform time;
+		GlobalData::get().getUniform("time", time);
+		time.value
+		int timeLoc = glGetUniformLocation(programhandle, "timet");
+		glUniform1ui(timeLoc, GlobalData::get().getCurrentTimeMillis());*/
+
+
 		// TODO: system ticks here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//glEnable(GL_DEPTH_TEST);
-
-
 
 		glUseProgram(modelProgram);
 
