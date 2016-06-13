@@ -90,7 +90,7 @@ int main(int argc, char* args[])
 	// init GPManager and load xml project file
 	GPManager gpManager;
 	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
-	GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
+	GPLoader::loadProject("shaders/rain_and_puddles/_test.xml", gpManager.pSystems);
 
 
 	Model myModel = Model();

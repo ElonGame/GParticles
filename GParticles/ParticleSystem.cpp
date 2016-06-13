@@ -5,6 +5,9 @@ ParticleSystem::~ParticleSystem()
 {
 }
 
+//Criar função canExecute
+//
+
 void ParticleSystem::execute(glm::mat4 view)
 {
 	if (!alive)
@@ -27,15 +30,8 @@ void ParticleSystem::execute(glm::mat4 view)
 
 	//std::cout << "Time: " << std::chrono::duration_cast<ms>(age).count() << std::endl;
 
-	auto timeSpan = currTime - lastStep;
-
-	if (timeSpan > emissionStep)
-	{
-		emitter.execute(numWorkGroups);
-
-		lastStep += emissionStep;
-	}
 	//std::cout << "Time: " << std::chrono::duration_cast<ms>(timeSpan).count() << std::endl;
+	emitter.execute(numWorkGroups);
 	updater.execute(numWorkGroups);
 	renderer.execute(model, view);
 }

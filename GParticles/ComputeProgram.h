@@ -9,13 +9,16 @@ class ComputeProgram
 {
 public:
 	ComputeProgram(	GLuint ph, const atomicUmap &ah, const bufferUmap &bh,
-					const std::vector<std::string> &u, GLuint &mp)
-		: programhandle(ph), atomics(ah), buffers(bh), uniforms(u), maxParticles(mp) {};
+					const std::vector<std::string> &u, GLuint &mp, GLuint iStep)
+		: programhandle(ph), atomics(ah), buffers(bh), uniforms(u), maxParticles(mp), iterationStep(ms(iStep)) {};
 	ComputeProgram();
 	~ComputeProgram();
 
 	void execute(GLuint numWorkGroups);
 	void printContents();
+
+	timeClock::duration iterationStep;
+	timeP lastStep = timeClock::now();
 private:
 	GLuint programhandle;
 	atomicUmap atomics;

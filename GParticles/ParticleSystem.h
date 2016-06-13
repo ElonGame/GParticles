@@ -1,6 +1,4 @@
 #pragma once
-#include <chrono>
-#include <ratio>
 #include "RendererProgram.h"
 #include "ComputeProgram.h"
 
@@ -19,10 +17,6 @@ public:
 	void printContents();
 	bool isAlive();
 
-	// emission
-	timeClock::duration emissionStep = ms(100);
-	timeP lastStep = timeClock::now();
-	
 private:
 	ComputeProgram emitter;
 	ComputeProgram updater;

@@ -12,6 +12,15 @@ ComputeProgram::~ComputeProgram()
 
 void ComputeProgram::execute(GLuint numWorkGroups)
 {
+	auto timeSpan = timeClock::now() - lastStep;
+
+	if (timeSpan < iterationStep)
+	{
+		return;
+	}
+
+	lastStep += iterationStep;
+
 	glUseProgram(programhandle);
 
 	bindResources();

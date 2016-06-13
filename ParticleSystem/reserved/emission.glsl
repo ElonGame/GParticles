@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
-// EMISSION
+// EMISSION - requires: utilities.glsl
 ////////////////////////////////////////////////////////////////////////////////
 
-// -- Emission Primitives --
+// Returns particle position inside a cone primitive
 ////////////////////////////////////////////////////////////////////////////////
 vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin, bool positionsInVolume)
 {
@@ -31,6 +31,8 @@ vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin, bo
 }
 
 
+
+// Returns particle position inside a sphere primitive
 ////////////////////////////////////////////////////////////////////////////////
 vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 {
@@ -51,7 +53,39 @@ vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 }
 
 
-// -- Velocity --
+
+
+// Returns particle position from a plane primitive
+////////////////////////////////////////////////////////////////////////////////
+vec4 planePositionGenerator(float width, float height, bool centeredAtOrigin, bool horizontal)
+{
+	float minMultiplier = 0;
+	float maxMultiplier = 1;
+	if (centeredAtOrigin)
+	{
+		minMultiplier = 0.5;
+		maxMultiplier = 0.5;
+	}
+
+	vec4 pos = vec4(0,0,0,1);
+
+	pos.x = randInRange(-width * minMultiplier, width * maxMultiplier);
+	pos.y = randInRange(-height * minMultiplier, height * maxMultiplier);
+
+	if (horizontal)
+		pos.zy = pos.yz;
+
+	return pos;
+}
+
+
+
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+// Returns velocity vector with magnitude = intensity
 ////////////////////////////////////////////////////////////////////////////////
 vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
 {
@@ -69,6 +103,8 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
 }
 
 
+
+// Returns velocity vector with random magnitude (minInt < magnitude < maxInt)
 ////////////////////////////////////////////////////////////////////////////////
 vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
 {

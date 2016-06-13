@@ -2,7 +2,6 @@
 
 bufferUmap GPLoader::globalBufferInfo;
 atomicUmap GPLoader::globalAtomicInfo;
-//uniformUmap GPLoader::globalUniformInfo;
 
 std::vector<bufferInfo> GPLoader::reservedBufferInfo;
 std::vector<atomicInfo> GPLoader::reservedAtomicInfo;
@@ -683,7 +682,10 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 		uNames.push_back(u.first);
 	}
 
-	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, uNames, rr.maxParticles);
+	GLuint iterationStep;
+	programE->QueryUnsignedAttribute("iterationStep", &iterationStep);
+
+	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, uNames, rr.maxParticles, iterationStep);
 
 	return true;
 }
