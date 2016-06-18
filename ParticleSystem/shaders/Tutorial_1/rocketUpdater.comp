@@ -46,8 +46,6 @@ void main()
 		return;
 	}
 	
-	//rocket_velocities[gid].y -= 0.0001;
 	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
 	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
-	rocket_positions[gid].x += (mouseXY.x);
 }

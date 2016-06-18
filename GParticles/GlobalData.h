@@ -24,10 +24,20 @@ public:
 	void addUniform(GP_Uniform u);
 	//bufferInfo getBuffer(std::string name);
 	//atomicInfo getAtomic(std::string name);
-	bool setUniformValue(std::string name, float value);
-	bool setUniformValue(std::string name, glm::vec2 value);
-	bool setUniformValue(std::string name, glm::vec4 value);
-	bool setUniformValue(std::string name, glm::mat4 value);
+
+	template <typename T>
+	bool setUniformValue(std::string name, T value)
+	{
+		GP_Uniform u;
+		getUniform(name, u);
+
+		u.setValue(value);
+
+		addUniform(u);
+
+		return true;
+	}
+
 	bool getUniform(std::string name, GP_Uniform &u);
 	uniformUmap getUniformMap();
 

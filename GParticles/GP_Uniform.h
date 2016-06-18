@@ -10,12 +10,16 @@ class GP_Uniform
 {
 public:
 	std::string name;
-	glm::mat4 value;
 	std::string type;
+	glm::mat4 value;
 
 	GP_Uniform();
 	~GP_Uniform();
 
 	void bind(GLint location);
+	bool setValue(float value);
+	bool setValue(glm::vec2 value);
+	bool setValue(glm::vec4 value);
+	bool setValue(glm::mat4 value);
 };
 

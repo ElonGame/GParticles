@@ -1,132 +1,73 @@
 <project>
-<!-- GLOBAL RESOURCES
-	<buffers>
-		<buffer name="" type="float/vec4" elements=n/>
-	</buffers>
-	<atomics>
-		<atomic name="" initialValue=n/>
-	</atomics>
-	<uniforms>
-		<uniform name="" type="float" initialValue=n>
-	</uniforms>
--->
-	<resources>
-		<buffers>
-			<buffer name="rdpPos" elements=512 type="vec4"/>
-			<buffer name="rdpActive" elements=512 type="float"/>
-		</buffers>
-		
-		<atomics>
-			<atomic name="rdpLast" value=0/>
-		</atomics>
+	<resources prefab="prefabs/resources.xml" />
 
-		<uniforms>
-			<uniform name="rdpCreate" type="float" value=4/>
-			<uniform name="rdpSize" type="float" value=512/>
-		</uniforms>
-	</resources>
-
-	<psystem name="rocket">
-		<position x=0 y=0 z=0 />
+	<psystem name="leader">
+		<position x=0 y=0 z=-5 />
 		<rotation x=1 y=0 z=0 angle=0/>
 		<scale x=1 y=1 z=1 />
 		<lifetime unit="sec" limit=3600 />
 		<numWorkGroups value=1 />
 
-		<uniformOverride name="rocket_toCreate" value=1/>
-		<uniformOverride name="rocket_maxParticles" value=5/>
+		<override type="uniform" name="leader_toCreate" value=1/>
+		<override type="uniform" name="leader_maxParticles" value=1/>
 
-			<!-- reserverd should just be maxParticls, easier override, add '_' at linking phase-->
+		<emitter iterationStep=100>
+			<override type="atomic" name="leader_emissionAttempts" value=0/>
 
-		<emitter>
-			<actions>
-				<override type="atomic" name="rocket_emissionAttempts" value=0/>
-			</actions>
-
-			<files>
-				<file path="shaders/boids/rocketEmitter.comp" />
-			</files>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/leaderEmitter.comp" />
 		</emitter>
 
-		<updater>
-			<files>
-				<file path="shaders/boids/rocketUpdater.comp" />
-			</files>
+		<updater iterationStep=0>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/leaderUpdater.comp" />
 		</updater>
 
 		<renderer prefab="prefabs/simplePointRenderer.xml">
 			<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
-			<vertfiles>
-				<file path="shaders/boids/model.vert" />
-			</vertfiles>
-			<fragfiles>
-				<file path="shaders/boids/model.frag" />
-			</fragfiles>
-			<!--rendertype type="billboard" path="snow.png" orientation=vertical/>
 
-			<vertfiles>
-				<file path="shaders/boids/rocketVertex.vert" />
-			</vertfiles>
-			<geomfiles>
-				<file path="shaders/boids/rocketGeom.geom"/>
-			</geomfiles>
-			<fragfiles>
-				<file path="shaders/boids/rocketFrag.frag" />
-			</fragfiles-->
+			<vertfile path="reserved/utilities.glsl" />
+			<vertfile path="shaders/boids/modelLeader.vert" />
+			<fragfile path="shaders/boids/modelLeader.frag" />
 		</renderer>
-
-
 	</psystem>
 
-	<psystem name="exp">
-		<position x=0 y=0 z=0 />
+	<psystem name="rocket">
+		<position x=0 y=0 z=-5 />
 		<rotation x=1 y=0 z=0 angle=0/>
 		<scale x=1 y=1 z=1 />
-		<numWorkGroups value=1 />
 		<lifetime unit="sec" limit=3600 />
+		<numWorkGroups value=1 />
 
-		<actions>
-			<uniformOverride name="exp_maxParticles" value=512/>
-		</actions>
+		<override type="uniform" name="rocket_toCreate" value=1/>
+		<override type="uniform" name="rocket_maxParticles" value=5/>
 
+		<emitter iterationStep=100>
+			<override type="atomic" name="rocket_emissionAttempts" value=0/>
 
-
-		<emitter>
-			<actions>
-				<override type="atomic" name="exp_emissionAttempts" value=0/>
-				<override type="atomic" name="rdpLast" value=0/>
-			</actions>
-
-			<files>
-				<file path="shaders/boids/expEmitter.comp" />
-			</files>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/rocketEmitter.comp" />
 		</emitter>
 
-		<updater>
-			<files>
-				<file path="shaders/boids/expUpdater.comp" />
-			</files>
+		<updater iterationStep=0>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/rocketUpdater.comp" />
 		</updater>
 
-		<collision>
-			<!--particleBounds type="point"/-->
-			<particleBounds type="sphere" r=0.01/>
-			<!--particleBounds type="aabb"/-->
+		<renderer prefab="prefabs/simplePointRenderer.xml">
+			<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
 
-			<worldPrimitive type="sphere" x=0 y=0 z=-50.5 r=0.5/>
-			<!--worldPrimitive type="cone" x1=0 y1=0 z1=-0.5 x1=0 y1=0 z1=0 r=0.5/-->
-
-			<onCollision/>
-		</collision>
-
-		<renderer>
-			<rendertype type="point" />
-			<vertfiles>
-				<file path="shaders/boids/expVertex.vert" />
-			</vertfiles>
-			<fragfiles>
-				<file path="shaders/boids/expFrag.frag" />
-			</fragfiles>
+			<vertfile path="reserved/utilities.glsl" />
+			<vertfile path="shaders/boids/model.vert" />
+			<fragfile path="shaders/boids/model.frag" />
 		</renderer>
 	</psystem>
+
+
+
+ 
 </project>

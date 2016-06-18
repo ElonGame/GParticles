@@ -43,7 +43,7 @@ vec4[4] billboardDirectionCamera(vec4[4] quad, vec3 dir, vec3 particleToCamera)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirection(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
 
     for (int i = 0; i < 4; i++)
         quad[i] =  orientation * quad[i];
@@ -58,7 +58,7 @@ vec4[4] billboardDirection(vec4[4] quad, vec3 dir)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirectionUp(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
 
     vec4 tmp = orientation[1];
     orientation[1] = orientation[2];
@@ -77,7 +77,7 @@ vec4[4] billboardDirectionUp(vec4[4] quad, vec3 dir)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirectionRight(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
     
     vec4 tmp = orientation[0];
     orientation[0] = orientation[2];

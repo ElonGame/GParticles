@@ -11,9 +11,9 @@ layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
 layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
 layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
 
-layout(std430, binding = 3) buffer Rocket_lifetimes
+layout(std430, binding = 3) buffer Rocket_floorHit
 {
-	float rocket_lifetimes[];
+	float rocket_floorHit[];
 };
 
 layout(std430, binding = 4) buffer Rocket_lastPositions
@@ -21,37 +21,53 @@ layout(std430, binding = 4) buffer Rocket_lastPositions
 	vec4 rocket_lastPositions[];
 };
 
-layout(std430, binding = 5) buffer Rocket_lineLifetime
+layout(std430, binding = 5) buffer Rocket_lifetimes
+{
+	float rocket_lifetimes[];
+};
+
+layout(std430, binding = 6) buffer Rocket_size
+{
+	float rocket_size[];
+};
+
+layout(std430, binding = 7) buffer Rocket_lineLifetime
 {
 	float rocket_lineLifetime[];
 };
 
-layout(std430, binding = 6) buffer Rocket_positions
-{
-	vec4 rocket_positions[];
-};
-
-layout(std430, binding = 7) buffer Rocket_colors
+layout(std430, binding = 8) buffer Rocket_colors
 {
 	vec4 rocket_colors[];
 };
 
-layout(std430, binding = 8) buffer Rocket_velocities
+layout(std430, binding = 9) buffer Rocket_positions
+{
+	vec4 rocket_positions[];
+};
+
+layout(std430, binding = 10) buffer Rocket_texCoords
+{
+	vec2 rocket_texCoords[];
+};
+
+layout(std430, binding = 11) buffer Rocket_velocities
 {
 	vec4 rocket_velocities[];
 };
 
-layout(std430, binding = 9) buffer Rocket_texCoords
+layout(std430, binding = 12) buffer VirusPos
 {
-	vec2 rocket_texCoords[];
+	vec4 virusPos[];
 };
 
 layout(local_size_variable) in;
 
 uniform float rocket_maxParticles;
 uniform float rocket_toCreate;
-uniform uint uniTest;
+uniform float virusAnimationRadius;
 uniform vec2 mouseXY;
+uniform float virusAnimationAngle;
 uniform int timet;
 uniform vec2 mouse;
 
@@ -186,11 +202,20 @@ mat4 rotationMatrix(vec3 axis, float angle)
 // Returns a matrix constructed from the given direction axis that holds the
 // axis of a 3D space
 ////////////////////////////////////////////////////////////////////////////////
-mat4 construct3DSpace(vec3 dir)
+mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 {
     dir = normalize(dir);
-    vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
-    vec3 up = normalize(cross(dir, right));
+    vec3 right, up;
+
+    if (flipRight)
+      right = normalize(cross(vec3(0, 1, 0), dir));
+    else
+      right = normalize(cross(dir, vec3(0, 1, 0)));
+
+    if (flipUp)
+      up = normalize(cross(right, dir));
+    else
+      up = normalize(cross(dir, right));
     
     return mat4(vec4(right, 0),
                 vec4(up, 0),
@@ -315,10 +340,11 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
 
 void onEmission()
 {
-	rocket_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 6;
+	rocket_floorHit[gid] = 0;
+	rocket_lifetimes[gid] = randInRange(6, 10);
 	rocket_positions[gid] = spherePositionGenerator(1.5, false);
 	//rocket_positions[gid] = conePositionGenerator(1,2,false,true);
-	rocket_positions[gid] = planePositionGenerator(1, 1, true, true);
+	rocket_positions[gid] = virusPos[0] + planePositionGenerator(2, 2, true, true);
 	rocket_velocities[gid].xyz = velocityGenerator(rocket_positions[gid].xyz, vec3(0), 0.0015);
 	rocket_velocities[gid].xyz = velocityGenerator(vec3(0,-1,0), vec3(0), 0.0015);
 	rocket_lastPositions[gid] = rocket_positions[gid];

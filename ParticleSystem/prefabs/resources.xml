@@ -3,26 +3,26 @@
 
 
 		<private>
-			<buffer name="_lifetimes" elements=512 type="float"/>
-			<buffer name="_lineLifetime" elements=512 type="float"/>
-			<buffer name="_positions" elements=512 type="vec4"/>
-			<buffer name="_lastPositions" elements=512 type="vec4"/>
-			<buffer name="_velocities" elements=512 type="vec4"/>
-			<buffer name="_colors" elements=512 type="vec4"/>
-			<buffer name="_texCoords" elements=512 type="vec2"/>
+			<buffer name="lifetimes" elements=512 type="float"/>
+			<buffer name="lineLifetime" elements=512 type="float"/>
+			<buffer name="positions" elements=512 type="vec4"/>
+			<buffer name="lastPositions" elements=512 type="vec4"/>
+			<buffer name="velocities" elements=512 type="vec4"/>
+			<buffer name="colors" elements=512 type="vec4"/>
+			<buffer name="texCoords" elements=512 type="vec2"/>
+			<buffer name="size" elements=512 type="float"/>
 
-			<atomic name="_aliveParticles" value=0 />
-			<atomic name="_emissionAttempts" value=0 />
+			<atomic name="aliveParticles" />
+			<atomic name="emissionAttempts" />
 
-			<uniform name="_maxParticles" type="float" value=10 />
-			<uniform name="_toCreate" type="float" value=500 />
+			<uniform name="maxParticles" type="float" value=10 />
+			<uniform name="toCreate" type="float" value=500 />
 		</private>
 
 
 
 		<global>
 			<atomic name="randomCounter" value=0 />
-			<uniform name="uniTest" type="uint" value=13/>
 			<uniform name="mouseXY" type="vec2"/>
 		</global>
 

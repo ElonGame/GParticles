@@ -128,11 +128,20 @@ mat4 rotationMatrix(vec3 axis, float angle)
 // Returns a matrix constructed from the given direction axis that holds the
 // axis of a 3D space
 ////////////////////////////////////////////////////////////////////////////////
-mat4 construct3DSpace(vec3 dir)
+mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 {
     dir = normalize(dir);
-    vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
-    vec3 up = normalize(cross(dir, right));
+    vec3 right, up;
+
+    if (flipRight)
+      right = normalize(cross(vec3(0, 1, 0), dir));
+    else
+      right = normalize(cross(dir, vec3(0, 1, 0)));
+
+    if (flipUp)
+      up = normalize(cross(right, dir));
+    else
+      up = normalize(cross(dir, right));
     
     return mat4(vec4(right, 0),
                 vec4(up, 0),

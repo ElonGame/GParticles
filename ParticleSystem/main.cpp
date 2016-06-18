@@ -4,6 +4,7 @@
 #include "GPManager.h"
 #include "Camera.h"
 #include <IL\il.h>
+#include <math.h>
 #pragma comment(lib,"devil.lib")
 #include "Model.h"
 
@@ -58,14 +59,16 @@ bool processEvents()
 
 	//GlobalData::get().setUniform("mouseXY", -1 / GlobalData::get().getWindowWidth());
 
-	glm::vec2 asd = glm::vec2(0.1f, 0);
+	//glm::vec2 asd = glm::vec2(0.1f, 0);
 
-	GlobalData::get().setUniformValue("mouseXY", asd);
+	//GlobalData::get().setUniformValue("mouseXY", asd);
 	//GlobalData::get().setUniformValue("uniTest", 13);
 
 
 	return true;
 }
+
+
 
 int main(int argc, char* args[])
 {
@@ -91,48 +94,52 @@ int main(int argc, char* args[])
 	GPManager gpManager;
 	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
 	GPLoader::loadProject("shaders/rain_and_puddles/_test.xml", gpManager.pSystems);
+	//GPLoader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
+	//GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
 
 
-	Model myModel = Model();
-	//myModel = Model("assets/models/nanosuit2/nanosuit.obj");
-	myModel = Model("assets/models/agent/agent.blend");
+	//Model myModel = Model("assets/models/nanosuit2/nanosuit.obj");
+	//Model myModel = Model("assets/models/agent/agent.blend");
 	//myModel = Model("assets/models/paperPlane/3d-model.obj");
 	//Model myModel("assets/models/sphere/sphere.obj");
+	//Model myModel = Model("assets/models/virus/virus.3ds");
 
-	GLuint modelProgram = glCreateProgram();
+	//GLuint modelProgram = glCreateProgram();
 
-	// vertex shader
-	GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
-	std::vector<std::string> paths1;
-	paths1.push_back(std::string("shaders/model.vert"));
-	GPLoader::compileShaderFiles(rpVertShader, paths1);
-	glAttachShader(modelProgram, rpVertShader);
+	//// vertex shader
+	//GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
+	//std::vector<std::string> paths1;
+	//paths1.push_back(std::string("shaders/rain_and_puddles/model.vert"));
+	//GPLoader::compileShaderFiles(rpVertShader, paths1);
+	//glAttachShader(modelProgram, rpVertShader);
 
-	// frag shader
-	GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	std::vector<std::string> paths2;
-	paths2.push_back(std::string("shaders/model.frag"));
-	GPLoader::compileShaderFiles(rpFragShader, paths2);
-	glAttachShader(modelProgram, rpFragShader);
+	//// frag shader
+	//GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
+	//std::vector<std::string> paths2;
+	//paths2.push_back(std::string("shaders/rain_and_puddles/model.frag"));
+	//GPLoader::compileShaderFiles(rpFragShader, paths2);
+	//glAttachShader(modelProgram, rpFragShader);
 
-	glLinkProgram(modelProgram);
+	//glLinkProgram(modelProgram);
 
-	GLint programSuccess = GL_FALSE;
-	glGetProgramiv(modelProgram, GL_LINK_STATUS, &programSuccess);
-	if (programSuccess == GL_FALSE)
-	{
-		printf("Error linking program %d!\n", modelProgram);
-		return false;
-	}
+	//GLint programSuccess = GL_FALSE;
+	//glGetProgramiv(modelProgram, GL_LINK_STATUS, &programSuccess);
+	//if (programSuccess == GL_FALSE)
+	//{
+	//	printf("Error linking program %d!\n", modelProgram);
+	//	return false;
+	//}
 
-	printf("MODEL PROGRAM NUMBER IS %d!\n", modelProgram);
-
-
+	//printf("MODEL PROGRAM NUMBER IS %d!\n", modelProgram);
 
 
+	GP_Uniform u;
+	GlobalData::get().getUniform("virusAnimationAngle", u);
+	float i = u.value[0].x;
 	// system loop
 	while (processEvents())
 	{
+		i += 0.01f;
 		// user uniform manual control
 		/*GP_Uniform time;
 		GlobalData::get().getUniform("time", time);
@@ -143,25 +150,15 @@ int main(int argc, char* args[])
 
 		// TODO: system ticks here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glEnable(GL_DEPTH_TEST);
 
-		glUseProgram(modelProgram);
-
-		glm::mat4 projection = glm::perspective(45.0f, (GLfloat)1024 / (GLfloat)576, 0.1f, 100.0f);
-		glm::mat4 view = c.getViewMatrix();
-		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(0,0.0f,0.0f));
-		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
-		//myModel.draw();
-
+		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 
 		// process all particle system
 		gpManager.processParticles(c.getViewMatrix());
 		glDisable(GL_BLEND);
+
+		GlobalData::get().setUniformValue("virusAnimationAngle", ++i);
 
 		glUseProgram(NULL);
 		glDisable(GL_DEPTH_TEST);
@@ -178,3 +175,4 @@ int main(int argc, char* args[])
 
 	return 0;
 }
+

@@ -1,0 +1,25 @@
+void onEmission()
+{
+	virus_size[gid] = 0.025;
+	virus_lifetimes[gid] = 3600;
+	virus_positions[gid] = vec4(0, 0, -50, 1);
+	virus_velocities[gid] = vec4(0);
+}
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (atomicCounter(virus_aliveParticles) >= virus_maxParticles)
+		return;
+
+	if (virus_lifetimes[gid] <= 0)
+	{
+		if (atomicCounterIncrement(virus_emissionAttempts) < virus_toCreate)
+		{
+			atomicCounterIncrement(virus_aliveParticles);
+
+			onEmission();
+		}
+	}
+}

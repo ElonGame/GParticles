@@ -1,4 +1,3 @@
-#version 430
 
 in float lifetimesV;
 in vec4 colorsV;

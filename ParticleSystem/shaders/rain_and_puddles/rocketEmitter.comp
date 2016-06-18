@@ -1,9 +1,10 @@
 void onEmission()
 {
-	rocket_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 6;
+	rocket_floorHit[gid] = 0;
+	rocket_lifetimes[gid] = randInRange(6, 10);
 	rocket_positions[gid] = spherePositionGenerator(1.5, false);
 	//rocket_positions[gid] = conePositionGenerator(1,2,false,true);
-	rocket_positions[gid] = planePositionGenerator(1, 1, true, true);
+	rocket_positions[gid] = virusPos[0] + planePositionGenerator(2, 2, true, true);
 	rocket_velocities[gid].xyz = velocityGenerator(rocket_positions[gid].xyz, vec3(0), 0.0015);
 	rocket_velocities[gid].xyz = velocityGenerator(vec3(0,-1,0), vec3(0), 0.0015);
 	rocket_lastPositions[gid] = rocket_positions[gid];

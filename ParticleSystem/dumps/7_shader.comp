@@ -133,11 +133,20 @@ mat4 rotationMatrix(vec3 axis, float angle)
 // Returns a matrix constructed from the given direction axis that holds the
 // axis of a 3D space
 ////////////////////////////////////////////////////////////////////////////////
-mat4 construct3DSpace(vec3 dir)
+mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 {
     dir = normalize(dir);
-    vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
-    vec3 up = normalize(cross(dir, right));
+    vec3 right, up;
+
+    if (flipRight)
+      right = normalize(cross(vec3(0, 1, 0), dir));
+    else
+      right = normalize(cross(dir, vec3(0, 1, 0)));
+
+    if (flipUp)
+      up = normalize(cross(right, dir));
+    else
+      up = normalize(cross(dir, right));
     
     return mat4(vec4(right, 0),
                 vec4(up, 0),
@@ -190,7 +199,7 @@ vec4[4] billboardDirectionCamera(vec4[4] quad, vec3 dir, vec3 particleToCamera)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirection(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
 
     for (int i = 0; i < 4; i++)
         quad[i] =  orientation * quad[i];
@@ -205,7 +214,7 @@ vec4[4] billboardDirection(vec4[4] quad, vec3 dir)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirectionUp(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
 
     vec4 tmp = orientation[1];
     orientation[1] = orientation[2];
@@ -224,7 +233,7 @@ vec4[4] billboardDirectionUp(vec4[4] quad, vec3 dir)
 ////////////////////////////////////////////////////////////////////////////////
 vec4[4] billboardDirectionRight(vec4[4] quad, vec3 dir)
 {
-    mat4 orientation = construct3DSpace(dir);
+    mat4 orientation = construct3DSpace(dir, false, false);
     
     vec4 tmp = orientation[0];
     orientation[0] = orientation[2];
@@ -244,6 +253,7 @@ in vec4 rocket_velocitiesV[];
 in float rocket_lifetimesV[];
 in vec4 colorsV[];
 in vec2 rocket_texCoordsV[];
+in float rocket_floorHitV[];
 
 out float rocket_lifetimesG;
 out vec4 colorsG;
@@ -261,6 +271,13 @@ void main()
 
     float ratio = clamp(length(rocket_velocitiesV[0].xyz) * 40, 1.0, 2.0);
 
+    if (rocket_floorHitV[0] == 1)
+    {
+        ratio = 1;
+        original *= 2;
+        original = min(rocket_lifetimesG/5, original);
+    }
+
     float newX = original * ratio;
     float newY = original / ratio;
 
@@ -269,6 +286,9 @@ void main()
                     vec4(newX, -newY, 0, 0),
                     vec4(newX, newY, 0, 0)};
 
+    if (rocket_floorHitV[0] == 1)
+        quad = billboardFaceXZ(quad, view * model);
+    else
     quad = billboardDirectionCamera(quad,
                                     (view*model*rocket_velocitiesV[0]).xyz,
                                     -vec3(gl_in[0].gl_Position.xyz));

@@ -14,4 +14,5 @@ void main()
 
 	LFragment = colorsG;
 	LFragment = texture(ourTexture, rocket_texCoordsG);
+	LFragment.xyz = vec3(0.1, 0.8, 0.1);
 }

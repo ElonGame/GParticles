@@ -6,6 +6,7 @@ in vec4 rocket_velocitiesV[];
 in float rocket_lifetimesV[];
 in vec4 colorsV[];
 in vec2 rocket_texCoordsV[];
+in float rocket_floorHitV[];
 
 out float rocket_lifetimesG;
 out vec4 colorsG;
@@ -23,6 +24,13 @@ void main()
 
     float ratio = clamp(length(rocket_velocitiesV[0].xyz) * 40, 1.0, 2.0);
 
+    if (rocket_floorHitV[0] == 1)
+    {
+        ratio = 1;
+        original *= 2;
+        original = min(rocket_lifetimesG/5, original);
+    }
+
     float newX = original * ratio;
     float newY = original / ratio;
 
@@ -31,6 +39,9 @@ void main()
                     vec4(newX, -newY, 0, 0),
                     vec4(newX, newY, 0, 0)};
 
+    if (rocket_floorHitV[0] == 1)
+        quad = billboardFaceXZ(quad, view * model);
+    else
     quad = billboardDirectionCamera(quad,
                                     (view*model*rocket_velocitiesV[0]).xyz,
                                     -vec3(gl_in[0].gl_Position.xyz));

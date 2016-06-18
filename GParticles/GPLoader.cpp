@@ -16,7 +16,7 @@ bool GPLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &ps
 	TiXmlDocument doc(filePath);
 	if (!doc.LoadFile())
 	{
-		printf("Failed to load file \"%s\"\n", doc);
+		printf("Failed to load file \"%s\"\n", filePath.c_str());
 		return false;
 	}
 
@@ -76,27 +76,25 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 
 
 	// load psystem main components (emitter, updater, renderer)
-	TiXmlElement* programE;
-
 	ComputeProgram emitter;
-	programE = psystemE->FirstChildElement("emitter");
+	TiXmlElement* programE = psystemE->FirstChildElement("emitter");
 	if (!loadComputeProgram(rr, programE, emitter))
 	{
-		printf("Unable to load emitter!\n");
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
 	ComputeProgram updater;
 	programE = psystemE->FirstChildElement("updater");
 	if (!loadComputeProgram(rr, programE, updater))
 	{
-		printf("Unable to load updater!\n");
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
 	RendererProgram renderer;
 	programE = psystemE->FirstChildElement("renderer");
 	if (!loadRenderer(rr, programE, renderer))
 	{
-		printf("Unable to load renderer!\n");
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
 
@@ -267,6 +265,16 @@ bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 ///////////////////////////////////////////////////////////////////////////////
 void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 {
+	//if (u.type == "bool")
+	//{
+	//	int res = uElem->QueryBoolAttribute( ("value", (GLuint *)&u.value[0].x);
+	//	if (res != TIXML_SUCCESS || isnan(u.value[0].x))
+	//	{
+	//		std::string msg = "Must provide a value > -1 for uniform \"" + u.name
+	//			+ "\" on line " + std::to_string(uElem->Row());
+	//		Utils::exitMessage("Invalid Input", msg);
+	//	}
+	//}
 	if (u.type == "uint")
 	{
 		int res = uElem->QueryUnsignedAttribute("value", (GLuint *)&u.value[0].x);
@@ -280,12 +288,12 @@ void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 	else if (u.type == "float")
 	{
 		int res = uElem->QueryFloatAttribute("value", &u.value[0].x);
-		if (res != TIXML_SUCCESS)
+		/*if (res != TIXML_SUCCESS)
 		{
 			std::string msg = "Must provide a value for uniform \"" + u.name
 				+ "\" on line " + std::to_string(uElem->Row());
 			Utils::exitMessage("Invalid Input", msg);
-		}
+		}*/
 		std::cout << "VALUE PLACE IS: " << u.value[0].x << std::endl;
 	}
 	else if (u.type == "vec2")
@@ -416,6 +424,7 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 			continue;
 		}
 
+		ai.initialValue = 0;
 		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
 
 		reservedAtomicInfo.push_back(ai);
@@ -454,25 +463,33 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 	}
 }
 
+std::string queryString(TiXmlElement* elem, std::string errorMsg, std::string errorMsgTitle = "Invalid Input")
+{
+	std::string outStr;
+
+	int res = elem->QueryStringAttribute("name", &outStr);
+	if (res != TIXML_SUCCESS || outStr == "")
+	{
+		Utils::exitMessage(errorMsgTitle + " - line " + std::to_string(elem->Row()),
+							errorMsg);
+	}
+
+	return outStr;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE)
 {
 	// get psystem name
-	std::string psystemName;
-	int res = psystemE->QueryStringAttribute("name", &psystemName);
-	if (res != TIXML_SUCCESS)
-	{
-		std::string msg = "Must give a name to psystem on line " + std::to_string(psystemE->Row());
-		Utils::exitMessage("Invalid Input", msg);
-	}
+	std::string psystemName = queryString(psystemE, "Must provide psystem with a name");
 
 	// load default reserved atomics, uniforms and buffers
 	for (auto resAtmInfo : reservedAtomicInfo)
 	{
 		atomicInfo ai = resAtmInfo;
-		ai.name = psystemName + ai.name;
+		ai.name = psystemName + "_" + ai.name;
 		ai.reset = false;
 		
 		rr.reservedAtomicInfo.emplace(ai.name, ai);
@@ -481,7 +498,7 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 	for (auto resUniInfo : reservedUniformInfo)
 	{
 		GP_Uniform ui = resUniInfo;
-		ui.name = psystemName + ui.name;
+		ui.name = psystemName + "_" + ui.name;
 
 		GlobalData::get().addUniform(ui);
 		rr.reservedUniformInfo.emplace(ui.name, ui);
@@ -493,7 +510,7 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 	for (auto resBufInfo : reservedBufferInfo)
 	{
 		bufferInfo bi = resBufInfo;
-		bi.name = psystemName + bi.name;
+		bi.name = psystemName + "_" + bi.name;
 
 		rr.reservedBufferInfo.emplace(bi.name, bi);
 	}

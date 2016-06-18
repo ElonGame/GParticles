@@ -31,6 +31,8 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 	GLint projLoc = glGetUniformLocation(programhandle, "projection");
 	GLint normalMatLoc = glGetUniformLocation(programhandle, "normalMatrix");
 
+	glm::mat4 mm = glm::scale(modelMat, glm::vec3(0.025));
+
 	// Pass the matrices to the shader
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
@@ -56,7 +58,8 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 		
-		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0, 30);
+		// TODO: should be maxParticles instead of magic
+		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0,1);
 
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
