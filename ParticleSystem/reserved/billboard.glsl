@@ -89,3 +89,48 @@ vec4[4] billboardDirectionRight(vec4[4] quad, vec3 dir)
     return quad;
 }
 
+
+
+// Returns a quad coordinates vector with the given edgeSize
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] getQuad(float width, float height)
+{
+    float X = width * 0.5;
+    float Y = height * 0.5;
+
+    vec4 quad[4] = {vec4(-X,-Y,0,0),
+                    vec4(-X, Y, 0, 0),
+                    vec4(X, -Y, 0, 0),
+                    vec4(X, Y, 0, 0)};
+
+    return quad;
+}
+
+
+
+// Returns new stretched quad coordinates vector
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] getStretchedQuad(float width, float height, vec3 velocity, bool horizontal)
+{
+    float ratio = clamp(length(velocity) * 40, 1.0, 2.0);
+
+    float X = (width * 0.5) * ratio;
+    float Y = (height * 0.5) / ratio;
+
+    vec4 quad[4] = {vec4(-X,-Y,0,0),
+                    vec4(-X, Y, 0, 0),
+                    vec4(X, -Y, 0, 0),
+                    vec4(X, Y, 0, 0)};
+
+    if (horizontal)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            quad[i].xy = quad[i].yx;
+        }
+    }
+
+    return quad;
+}
+
+

@@ -93,7 +93,7 @@ int main(int argc, char* args[])
 	// init GPManager and load xml project file
 	GPManager gpManager;
 	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
-	GPLoader::loadProject("shaders/rain_and_puddles/_test.xml", gpManager.pSystems);
+	GPLoader::loadProject("shaders/virusPuddles/_test.xml", gpManager.pSystems);
 	//GPLoader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
 	//GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
 
@@ -131,6 +131,13 @@ int main(int argc, char* args[])
 	//}
 
 	//printf("MODEL PROGRAM NUMBER IS %d!\n", modelProgram);
+
+	GP_Atomic atm;
+	atm.resetValue = 3;
+	atm.init();
+	GLuint aaa = atm.getCurrentValue();
+	atm.setCurrentValue(5);
+	aaa = atm.getCurrentValue();
 
 
 	GP_Uniform u;

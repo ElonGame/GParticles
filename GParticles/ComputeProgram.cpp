@@ -29,23 +29,14 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 		numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	//// print random counter
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, atomics.at("randomCounter").id);
-	//GLuint *ptr = (GLuint *)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-	//glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	//GLuint currentVal = ptr[0];
-	//if (programhandle == 1)
-	//	printf("%d LAST\n", currentVal);
 
 	// reset marked atomics
-	for (auto a : atomics)
+	for (auto aName : atomics)
 	{
-		if (a.second.reset)
+		GP_Atomic a;
+		if (GlobalData::get().getAtomic(aName, a))
 		{
-			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, a.second.id);
-			glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
-							&a.second.initialValue);
-			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+			a.setCurrentValue(a.resetValue);
 		}
 	}
 }
@@ -57,15 +48,13 @@ void ComputeProgram::printContents()
 {
 	std::cout << ">> Compute program " << programhandle << std::endl;
 	std::cout << "Atomics" << std::endl;
-	for (auto b : atomics)
+	for (auto aName : atomics)
 	{
-		std::cout << b.first << " with id " << b.second.id << ".";
-		if (b.second.reset)
+		GP_Atomic a;
+		if (GlobalData::get().getAtomic(aName, a))
 		{
-			std::cout << " [OVERRIDEN] to " << b.second.initialValue << " every iteration.";
+			std::cout << a.name << " with id " << a.id << " and resetValue " << a.resetValue << std::endl;
 		}
-		
-		std::cout << std::endl;
 	}
 
 	std::cout << "Buffers" << std::endl;
@@ -73,6 +62,7 @@ void ComputeProgram::printContents()
 	{
 		std::cout << b.first << " with binding " << b.second.id << std::endl;
 	}
+
 	std::cout << "Uniforms" << std::endl;
 	for (auto uName : uniforms)
 	{
@@ -89,16 +79,20 @@ void ComputeProgram::printContents()
 ///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::bindResources()
 {
-	// bind atomics
-	for each (auto a in atomics)
-	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, a.second.binding, a.second.id);
-	}
-
 	// bind buffers
-	for each (auto b in buffers)
+	for (auto b : buffers)
 	{
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, b.second.binding, b.second.id);
+	}
+
+	// bind atomics
+	for (auto aName : atomics)
+	{
+		GP_Atomic a;
+		if (GlobalData::get().getAtomic(aName, a))
+		{
+			a.bind();
+		}
 	}
 
 	// bind uniforms

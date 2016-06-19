@@ -20,7 +20,7 @@ public:
 
 	// resource functions
 	//void addBuffer(bufferInfo b);
-	//void addAtomic(atomicInfo a);
+	void addAtomic(GP_Atomic a);
 	void addUniform(GP_Uniform u);
 	//bufferInfo getBuffer(std::string name);
 	//atomicInfo getAtomic(std::string name);
@@ -38,7 +38,9 @@ public:
 		return true;
 	}
 
+	bool getAtomic(std::string name, GP_Atomic &a);
 	bool getUniform(std::string name, GP_Uniform &u);
+	atomicUmap getAtomicMap();
 	uniformUmap getUniformMap();
 
 

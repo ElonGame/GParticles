@@ -1,0 +1,33 @@
+void update()
+{
+	puddle_velocities[gid].y -= 0.00025;
+	puddle_positions[gid].xyz += puddle_velocities[gid].xyz;
+
+	if (puddle_positions[gid].y < -4)
+	{
+		if (puddle_floorHit[gid] == 0)
+			puddle_lifetimes[gid] = 1;
+		puddle_positions[gid].y = -4;
+		puddle_floorHit[gid] = 1.0;
+	}
+}
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (puddle_lifetimes[gid] <= 0)
+		return;
+
+	puddle_lifetimes[gid] -= 0.025;
+
+	if (puddle_lifetimes[gid] <= 0)
+	{
+		puddle_lifetimes[gid] = -1;
+		atomicCounterDecrement(puddle_aliveParticles);
+
+		return;
+	}
+	
+	update();
+}

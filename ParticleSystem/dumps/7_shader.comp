@@ -1,7 +1,7 @@
 #version 430
-layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 0, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 2, offset = 0) uniform atomic_uint puddle_emissionAttempts;
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -246,68 +246,105 @@ vec4[4] billboardDirectionRight(vec4[4] quad, vec3 dir)
 }
 
 
+
+// Returns a quad coordinates vector with the given edgeSize
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] getQuad(float width, float height)
+{
+    float X = width * 0.5;
+    float Y = height * 0.5;
+
+    vec4 quad[4] = {vec4(-X,-Y,0,0),
+                    vec4(-X, Y, 0, 0),
+                    vec4(X, -Y, 0, 0),
+                    vec4(X, Y, 0, 0)};
+
+    return quad;
+}
+
+
+
+// Returns new stretched quad coordinates vector
+////////////////////////////////////////////////////////////////////////////////
+vec4[4] getStretchedQuad(float width, float height, vec3 velocity, bool horizontal)
+{
+    float ratio = clamp(length(velocity) * 40, 1.0, 2.0);
+
+    float X = (width * 0.5) * ratio;
+    float Y = (height * 0.5) / ratio;
+
+    vec4 quad[4] = {vec4(-X,-Y,0,0),
+                    vec4(-X, Y, 0, 0),
+                    vec4(X, -Y, 0, 0),
+                    vec4(X, Y, 0, 0)};
+
+    if (horizontal)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            quad[i].xy = quad[i].yx;
+        }
+    }
+
+    return quad;
+}
+
+
+
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
-in vec4 rocket_velocitiesV[];
-in float rocket_lifetimesV[];
+in vec4 puddle_velocitiesV[];
+in float puddle_lifetimesV[];
 in vec4 colorsV[];
-in vec2 rocket_texCoordsV[];
-in float rocket_floorHitV[];
+in float puddle_floorHitV[];
 
-out float rocket_lifetimesG;
+out float puddle_lifetimesG;
 out vec4 colorsG;
-out vec2 rocket_texCoordsG;
+out vec2 puddle_texCoordsG;
 
 uniform mat4 model, view, projection;
 
 
 void main()
 {	
-    rocket_lifetimesG = rocket_lifetimesV[0];
+    puddle_lifetimesG = puddle_lifetimesV[0];
     colorsG = colorsV[0];
 
-    float original = 0.1;
+    vec4 quad[4];
 
-    float ratio = clamp(length(rocket_velocitiesV[0].xyz) * 40, 1.0, 2.0);
-
-    if (rocket_floorHitV[0] == 1)
+    if (puddle_floorHitV[0] == 1)
     {
-        ratio = 1;
-        original *= 2;
-        original = min(rocket_lifetimesG/5, original);
-    }
+        float edgeSize = min(puddle_lifetimesG/4, 0.2);
 
-    float newX = original * ratio;
-    float newY = original / ratio;
-
-    vec4 quad[4] = {vec4(-newX,-newY,0,0),
-                    vec4(-newX, newY, 0, 0),
-                    vec4(newX, -newY, 0, 0),
-                    vec4(newX, newY, 0, 0)};
-
-    if (rocket_floorHitV[0] == 1)
+        quad = getQuad(edgeSize, edgeSize);
         quad = billboardFaceXZ(quad, view * model);
+    }
     else
-    quad = billboardDirectionCamera(quad,
-                                    (view*model*rocket_velocitiesV[0]).xyz,
-                                    -vec3(gl_in[0].gl_Position.xyz));
+    {
+        quad = getStretchedQuad(0.1, 0.1, puddle_velocitiesV[0].xyz, false);
+        quad = billboardDirectionCamera(quad,
+                                        (view*model*puddle_velocitiesV[0]).xyz,
+                                        -vec3(gl_in[0].gl_Position.xyz));
+    }
 
     // generate final vertex positions
     gl_Position = projection * (gl_in[0].gl_Position + quad[0]);
-    rocket_texCoordsG = vec2(0,0);
+    puddle_texCoordsG = vec2(0,0);
     EmitVertex();
 
     gl_Position = projection * (gl_in[0].gl_Position + quad[1]);
-    rocket_texCoordsG = vec2(0,1);
+    puddle_texCoordsG = vec2(0,1);
     EmitVertex();
 
     gl_Position = projection * (gl_in[0].gl_Position + quad[2]);
-    rocket_texCoordsG = vec2(1,0);
+    puddle_texCoordsG = vec2(1,0);
     EmitVertex();
 
     gl_Position = projection * (gl_in[0].gl_Position + quad[3]);
-    rocket_texCoordsG = vec2(1,1);
+    puddle_texCoordsG = vec2(1,1);
     EmitVertex();
+
+    EndPrimitive();
 }  
 

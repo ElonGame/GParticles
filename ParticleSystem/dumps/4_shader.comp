@@ -7,53 +7,53 @@
 // RESOURCES
 ////////////////////////////////////////////////////////////////////////////////
 
-layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 0, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 2, offset = 0) uniform atomic_uint puddle_emissionAttempts;
 
-layout(std430, binding = 3) buffer Rocket_floorHit
+layout(std430, binding = 3) buffer Puddle_floorHit
 {
-	float rocket_floorHit[];
+	float puddle_floorHit[];
 };
 
-layout(std430, binding = 4) buffer Rocket_lastPositions
+layout(std430, binding = 4) buffer Puddle_lastPositions
 {
-	vec4 rocket_lastPositions[];
+	vec4 puddle_lastPositions[];
 };
 
-layout(std430, binding = 5) buffer Rocket_lifetimes
+layout(std430, binding = 5) buffer Puddle_lifetimes
 {
-	float rocket_lifetimes[];
+	float puddle_lifetimes[];
 };
 
-layout(std430, binding = 6) buffer Rocket_size
+layout(std430, binding = 6) buffer Puddle_size
 {
-	float rocket_size[];
+	float puddle_size[];
 };
 
-layout(std430, binding = 7) buffer Rocket_lineLifetime
+layout(std430, binding = 7) buffer Puddle_lineLifetime
 {
-	float rocket_lineLifetime[];
+	float puddle_lineLifetime[];
 };
 
-layout(std430, binding = 8) buffer Rocket_colors
+layout(std430, binding = 8) buffer Puddle_colors
 {
-	vec4 rocket_colors[];
+	vec4 puddle_colors[];
 };
 
-layout(std430, binding = 9) buffer Rocket_positions
+layout(std430, binding = 9) buffer Puddle_positions
 {
-	vec4 rocket_positions[];
+	vec4 puddle_positions[];
 };
 
-layout(std430, binding = 10) buffer Rocket_texCoords
+layout(std430, binding = 10) buffer Puddle_texCoords
 {
-	vec2 rocket_texCoords[];
+	vec2 puddle_texCoords[];
 };
 
-layout(std430, binding = 11) buffer Rocket_velocities
+layout(std430, binding = 11) buffer Puddle_velocities
 {
-	vec4 rocket_velocities[];
+	vec4 puddle_velocities[];
 };
 
 layout(std430, binding = 12) buffer VirusPos
@@ -63,11 +63,11 @@ layout(std430, binding = 12) buffer VirusPos
 
 layout(local_size_variable) in;
 
-uniform float rocket_maxParticles;
-uniform float rocket_toCreate;
-uniform float virusAnimationRadius;
 uniform vec2 mouseXY;
 uniform float virusAnimationAngle;
+uniform float puddle_maxParticles;
+uniform float puddle_toCreate;
+uniform float virusAnimationRadius;
 uniform int timet;
 uniform vec2 mouse;
 
@@ -338,49 +338,36 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
 	return velocityGenerator(dir, randomize, intensity);
 }
 
-void kill()
+void update()
 {
-	rocket_lifetimes[gid] = -1;
+	puddle_velocities[gid].y -= 0.00025;
+	puddle_positions[gid].xyz += puddle_velocities[gid].xyz;
 
-	atomicCounterDecrement(rocket_aliveParticles);
+	if (puddle_positions[gid].y < -4)
+	{
+		if (puddle_floorHit[gid] == 0)
+			puddle_lifetimes[gid] = 1;
+		puddle_positions[gid].y = -4;
+		puddle_floorHit[gid] = 1.0;
+	}
 }
-
-void bounce(vec3 normal)
-{
-	rocket_velocities[gid].xyz = reflect(rocket_velocities[gid].xyz, normal);
-}
-
-void stick()
-{
-	rocket_velocities[gid] = vec4(0);
-}
-
-uniform vec4 spheres[1];
-
 
 void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
 
-	if (rocket_lifetimes[gid] <= 0)
+	if (puddle_lifetimes[gid] <= 0)
 		return;
 
-	rocket_lifetimes[gid] -= 0.025;
-	rocket_lineLifetime[gid] -= 0.025;
+	puddle_lifetimes[gid] -= 0.025;
 
-	if (rocket_lifetimes[gid] <= 0)
+	if (puddle_lifetimes[gid] <= 0)
 	{
-		kill();
+		puddle_lifetimes[gid] = -1;
+		atomicCounterDecrement(puddle_aliveParticles);
+
 		return;
 	}
 	
-	rocket_velocities[gid].y -= 0.00025;
-	rocket_lastPositions[gid].xyz = rocket_positions[gid].xyz;
-	rocket_positions[gid].xyz += rocket_velocities[gid].xyz;
-
-	if (rocket_positions[gid].y < -4)
-	{
-		rocket_positions[gid].y = -4;
-		rocket_floorHit[gid] = 1.0;
-	}
+	update();
 }

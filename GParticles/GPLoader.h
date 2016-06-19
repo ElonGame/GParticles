@@ -7,6 +7,7 @@
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 #include "GP_Uniform.h"
+#include "GP_Atomic.h"
 
 struct reservedResources
 {
@@ -29,7 +30,7 @@ private:
 
 	// global resource info
 	static bufferUmap globalBufferInfo;
-	static atomicUmap globalAtomicInfo;
+	//static atomicUmap globalAtomicInfo;
 	//static uniformUmap globalUniformInfo;
 	
 	// global resource loading functions
@@ -43,7 +44,7 @@ private:
 
 	// reserved resource info
 	static std::vector<bufferInfo> reservedBufferInfo;
-	static std::vector<atomicInfo> reservedAtomicInfo;
+	static std::vector<GP_Atomic> reservedAtomicInfo;
 	static std::vector<GP_Uniform> reservedUniformInfo;
 
 	// reserved resource loading functions

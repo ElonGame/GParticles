@@ -1,30 +1,27 @@
 #version 430
-layout(binding = 0, offset = 0) uniform atomic_uint rocket_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint rocket_emissionAttempts;
-layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 0, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 2, offset = 0) uniform atomic_uint puddle_emissionAttempts;
 
 
-in float rocket_lifetimes;
-in vec4 rocket_velocities;
-in vec4 rocket_positions;
-in vec4 rocket_colors;
-in vec2 rocket_texCoords;
-in float rocket_floorHit;
+in float puddle_lifetimes;
+in vec4 puddle_velocities;
+in vec4 puddle_positions;
+in vec4 puddle_colors;
+in float puddle_floorHit;
 
 uniform mat4 model, view, projection;
 
-out vec4 rocket_velocitiesV;
-out float rocket_lifetimesV;
+out vec4 puddle_velocitiesV;
+out float puddle_lifetimesV;
 out vec4 colorsV;
-out vec2 rocket_texCoordsV;
-out float rocket_floorHitV;
+out float puddle_floorHitV;
 
 void main()
 {
-	rocket_velocitiesV = rocket_velocities;
-	rocket_lifetimesV = rocket_lifetimes;
-	colorsV = rocket_colors;
-	rocket_texCoordsV = rocket_texCoords;
-	rocket_floorHitV = rocket_floorHit;
-	gl_Position = view * model * vec4(rocket_positions.xyz, 1);
+	puddle_velocitiesV = puddle_velocities;
+	puddle_lifetimesV = puddle_lifetimes;
+	colorsV = puddle_colors;
+	puddle_floorHitV = puddle_floorHit;
+	gl_Position = view * model * vec4(puddle_positions.xyz, 1);
 }

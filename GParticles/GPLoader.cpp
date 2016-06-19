@@ -1,10 +1,10 @@
 #include "GPLoader.h"
 
 bufferUmap GPLoader::globalBufferInfo;
-atomicUmap GPLoader::globalAtomicInfo;
+//atomicUmap GPLoader::globalAtomicInfo;
 
 std::vector<bufferInfo> GPLoader::reservedBufferInfo;
-std::vector<atomicInfo> GPLoader::reservedAtomicInfo;
+std::vector<GP_Atomic> GPLoader::reservedAtomicInfo;
 std::vector<GP_Uniform> GPLoader::reservedUniformInfo;
 
 
@@ -229,11 +229,11 @@ bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 	// iterate through every atomic resource
 	for (; atomic; atomic = atomic->NextSiblingElement("atomic"))
 	{
-		atomicInfo ai;
+		GP_Atomic ai;
 
 		// skip atomic loading another has already been loaded with that name
 		atomic->QueryStringAttribute("name", &ai.name);
-		if (globalAtomicInfo.find(ai.name) == globalAtomicInfo.end() && !globalAtomicInfo.empty())
+		if (GlobalData::get().getAtomic(ai.name, ai))
 		{
 			printf("Skipping loading of atomic %s! Another atomic with the "
 				"same name has already been loaded!\n", ai.name);
@@ -241,20 +241,15 @@ bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 			continue;
 		}
 
-		// parse atomic info and store <name, atomicInfo> pair
-		glGenBuffers(1, &ai.id);
-		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
+		// parse atomic info, initialize and it
+		atomic->QueryUnsignedAttribute("value", &ai.resetValue);
 		ai.reset = false;
 
-		globalAtomicInfo.emplace(ai.name, ai);
-
-		// initialize atomic buffer
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ai.id);
-		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ai.initialValue);
+		ai.init();
+		GlobalData::get().addAtomic(ai);
 
 		std::cout << "(GLOBAL) INIT: atomic " << ai.name << " with number " <<
-			ai.id << " and starting value " << ai.initialValue << std::endl; // DUMP
+			ai.id << " and starting value " << ai.resetValue << std::endl; // DUMP
 	}
 
 	return true;
@@ -408,7 +403,7 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 	TiXmlElement* atomic = reservedResH.FirstChild("atomic").ToElement();
 	for (; atomic; atomic = atomic->NextSiblingElement("atomic"))
 	{
-		atomicInfo ai;
+		GP_Atomic ai;
 
 		// skip atomic loading another has already been loaded with that name
 		atomic->QueryStringAttribute("name", &ai.name);
@@ -424,13 +419,12 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 			continue;
 		}
 
-		ai.initialValue = 0;
-		atomic->QueryUnsignedAttribute("value", &ai.initialValue);
+		atomic->QueryUnsignedAttribute("value", &ai.resetValue);
 
 		reservedAtomicInfo.push_back(ai);
 
 		std::cout << "COLLECTED: atomic " << ai.name << " with initial value "
-			<< ai.initialValue << std::endl; // DUMP
+			<< ai.resetValue << std::endl; // DUMP
 	}
 
 	// collect uniform name, type and initial value
@@ -488,9 +482,11 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 	// load default reserved atomics, uniforms and buffers
 	for (auto resAtmInfo : reservedAtomicInfo)
 	{
-		atomicInfo ai = resAtmInfo;
+		GP_Atomic ai = resAtmInfo;
 		ai.name = psystemName + "_" + ai.name;
-		ai.reset = false;
+
+		ai.init();
+		GlobalData::get().addAtomic(ai);
 		
 		rr.reservedAtomicInfo.emplace(ai.name, ai);
 	}
@@ -526,10 +522,10 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 		glGenBuffers(1, &ab.second.id);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ab.second.id);
 		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ab.second.initialValue);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ab.second.resetValue);
 
 		std::cout << "INIT: atomic " << ab.second.name << " with number " <<
-			ab.second.id << " and starting value " << ab.second.initialValue << std::endl; // DUMP
+			ab.second.id << " and starting value " << ab.second.resetValue << std::endl; // DUMP
 	}
 
 	
@@ -597,16 +593,16 @@ void GPLoader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement
 ///////////////////////////////////////////////////////////////////////////////
 void GPLoader::addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
 {
-	// add global atomics
-	for (auto gah : globalAtomicInfo)
-	{
-		aum.emplace(gah);
-	}
-
 	// add global buffers
 	for (auto gbh : globalBufferInfo)
 	{
 		bum.emplace(gbh);
+	}
+
+	// add global atomics
+	for (auto gah : GlobalData::get().getAtomicMap())
+	{
+		aum.emplace(gah);
 	}
 
 	// add global uniforms
@@ -638,7 +634,7 @@ void GPLoader::loadIterationResourceOverrides(
 		if (resType == "atomic")
 		{
 			aum.at(resName).reset = true;
-			aum.at(resName).initialValue = std::stoul(resValue, nullptr, 0);
+			aum.at(resName).resetValue = std::stoul(resValue, nullptr, 0);
 		}
 		else if (resType == "uniform")
 		{ 
@@ -659,8 +655,10 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	uniformUmap cpUniforms = rr.reservedUniformInfo;
 
 	// then, add the program global resources
-	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
+	
 	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
+	atomicUmap atomics = GlobalData::get().getAtomicMap();
+	cpAtomics.insert(atomics.begin(), atomics.end());
 	uniformUmap uniforms = GlobalData::get().getUniformMap();
 	cpUniforms.insert(uniforms.begin(), uniforms.end());
 
@@ -693,6 +691,12 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 		return false;
 	}
 	
+	std::vector<std::string> aNames;
+	for (auto a : cpAtomics)
+	{
+		aNames.push_back(a.first);
+	}
+
 	std::vector<std::string> uNames;
 	for (auto u : cpUniforms)
 	{
@@ -702,7 +706,7 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	GLuint iterationStep;
 	programE->QueryUnsignedAttribute("iterationStep", &iterationStep);
 
-	cp = ComputeProgram(cpHandle, cpAtomics, cpBuffers, uNames, rr.maxParticles, iterationStep);
+	cp = ComputeProgram(cpHandle, aNames, cpBuffers, uNames, rr.maxParticles, iterationStep);
 
 	return true;
 }

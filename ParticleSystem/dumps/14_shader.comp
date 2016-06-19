@@ -1,7 +1,9 @@
 #version 430
 layout(binding = 0, offset = 0) uniform atomic_uint virus_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint randomCounter;
-layout(binding = 2, offset = 0) uniform atomic_uint virus_emissionAttempts;
+layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 3, offset = 0) uniform atomic_uint virus_emissionAttempts;
+layout(binding = 4, offset = 0) uniform atomic_uint puddle_emissionAttempts;
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -154,9 +156,9 @@ mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
                 vec4(0, 0, 0, 1));
 }
 
+in float virus_lifetimes;
 in vec4 virus_positions;
 in float virus_size;
-in vec4 virusPos;
 
 in vec3 position;
 in vec3 normal;
@@ -165,17 +167,20 @@ uniform mat4 model, view, projection, normalMatrix;
 
 out vec3 normalV;
 out vec3 lightDirV;
+out float virus_lifetimesV;
 
 void main()
 {
+
 	float val = 0.025;
-	float b = virus_size;
+	float rot = 2;
 
-if (virus_size == 0.025) ;
-//if (virus_size == 0.025) val = 0.025;
-//else val = 1;
+//if (virus_size==0.025);
+//if (virus_size==0.025) rot = 10;
 
-	mat4 rotation = rotationMatrix(vec3(1,1,0.5), radians(2 * virus_positions.w));
+
+
+	mat4 rotation = rotationMatrix(vec3(1,1,0.5), radians(rot * virus_positions.w));
 
     gl_Position = projection * view * model * vec4((mat3(rotation) * position) * val + virus_positions.xyz, 1.0f);
     normalV = mat3(transpose(inverse(view * model))) * mat3(rotation) * normal;
