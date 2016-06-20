@@ -12,9 +12,18 @@
 struct reservedResources
 {
 	GLuint maxParticles;
-	bufferUmap reservedBufferInfo;
-	atomicUmap reservedAtomicInfo;
-	uniformUmap reservedUniformInfo;
+	bufferUmap reservedBuffers;
+	atomicUmap reservedAtomics;
+	uniformUmap reservedUniforms;
+};
+
+struct rendererLoading
+{
+	std::vector<std::string> vsPath;
+	std::vector<std::string> fgPath;
+	std::vector<std::string> gmPath;
+	std::string rendertype;
+	std::string path;
 };
 
 class GPLoader
@@ -27,27 +36,24 @@ public:
 private:
 	static void loadResources(TiXmlHandle projectH);
 	static ParticleSystem loadParticleSystem(TiXmlElement* psystemE); // TODO: single psystem loading?
-
+	
 	// global resource info
 	static bufferUmap globalBufferInfo;
-	//static atomicUmap globalAtomicInfo;
-	//static uniformUmap globalUniformInfo;
-	
-	// global resource loading functions
-	static void loadGlobalResources(TiXmlHandle globalResH);
-	static bool loadGlobalBuffers(TiXmlHandle buffers);
-	static bool loadGlobalAtomics(TiXmlHandle atomics);
-	static bool loadGlobalUniforms(TiXmlHandle uniforms);
-	static void addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
-	static void loadIterationResourceOverrides(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
-
+	static atomicUmap globalAtomicInfo;
+	static uniformUmap globalUniformInfo;
 
 	// reserved resource info
-	static std::vector<bufferInfo> reservedBufferInfo;
+	static std::vector<GP_Buffer> reservedBufferInfo;
 	static std::vector<GP_Atomic> reservedAtomicInfo;
 	static std::vector<GP_Uniform> reservedUniformInfo;
 
-	// reserved resource loading functions
+	// resource loading functions
+	static void loadGlobalBuffers(TiXmlHandle globalResH);
+	static void loadGlobalAtomics(TiXmlHandle globalResH);
+	static void loadGlobalUniforms(TiXmlHandle globalResH);
+	static void loadIterationResourceOverrides(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
+	static void queryUniformValue(TiXmlElement* uElem, GP_Uniform &u);
+
 	static void collectReservedResourceInfo(TiXmlHandle reservedResH);
 	static bool loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE);
 	static void loadInitialResourceOverrides(reservedResources &rr, TiXmlElement* psystemE);
@@ -60,17 +66,30 @@ private:
 	static void getRendererXMLInfo(rendererLoading &rl, TiXmlElement* programE);
 
 	// project loading utility functions
+	template <typename Func>
+	static void queryAttribute(Func func, TiXmlElement* elem, std::string errorMsg, std::string errorMsgTitle = "Invalid Input")
+	{
+		int res = func(elem);
+		if (res != TIXML_SUCCESS)
+		{
+			Utils::exitMessage(	errorMsgTitle + " - line " +
+								std::to_string(elem->Row()), errorMsg);
+		}
+	}
+
+
 	static void collectFPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
 	static std::string createFinalShaderSource(std::vector<std::string> filePaths);
-	static std::string generateRenderHeader(atomicUmap &atomics);
-	static std::string generateComputeHeader(atomicUmap &cpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms);
+	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms,
+											std::string in, std::string out);
+	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms);
 	static std::string fileToString(std::string filePath);
 	static void printShaderLog(GLuint shader);
 	static void printProgramLog(GLuint program);
 
 
-	static void queryValue(TiXmlElement* uElem, GP_Uniform &u);
+	
 };
 

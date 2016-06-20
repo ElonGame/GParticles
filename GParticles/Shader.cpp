@@ -18,8 +18,8 @@ Shader::Shader(const std::string &type)
 Shader::Shader(const std::string &type, const std::string source)
 {
 	shaderType = type;
-	GLenum asd = shaderTypeMap.at(shaderType);
-	id = glCreateShader(asd);
+	GLenum shaderTypeInt = shaderTypeMap.at(shaderType);
+	id = glCreateShader(shaderTypeInt);
 	loadShader(source);
 }
 
@@ -29,9 +29,9 @@ Shader::~Shader()
 	//glDeleteShader(id);
 }
 
-bool Shader::loadShader(const std::string source)
+bool Shader::loadShader(const std::string sourceString)
 {
-	this->source = source;
+	source = sourceString;
 	const GLchar* shaderSource = source.c_str();
 	glShaderSource(id, 1, (const GLchar**)&shaderSource, NULL);
 	glCompileShader(id);

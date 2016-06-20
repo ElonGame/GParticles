@@ -8,57 +8,55 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 layout(binding = 0, offset = 0) uniform atomic_uint virus_aliveParticles;
-layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
-layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
-layout(binding = 3, offset = 0) uniform atomic_uint virus_emissionAttempts;
-layout(binding = 4, offset = 0) uniform atomic_uint puddle_emissionAttempts;
+layout(binding = 1, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 2, offset = 0) uniform atomic_uint virus_emissionAttempts;
 
-layout(std430, binding = 5) buffer Virus_velocities
+layout(std430, binding = 3) buffer Virus_velocities
 {
 	vec4 virus_velocities[];
 };
 
-layout(std430, binding = 6) buffer Virus_floorHit
+layout(std430, binding = 4) buffer Virus_floorHit
 {
 	float virus_floorHit[];
 };
 
-layout(std430, binding = 7) buffer Virus_lastPositions
+layout(std430, binding = 5) buffer Virus_lastPositions
 {
 	vec4 virus_lastPositions[];
 };
 
-layout(std430, binding = 8) buffer Virus_positions
+layout(std430, binding = 6) buffer Virus_positions
 {
 	vec4 virus_positions[];
 };
 
-layout(std430, binding = 9) buffer Virus_lifetimes
+layout(std430, binding = 7) buffer Virus_lifetimes
 {
 	float virus_lifetimes[];
 };
 
-layout(std430, binding = 10) buffer Virus_size
+layout(std430, binding = 8) buffer Virus_size
 {
 	float virus_size[];
 };
 
-layout(std430, binding = 11) buffer Virus_lineLifetime
+layout(std430, binding = 9) buffer Virus_lineLifetime
 {
 	float virus_lineLifetime[];
 };
 
-layout(std430, binding = 12) buffer Virus_colors
+layout(std430, binding = 10) buffer Virus_colors
 {
 	vec4 virus_colors[];
 };
 
-layout(std430, binding = 13) buffer Virus_texCoords
+layout(std430, binding = 11) buffer Virus_texCoords
 {
 	vec2 virus_texCoords[];
 };
 
-layout(std430, binding = 14) buffer VirusPos
+layout(std430, binding = 12) buffer VirusPos
 {
 	vec4 virusPos[];
 };
@@ -68,10 +66,8 @@ layout(local_size_variable) in;
 uniform float virusAnimationRadius;
 uniform float virus_maxParticles;
 uniform float virus_toCreate;
-uniform float puddle_toCreate;
-uniform float puddle_maxParticles;
-uniform vec2 mouseXY;
 uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
 uniform int timet;
 uniform vec2 mouse;
 

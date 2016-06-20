@@ -28,6 +28,11 @@ float GlobalData::getWindowHeight()
 	return windowHeight;
 }
 
+void GlobalData::addBuffer(GP_Buffer b)
+{
+	buffers[b.name] = b;
+}
+
 void GlobalData::addAtomic(GP_Atomic a)
 {
 	atomics[a.name] = a;
@@ -36,6 +41,15 @@ void GlobalData::addAtomic(GP_Atomic a)
 void GlobalData::addUniform(GP_Uniform u)
 {
 	uniforms[u.name] = u;
+}
+
+bool GlobalData::getBuffer(std::string name, GP_Buffer & b)
+{
+	if (buffers.find(name) == buffers.end() || buffers.empty())
+		return false;
+
+	b = buffers.at(name);
+	return true;
 }
 
 bool GlobalData::getAtomic(std::string name, GP_Atomic & a)
@@ -54,6 +68,11 @@ bool GlobalData::getUniform(std::string name, GP_Uniform &u)
 
 	u = uniforms.at(name);
 	return true;
+}
+
+bufferUmap GlobalData::getBufferMap()
+{
+	return buffers;
 }
 
 atomicUmap GlobalData::getAtomicMap()

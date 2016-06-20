@@ -8,9 +8,9 @@
 class ComputeProgram
 {
 public:
-	ComputeProgram(	GLuint ph, const std::vector<std::string> &ah, const bufferUmap &bh,
+	ComputeProgram( GLuint ph, const resHeader &b, const resHeader &a,
 					const std::vector<std::string> &u, GLuint &mp, GLuint iStep)
-		: programhandle(ph), atomics(ah), buffers(bh), uniforms(u), maxParticles(mp), iterationStep(ms(iStep)) {};
+		: programhandle(ph), buffers(b), atomics(a), uniforms(u), maxParticles(mp), iterationStep(ms(iStep)) {};
 	ComputeProgram();
 	~ComputeProgram();
 
@@ -21,9 +21,9 @@ public:
 	timeP lastStep = timeClock::now();
 private:
 	GLuint programhandle;
-	std::vector<std::string> atomics;
+	resHeader buffers;
+	resHeader atomics;
 	std::vector<std::string> uniforms;
-	bufferUmap buffers;
 
 	GLuint maxParticles;
 

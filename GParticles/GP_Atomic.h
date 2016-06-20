@@ -11,11 +11,11 @@ public:
 	GLuint resetValue;
 	bool reset;
 
-	GP_Atomic() : id(-1), binding(-1), resetValue(0), reset(false) {};
+	GP_Atomic() : id(-1), resetValue(0), reset(false) {};
 	~GP_Atomic();
 
 	void init();
-	void bind();
+	void bind(GLuint bindingPoint);
 	GLuint getCurrentValue();
 	void setCurrentValue(GLuint value);
 };

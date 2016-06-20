@@ -1,9 +1,9 @@
 #include "GPLoader.h"
 
 bufferUmap GPLoader::globalBufferInfo;
-//atomicUmap GPLoader::globalAtomicInfo;
-
-std::vector<bufferInfo> GPLoader::reservedBufferInfo;
+atomicUmap GPLoader::globalAtomicInfo;
+uniformUmap GPLoader::globalUniformInfo;
+std::vector<GP_Buffer> GPLoader::reservedBufferInfo;
 std::vector<GP_Atomic> GPLoader::reservedAtomicInfo;
 std::vector<GP_Uniform> GPLoader::reservedUniformInfo;
 
@@ -20,15 +20,19 @@ bool GPLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &ps
 		return false;
 	}
 
-	TiXmlHandle projHandle(&doc);
-	TiXmlHandle projectH = projHandle.FirstChild("project");
+	TiXmlHandle docH(&doc);
+	TiXmlHandle projectH = docH.FirstChild("project");
+	if (!projectH.Element())
+	{
+		Utils::exitMessage("Invalid Input", "Input file must have an outer project tag");
+	}
 
 
 	// load global resources and store reserved resources info
 	loadResources(projectH.FirstChild("resources"));
 
 
-	// load particle systems
+	// iterate through and load particle systems
 	TiXmlElement* psystemE = projectH.FirstChildElement("psystem").ToElement();
 	for (; psystemE; psystemE = psystemE->NextSiblingElement())
 	{
@@ -42,14 +46,21 @@ bool GPLoader::loadProject(std::string filePath, std::vector<ParticleSystem> &ps
 ///////////////////////////////////////////////////////////////////////////////
 void GPLoader::loadResources(TiXmlHandle resourcesH)
 {
-	// load global project resources
-	loadGlobalResources(resourcesH.FirstChild("global"));
+	auto lambda = [](TiXmlHandle globalResH, TiXmlHandle reservedResH)
+	{	// load global project resources
+		loadGlobalBuffers(globalResH);
+		loadGlobalAtomics(globalResH);
+		loadGlobalUniforms(globalResH);
+		
+		// collect reserved resource default info
+		collectReservedResourceInfo(reservedResH);
+	};
 
-	// collect reserved resource default info
-	collectReservedResourceInfo(resourcesH.FirstChild("private"));
+	// start by processing current file
+	lambda(resourcesH.FirstChild("global"), resourcesH.FirstChild("private"));
 
-	// if there is a resources prefab call the same functions
-	// which continue loading/collecting uniquely named resources
+
+	// if there is a resources prefab continue loading/collecting resources
 	std::string st;
 	resourcesH.ToElement()->QueryStringAttribute("prefab", &st);
 
@@ -57,208 +68,104 @@ void GPLoader::loadResources(TiXmlHandle resourcesH)
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docH(&doc);
-		TiXmlHandle prefabResH = docH.FirstChild("prefab").FirstChild("resources");
+		TiXmlHandle prefabH = docH.FirstChild("prefab").FirstChild("resources");
 		
-		loadGlobalResources(prefabResH.FirstChild("global"));
-
-		collectReservedResourceInfo(prefabResH.FirstChild("private"));
+		lambda(prefabH.FirstChild("global"), prefabH.FirstChild("private"));
 	}
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
+void GPLoader::loadGlobalBuffers(TiXmlHandle globalResH)
 {
-	// load reserved resources
-	reservedResources rr;
-	loadReservedPSResources(rr, psystemE);
-
-
-	// load psystem main components (emitter, updater, renderer)
-	ComputeProgram emitter;
-	TiXmlElement* programE = psystemE->FirstChildElement("emitter");
-	if (!loadComputeProgram(rr, programE, emitter))
+	// skip function if there are no buffer tags
+	TiXmlElement* bufferE = globalResH.FirstChild("buffer").ToElement();
+	if (!bufferE)
 	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
+		return;
 	}
 
-	ComputeProgram updater;
-	programE = psystemE->FirstChildElement("updater");
-	if (!loadComputeProgram(rr, programE, updater))
+	// iterate through every buffer tag
+	for (; bufferE; bufferE = bufferE->NextSiblingElement("buffer"))
 	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
-	}
+		GP_Buffer b;
 
-	RendererProgram renderer;
-	programE = psystemE->FirstChildElement("renderer");
-	if (!loadRenderer(rr, programE, renderer))
-	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
-	}
+		// parse name and skip buffer loading if another has already been loaded with that name
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("name", &b.name);},
+						bufferE, "Must provide buffer attribute with a name");
 
-
-	// load psystem properties
-	// model matrix
-	glm::mat4 model = glm::mat4();
-	glm::vec3 pos = glm::vec3();
-	TiXmlElement* transformE = psystemE->FirstChildElement("position");
-	transformE->QueryFloatAttribute("x", &pos.x);
-	transformE->QueryFloatAttribute("y", &pos.y);
-	transformE->QueryFloatAttribute("z", &pos.z);
-
-	glm::vec3 rot = glm::vec3();
-	transformE = psystemE->FirstChildElement("rotation");
-	transformE->QueryFloatAttribute("x", &rot.x);
-	transformE->QueryFloatAttribute("y", &rot.y);
-	transformE->QueryFloatAttribute("z", &rot.z);
-	float angle = 0;
-	transformE->QueryFloatAttribute("angle", &angle);
-
-	glm::vec3 scale = glm::vec3();
-	transformE = psystemE->FirstChildElement("scale");
-	transformE->QueryFloatAttribute("x", &scale.x);
-	transformE->QueryFloatAttribute("y", &scale.y);
-	transformE->QueryFloatAttribute("z", &scale.z);
-
-	model = glm::translate(model, pos);
-	model = glm::rotate(model, glm::radians(angle), rot);
-	model = glm::scale(model, scale);
-
-	// numWorkGroups
-	GLuint numWorkGroups;
-	TiXmlElement* nWorkGroupE = psystemE->FirstChildElement("numWorkGroups");
-	nWorkGroupE->QueryUnsignedAttribute("value", &numWorkGroups);
-
-	// lifetime
-	unsigned int lifetime = 3600;
-	bool looping = true;
-	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
-	if (lifetimeE->QueryUnsignedAttribute("value", &lifetime) == TIXML_SUCCESS)
-	{
-		lifetime *= 1000;
-
-		if (lifetimeE->QueryBoolAttribute("looping", &looping) != TIXML_SUCCESS)
-		{
-			looping = true;
-		}
-	}
-
-	// TODO: add more psystem porperties
-
-
-	return ParticleSystem(emitter, updater, renderer, model, numWorkGroups, lifetime, looping);
-}
-
-
-void GPLoader::loadGlobalResources(TiXmlHandle globalResH)
-{
-	loadGlobalBuffers(globalResH);
-	loadGlobalAtomics(globalResH);
-	loadGlobalUniforms(globalResH);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadGlobalBuffers(TiXmlHandle globalResH)
-{
-	TiXmlElement* buffer = globalResH.FirstChild("buffer").ToElement();
-	if (!buffer)
-	{
-		printf("No global buffer resources found!\n");
-		return false;
-	}
-
-	// iterate through every buffer resource
-	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-	for (; buffer; buffer = buffer->NextSiblingElement("buffer"))
-	{
-		bufferInfo bi;
-
-		// skip buffer loading another has already been loaded with that name
-		buffer->QueryStringAttribute("name", &bi.name);
-		if (globalBufferInfo.find(bi.name) == globalBufferInfo.end() && !globalBufferInfo.empty())
+		if (GlobalData::get().getBuffer(b.name, b))
 		{
 			printf(	"Skipping loading of buffer %s! Another buffer with the "
-					"same name has already been loaded!\n", bi.name);
+					"same name has already been loaded!\n", b.name);
 
 			continue;
 		}
 
-		// parse buffer info and store <name, bufferInfo> pair
-		glGenBuffers(1, &bi.id);
-		buffer->QueryUnsignedAttribute("elements", &bi.elements);
-		buffer->QueryStringAttribute("type", &bi.type);
-
-		globalBufferInfo.emplace(bi.name, bi);
-
-		// initialize buffer
-		int bSize = bi.elements * ((bi.type == "vec4") ? 4 : 1);
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalBufferInfo.at(bi.name).id);
-		glBufferData(	GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat),
-						NULL, GL_DYNAMIC_DRAW);
-
-		// fill buffer with default values
-		GLfloat *values = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bSize * sizeof(GLfloat), bufMask);
+		// parse buffer info, initialize and store it
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryUnsignedAttribute("elements", &b.elements);},
+						bufferE, "Must provide buffer attribute with number of elements");
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("type", &b.type);},
+						bufferE, "Must provide buffer attribute with a type");
 		
-		for (int i = 0; i < bSize; values[i++] = 0);
+		b.init();
 
-		
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		globalBufferInfo.emplace(b.name, b);
+		GlobalData::get().addBuffer(b);
 
-		std::cout << "(GLOBAL) INIT: buffer " << bi.name << " with number " << globalBufferInfo.at(bi.name).id
-			<< ", " << bi.elements << " elements and size " << bSize << std::endl; // DUMP
+		std::cout << "(GLOBAL) INIT: buffer " << b.name << " with number " << b.id
+			<< ", " << b.elements << " elements of type " << b.type << std::endl; // DUMP
 	}
-
-	return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
+void GPLoader::loadGlobalAtomics(TiXmlHandle globalResH)
 {
-	TiXmlElement* atomic = globalResH.FirstChild("atomic").ToElement();
-	if (!atomic)
+	// skip function if there are no atomic tags
+	TiXmlElement* atomicE = globalResH.FirstChild("atomic").ToElement();
+	if (!atomicE)
 	{
-		printf("No global atomic resources found!\n");
-		return false;
+		return;
 	}
 
 	// iterate through every atomic resource
-	for (; atomic; atomic = atomic->NextSiblingElement("atomic"))
+	for (; atomicE; atomicE = atomicE->NextSiblingElement("atomic"))
 	{
-		GP_Atomic ai;
-
-		// skip atomic loading another has already been loaded with that name
-		atomic->QueryStringAttribute("name", &ai.name);
-		if (GlobalData::get().getAtomic(ai.name, ai))
+		GP_Atomic a;
+		
+		// parse name and skip atomic loading if another has already been loaded with that name
+		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryStringAttribute("name", &a.name);},
+						atomicE, "Must provide atomic attribute with a name");
+		
+		if (GlobalData::get().getAtomic(a.name, a))
 		{
 			printf("Skipping loading of atomic %s! Another atomic with the "
-				"same name has already been loaded!\n", ai.name);
+				"same name has already been loaded!\n", a.name);
 
 			continue;
 		}
 
-		// parse atomic info, initialize and it
-		atomic->QueryUnsignedAttribute("value", &ai.resetValue);
-		ai.reset = false;
+		// parse atomic info, initialize and store it
+		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryUnsignedAttribute("value", &a.resetValue);},
+						atomicE, "Must provide atomic attribute with a value > 0");
 
-		ai.init();
-		GlobalData::get().addAtomic(ai);
+		a.init();
 
-		std::cout << "(GLOBAL) INIT: atomic " << ai.name << " with number " <<
-			ai.id << " and starting value " << ai.resetValue << std::endl; // DUMP
+		globalAtomicInfo.emplace(a.name, a);
+		GlobalData::get().addAtomic(a);
+
+		std::cout << "(GLOBAL) INIT: atomic " << a.name << " with number " <<
+			a.id << " and starting value " << a.resetValue << std::endl; // DUMP
 	}
-
-	return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
+void GPLoader::queryUniformValue(TiXmlElement* uElem, GP_Uniform &u)
 {
 	//if (u.type == "bool")
 	//{
@@ -283,12 +190,12 @@ void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 	else if (u.type == "float")
 	{
 		int res = uElem->QueryFloatAttribute("value", &u.value[0].x);
-		/*if (res != TIXML_SUCCESS)
+		if (res != TIXML_SUCCESS)
 		{
 			std::string msg = "Must provide a value for uniform \"" + u.name
 				+ "\" on line " + std::to_string(uElem->Row());
 			Utils::exitMessage("Invalid Input", msg);
-		}*/
+		}
 		std::cout << "VALUE PLACE IS: " << u.value[0].x << std::endl;
 	}
 	else if (u.type == "vec2")
@@ -325,42 +232,43 @@ void GPLoader::queryValue(TiXmlElement* uElem, GP_Uniform &u)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
+void GPLoader::loadGlobalUniforms(TiXmlHandle globalResH)
 {
-	TiXmlElement* uniform = globalResH.FirstChild("uniform").ToElement();
-	if (!uniform)
+	// skip function if there are no uniform tags
+	TiXmlElement* uniformE = globalResH.FirstChild("uniform").ToElement();
+	if (!uniformE)
 	{
-		printf("No global uniform resources found!\n");
-		return false;
+		return;
 	}
 
 	// iterate through every uniform resource
-	for (; uniform; uniform = uniform->NextSiblingElement("uniform"))
+	for (; uniformE; uniformE = uniformE->NextSiblingElement("uniform"))
 	{
-		GP_Uniform ui;
+		GP_Uniform u;
 
-		// skip uniform loading another has already been loaded with that name
-		uniform->QueryStringAttribute("name", &ui.name);
-		if (GlobalData::get().getUniform(ui.name, ui))
+		// parse name and skip uniform loading if another has already been loaded with that name
+		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("name", &u.name);},
+						uniformE, "Must provide uniform attribute with a name");
+
+		if (GlobalData::get().getUniform(u.name, u))
 		{
 			printf("Skipping loading of uniform %s! Another uniform with the "
-				"same name has already been loaded!\n", ui.name);
+				"same name has already been loaded!\n", u.name);
 
 			continue;
 		}
 
-		// parse uniform and store <name, atomicInfo> pair
-		uniform->QueryStringAttribute("name", &ui.name);
-		uniform->QueryStringAttribute("type", &ui.type);
-		queryValue(uniform, ui);
+		// parse atomic info, initialize and store it
+		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("type", &u.type);},
+						uniformE, "Must provide uniform attribute with a type");
+		queryUniformValue(uniformE, u);
 
-		GlobalData::get().addUniform(ui);
+		globalUniformInfo.emplace(u.name, u);
+		GlobalData::get().addUniform(u);
 
-		std::cout << "(GLOBAL) INIT: uniform " << ui.name<< " of type " <<
-			ui.type << " and value " << ui.value[0].x << std::endl; // DUMP
+		std::cout << "(GLOBAL) INIT: uniform " << u.name<< " of type " <<
+			u.type << " and value " << u.value[0].x << std::endl; // DUMP
 	}
-
-	return true;
 }
 
 
@@ -370,17 +278,19 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 {
 	bool skipIter = false;
 
-	// collect buffer name, elements and type
-	TiXmlElement* buffer = reservedResH.FirstChild("buffer").ToElement();
-	for (; buffer; buffer = buffer->NextSiblingElement("buffer"))
+	// collect buffer info
+	TiXmlElement* bufferE = reservedResH.FirstChild("buffer").ToElement();
+	for (; bufferE; bufferE = bufferE->NextSiblingElement("buffer"))
 	{
-		bufferInfo bi;
+		GP_Buffer b;
 
-		// skip buffer loading another has already been loaded with that name
-		buffer->QueryStringAttribute("name", &bi.name);
+		// parse name and skip buffer loading if another has already been loaded with that name
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("name", &b.name);},
+						bufferE, "Must provide buffer attribute with a name");
+
 		for (int i = 0; i < reservedBufferInfo.size() && !skipIter; i++)
 		{
-			if (reservedBufferInfo[i].name == bi.name)
+			if (reservedBufferInfo[i].name == b.name)
 				skipIter = true;
 		}
 
@@ -390,26 +300,30 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 			continue;
 		}
 
-		buffer->QueryUnsignedAttribute("elements", &bi.elements);
-		buffer->QueryStringAttribute("type", &bi.type);
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryUnsignedAttribute("elements", &b.elements);},
+						bufferE, "Must provide buffer attribute with number of elements");
+		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("type", &b.type);},
+						bufferE, "Must provide buffer attribute with a type");
 
-		reservedBufferInfo.push_back(bi);
+		reservedBufferInfo.push_back(b);
 
-		std::cout << "COLLECTED: buffer " << bi.name << ", with " << bi.elements
-			<< " elements and type " << bi.type << std::endl; // DUMP
+		std::cout << "COLLECTED: buffer " << b.name << ", with " << b.elements
+			<< " elements and type " << b.type << std::endl; // DUMP
 	}
 
-	// collect atomic name and initialValue
-	TiXmlElement* atomic = reservedResH.FirstChild("atomic").ToElement();
-	for (; atomic; atomic = atomic->NextSiblingElement("atomic"))
+	// collect atomic info
+	TiXmlElement* atomicE = reservedResH.FirstChild("atomic").ToElement();
+	for (; atomicE; atomicE = atomicE->NextSiblingElement("atomic"))
 	{
-		GP_Atomic ai;
+		GP_Atomic a;
 
-		// skip atomic loading another has already been loaded with that name
-		atomic->QueryStringAttribute("name", &ai.name);
+		// parse name and skip atomic loading if another has already been loaded with that name
+		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryStringAttribute("name", &a.name);},
+						atomicE, "Must provide atomic attribute with a name");
+
 		for (int i = 0; i < reservedAtomicInfo.size() && !skipIter; i++)
 		{
-			if (reservedAtomicInfo[i].name == ai.name)
+			if (reservedAtomicInfo[i].name == a.name)
 				skipIter = true;
 		}
 
@@ -419,25 +333,26 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 			continue;
 		}
 
-		atomic->QueryUnsignedAttribute("value", &ai.resetValue);
+		atomicE->QueryUnsignedAttribute("value", &a.resetValue);
 
-		reservedAtomicInfo.push_back(ai);
+		reservedAtomicInfo.push_back(a);
 
-		std::cout << "COLLECTED: atomic " << ai.name << " with initial value "
-			<< ai.resetValue << std::endl; // DUMP
+		std::cout << "COLLECTED: atomic " << a.name << " with initial value "
+			<< a.resetValue << std::endl; // DUMP
 	}
 
-	// collect uniform name, type and initial value
-	TiXmlElement* uniform = reservedResH.FirstChild("uniform").ToElement();
-	for (; uniform; uniform = uniform->NextSiblingElement("uniform"))
+	// collect uniform info
+	TiXmlElement* uniformE = reservedResH.FirstChild("uniform").ToElement();
+	for (; uniformE; uniformE = uniformE->NextSiblingElement("uniform"))
 	{
-		GP_Uniform ui;
+		GP_Uniform u;
 
-		// skip uniform loading another has already been loaded with that name
-		uniform->QueryStringAttribute("name", &ui.name);
+		// parse name and skip uniform loading if another has already been loaded with that name
+		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("name", &u.name);},
+						uniformE, "Must provide uniform attribute with a name");
 		for (int i = 0; i < reservedUniformInfo.size() && !skipIter; i++)
 		{
-			if (reservedUniformInfo[i].name == ui.name)
+			if (reservedUniformInfo[i].name == u.name)
 				skipIter = true;
 		}
 
@@ -447,28 +362,113 @@ void GPLoader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 			continue;
 		}
 
-		uniform->QueryStringAttribute("type", &ui.type);
-		uniform->QueryFloatAttribute("value", &ui.value[0].x);
+		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("type", &u.type);},
+						uniformE, "Must provide uniform attribute with a type");
+		queryUniformValue(uniformE, u);
 
-		reservedUniformInfo.push_back(ui);
+		reservedUniformInfo.push_back(u);
 
-		std::cout << "COLLECTED: uniform " << ui.name << ", with initial value "
-			<< ui.value[0].x << " and type " << ui.type << std::endl; // DUMP
+		std::cout << "COLLECTED: uniform " << u.name << ", with initial value "
+			<< u.value[0].x << " and type " << u.type << std::endl; // DUMP
 	}
 }
 
-std::string queryString(TiXmlElement* elem, std::string errorMsg, std::string errorMsgTitle = "Invalid Input")
-{
-	std::string outStr;
 
-	int res = elem->QueryStringAttribute("name", &outStr);
-	if (res != TIXML_SUCCESS || outStr == "")
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
+{
+	// load reserved resources
+	reservedResources rr;
+	loadReservedPSResources(rr, psystemE);
+
+
+	// load psystem main components (emitter, updater, renderer)
+	ComputeProgram emission;
+	TiXmlElement* programE = psystemE->FirstChildElement("emitter");
+	if (!loadComputeProgram(rr, programE, emission))
 	{
-		Utils::exitMessage(errorMsgTitle + " - line " + std::to_string(elem->Row()),
-							errorMsg);
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
-	return outStr;
+	ComputeProgram update;
+	programE = psystemE->FirstChildElement("updater");
+	if (!loadComputeProgram(rr, programE, update))
+	{
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
+	}
+
+	RendererProgram render;
+	programE = psystemE->FirstChildElement("renderer");
+	if (!loadRenderer(rr, programE, render))
+	{
+		Utils::exitMessage("Fatal Error", "Unable to load emission event");
+	}
+
+
+	// load psystem properties
+	// model matrix
+	glm::mat4 model = glm::mat4();
+	glm::vec3 pos = glm::vec3();
+	TiXmlElement* transformE = psystemE->FirstChildElement("position");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &pos.x);
+		transformE->QueryFloatAttribute("y", &pos.y);
+		transformE->QueryFloatAttribute("z", &pos.z);
+	}
+
+	float angle = 0;
+	glm::vec3 rot = glm::vec3();
+	transformE = psystemE->FirstChildElement("rotation");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &rot.x);
+		transformE->QueryFloatAttribute("y", &rot.y);
+		transformE->QueryFloatAttribute("z", &rot.z);
+		transformE->QueryFloatAttribute("angle", &angle);
+	}
+
+	glm::vec3 scale = glm::vec3();
+	transformE = psystemE->FirstChildElement("scale");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &scale.x);
+		transformE->QueryFloatAttribute("y", &scale.y);
+		transformE->QueryFloatAttribute("z", &scale.z);
+	}
+
+	model = glm::translate(model, pos);
+	model = glm::rotate(model, glm::radians(angle), rot);
+	model = glm::scale(model, scale);
+
+	// numWorkGroups
+	GLuint numWorkGroups = 1;
+	TiXmlElement* nWorkGroupE = psystemE->FirstChildElement("numWorkGroups");
+	if (nWorkGroupE)
+	{
+		nWorkGroupE->QueryUnsignedAttribute("value", &numWorkGroups);
+	}
+
+	// lifetime
+	unsigned int lifetime = 3600;
+	bool looping = true;
+	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
+	if (lifetimeE->QueryUnsignedAttribute("value", &lifetime) == TIXML_SUCCESS)
+	{
+		lifetime *= 1000;
+
+		if (lifetimeE->QueryBoolAttribute("looping", &looping) != TIXML_SUCCESS)
+		{
+			looping = true;
+		}
+	}
+
+	// TODO: add more psystem porperties
+
+
+	return ParticleSystem(emission, update, render, model, numWorkGroups, lifetime, looping);
 }
 
 
@@ -477,94 +477,44 @@ std::string queryString(TiXmlElement* elem, std::string errorMsg, std::string er
 bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE)
 {
 	// get psystem name
-	std::string psystemName = queryString(psystemE, "Must provide psystem with a name");
-
-	// load default reserved atomics, uniforms and buffers
-	for (auto resAtmInfo : reservedAtomicInfo)
-	{
-		GP_Atomic ai = resAtmInfo;
-		ai.name = psystemName + "_" + ai.name;
-
-		ai.init();
-		GlobalData::get().addAtomic(ai);
-		
-		rr.reservedAtomicInfo.emplace(ai.name, ai);
-	}
+	std::string psystemName;
+	queryAttribute(	[&psystemName](TiXmlElement* e) {return e->QueryStringAttribute("name", &psystemName);},
+					psystemE, "Must provide psystem tag with a name");
 
 	for (auto resUniInfo : reservedUniformInfo)
 	{
-		GP_Uniform ui = resUniInfo;
-		ui.name = psystemName + "_" + ui.name;
+		GP_Uniform u = resUniInfo;
+		u.name = psystemName + "_" + u.name;
 
-		GlobalData::get().addUniform(ui);
-		rr.reservedUniformInfo.emplace(ui.name, ui);
-
-		std::cout << "INIT: uniform " << ui.name << " of type " <<
-			ui.type << " and value " << ui.value[0].x << std::endl; // DUMP
+		GlobalData::get().addUniform(u);
+		rr.reservedUniforms.emplace(u.name, u);
 	}
 
-	for (auto resBufInfo : reservedBufferInfo)
+	for (auto resAtmInfo : reservedAtomicInfo)
 	{
-		bufferInfo bi = resBufInfo;
-		bi.name = psystemName + "_" + bi.name;
+		GP_Atomic a = resAtmInfo;
+		a.name = psystemName + "_" + a.name;
 
-		rr.reservedBufferInfo.emplace(bi.name, bi);
+		a.init();
+
+		GlobalData::get().addAtomic(a);
+		rr.reservedAtomics.emplace(a.name, a);
 	}
-
 
 	// check and apply resource value overrides
 	loadInitialResourceOverrides(rr, psystemE);
 
-
-	// initialize reserved atomic buffers
-	for (auto &ab : rr.reservedAtomicInfo)
+	// load default reserved atomics, uniforms and buffers
+	rr.maxParticles = rr.reservedUniforms.at(psystemName + "_maxParticles").value[0].x;
+	for (auto resBufInfo : reservedBufferInfo)
 	{
-		glGenBuffers(1, &ab.second.id);
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ab.second.id);
-		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &ab.second.resetValue);
+		GP_Buffer b = resBufInfo;
+		b.name = psystemName + "_" + b.name;
 
-		std::cout << "INIT: atomic " << ab.second.name << " with number " <<
-			ab.second.id << " and starting value " << ab.second.resetValue << std::endl; // DUMP
-	}
+		b.init(rr.maxParticles);
 
-	
-	// get psystem max particles and initialize reserved buffers
-	rr.maxParticles = rr.reservedUniformInfo.at(psystemName + "_maxParticles").value[0].x;
-	GLint bufMask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-
-	for (auto &bi : rr.reservedBufferInfo)
-	{
-		if (rr.maxParticles != 0)
-		{
-			bi.second.elements = rr.maxParticles;
-		}
-	
-		int multiplier = 1;
-		if (bi.second.type == "vec4")
-		{
-			multiplier = 4;
-		}
-		else if (bi.second.type == "vec2")
-		{
-			multiplier = 2;
-		}
-
-		int bSize = bi.second.elements * multiplier;
-
-		glGenBuffers(1, &bi.second.id);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, bi.second.id);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, bSize * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
-
-		// fill buffer with default values
-		GLfloat *values = (GLfloat*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bSize * sizeof(GLfloat), bufMask);
-
-		for (int i = 0; i < bSize; values[i++] = 0);
-
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
-		std::cout << "INIT: buffer " << bi.second.name << " with number " << bi.second.id
-			<< ", " << bi.second.elements << " elements and size " << bSize << std::endl; // DUMP
+		GlobalData::get().addBuffer(b);
+		rr.reservedBuffers.emplace(b.name, b);
 	}
 
 	return true;
@@ -573,42 +523,18 @@ bool GPLoader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psys
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+// TODO: support uniform and atomic overriding (only uniform for now)
 void GPLoader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement * psystemE)
 {
 	TiXmlElement* resE = psystemE->FirstChildElement("override");
 	std::string resType, resName;
 	for (; resE; resE = resE->NextSiblingElement("override"))
 	{
-		resE->QueryStringAttribute("type", &resType);
 		resE->QueryStringAttribute("name", &resName);
+		// TODO: check res type
+		queryUniformValue(resE, rr.reservedUniforms.at(resName));
 
-		queryValue(resE, rr.reservedUniformInfo.at(resName));
-
-		GlobalData::get().addUniform(rr.reservedUniformInfo.at(resName));
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-void GPLoader::addGlobalProgramResources(atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
-{
-	// add global buffers
-	for (auto gbh : globalBufferInfo)
-	{
-		bum.emplace(gbh);
-	}
-
-	// add global atomics
-	for (auto gah : GlobalData::get().getAtomicMap())
-	{
-		aum.emplace(gah);
-	}
-
-	// add global uniforms
-	for (auto guh : GlobalData::get().getUniformMap())
-	{
-		uum.emplace(guh);
+		GlobalData::get().addUniform(rr.reservedUniforms.at(resName));
 	}
 }
 
@@ -635,10 +561,12 @@ void GPLoader::loadIterationResourceOverrides(
 		{
 			aum.at(resName).reset = true;
 			aum.at(resName).resetValue = std::stoul(resValue, nullptr, 0);
+			GlobalData::get().addAtomic(aum.at(resName));
 		}
 		else if (resType == "uniform")
 		{ 
 			uum.at(resName).value[0].x = std::stof(resValue);
+			GlobalData::get().addUniform(uum.at(resName));
 		}
 	}
 }
@@ -650,17 +578,14 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 {
 	// parse and store program resource info for later binding
 	// start by adding the program reserved resources
-	atomicUmap cpAtomics = rr.reservedAtomicInfo;
-	bufferUmap cpBuffers = rr.reservedBufferInfo;
-	uniformUmap cpUniforms = rr.reservedUniformInfo;
+	atomicUmap cpAtomics = rr.reservedAtomics;
+	bufferUmap cpBuffers = rr.reservedBuffers;
+	uniformUmap cpUniforms = rr.reservedUniforms;
 
 	// then, add the program global resources
-	
 	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
-	atomicUmap atomics = GlobalData::get().getAtomicMap();
-	cpAtomics.insert(atomics.begin(), atomics.end());
-	uniformUmap uniforms = GlobalData::get().getUniformMap();
-	cpUniforms.insert(uniforms.begin(), uniforms.end());
+	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
+	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
 
 	// and mark the indicated resources to be reset every iteration
 	loadIterationResourceOverrides(programE, cpAtomics, cpBuffers, cpUniforms);
@@ -672,8 +597,8 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	std::vector<std::string> fPaths;
 	collectFPaths(programE, "file", fPaths);
 
-	// shader source = header (from resource info) + reserved functionality + filepaths source
-	std::string shaderSource = generateComputeHeader(cpAtomics, cpBuffers, cpUniforms);
+	// shader source = header (from resource info) + filepaths source
+	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms);
 	shaderSource += createFinalShaderSource(fPaths);
 
 	// compile, attach and check link status
@@ -691,22 +616,29 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 		return false;
 	}
 	
-	std::vector<std::string> aNames;
+	// shaderprogram only requires the resource headers
+	resHeader bHeaders;
+	for (auto b : cpBuffers)
+	{
+		bHeaders.push_back(std::make_pair(b.second.name, b.second.binding));
+	}
+
+	resHeader aHeaders;
 	for (auto a : cpAtomics)
 	{
-		aNames.push_back(a.first);
+		aHeaders.push_back(std::make_pair(a.second.name, a.second.binding));
 	}
 
-	std::vector<std::string> uNames;
+	std::vector<std::string> uHeaders;
 	for (auto u : cpUniforms)
 	{
-		uNames.push_back(u.first);
+		uHeaders.push_back(u.second.name);
 	}
 
-	GLuint iterationStep;
+	GLuint iterationStep = 0;
 	programE->QueryUnsignedAttribute("iterationStep", &iterationStep);
 
-	cp = ComputeProgram(cpHandle, aNames, cpBuffers, uNames, rr.maxParticles, iterationStep);
+	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, rr.maxParticles, iterationStep);
 
 	return true;
 }
@@ -723,32 +655,11 @@ void GPLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement* programE)
 	TiXmlElement* renderType = programE->FirstChildElement("rendertype");
 	if (renderType != NULL && rl.rendertype.empty())
 	{
-		int res = renderType->QueryStringAttribute("type", &rl.rendertype);
-		if (res != TIXML_SUCCESS)
-		{
-			std::string msg = "Must give a type to rendertype on line " + std::to_string(renderType->Row());
-			Utils::exitMessage("Invalid Input", msg);
-		}
+		queryAttribute(	[&rl](TiXmlElement* e) {return e->QueryStringAttribute("type", &rl.rendertype);},
+						renderType, "Must provide rendertype with a type");
 
-		if (rl.rendertype == "billboard")
-		{
-			res = renderType->QueryStringAttribute("path", &rl.path);
-			if (res != TIXML_SUCCESS)
-			{
-				std::string msg = "Must supply image path to billboard rendertype on line " + std::to_string(renderType->Row());
-				Utils::exitMessage("Invalid Input", msg);
-			}
-		}
-
-		if (rl.rendertype == "model")
-		{
-			res = renderType->QueryStringAttribute("path", &rl.path);
-			if (res != TIXML_SUCCESS)
-			{
-				std::string msg = "Must supply directory path to model rendertype on line " + std::to_string(renderType->Row());
-				Utils::exitMessage("Invalid Input", msg);
-			}
-		}
+		queryAttribute(	[&rl](TiXmlElement* e) {return e->QueryStringAttribute("path", &rl.path);},
+						renderType, "Must provide rendertype with a resource path");
 	}
 
 	// collect shader file paths
@@ -802,18 +713,17 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 
 
 	// parse and store program resource info for later binding
-	//TiXmlElement* resourcesElement = programE->FirstChildElement("resources");
-	// TODO: Fix this
-	atomicUmap rendAtomics = rr.reservedAtomicInfo;
-	bufferUmap rendBuffers = rr.reservedBufferInfo;
-	uniformUmap rendUniforms = rr.reservedUniformInfo;
-	std::vector<GLuint> rendAtmHandlesToReset;
-	Texture texture;
-	Model model;
+	atomicUmap rendAtomics = rr.reservedAtomics;
+	bufferUmap rendBuffers = rr.reservedBuffers;
+	uniformUmap rendUniforms = rr.reservedUniforms;
 
-	addGlobalProgramResources(rendAtomics, rendBuffers, rendUniforms);
-	//addAtomicResets(resourcesElement, rendAtomics, rendAtmHandlesToReset);
+	// then, add the program global resources
+	rendBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
+	rendAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
+	rendUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
 
+
+	// TODO: move to header generation
 	// create atomic binding points
 	int bindingPoint = 0;
 	for (auto &atm : rendAtomics)
@@ -823,27 +733,32 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 
 
 
-
+	// create shader program
 	GLuint rpHandle = glCreateProgram();
+
+	auto loadAndAttach = [&rpHandle, &rendBuffers, &rendAtomics, &rendUniforms]
+						 (auto type, auto paths, auto in, auto out)
+	{
+		std::string header = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
+		Shader shader(type, header + createFinalShaderSource(paths));
+		glAttachShader(rpHandle, shader.getId());
+	};
 
 	// vertex shader
 	if (rl.vsPath.empty())
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for vertex shader");
 	}
-	std::string header = generateRenderHeader(rendAtomics);
-	std::string shaderSource = header + createFinalShaderSource(rl.vsPath);
-	Shader rpVertShader("vertex", shaderSource);
-	rpVertShader.dumpToFile();
-	glAttachShader(rpHandle, rpVertShader.getId());
+	loadAndAttach("vertex", rl.vsPath, "", "V");
+
+	std::string fragIn = "V";
 
 	// geometry shader
 	if (!rl.gmPath.empty())
 	{
-		shaderSource = header + createFinalShaderSource(rl.gmPath);
-		Shader rpGeomShader("geometry", shaderSource);
-		rpGeomShader.dumpToFile();
-		glAttachShader(rpHandle, rpGeomShader.getId());
+		loadAndAttach("geometry", rl.gmPath, "V[]", "G");
+
+		fragIn = "G";
 	}
 
 	// frag shader
@@ -851,11 +766,7 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	{
 		Utils::exitMessage("Invalid Input", "Must provide a file for fragment shader");
 	}
-	shaderSource = header + createFinalShaderSource(rl.fgPath);
-	Shader rpFragShader("fragment", shaderSource);
-	rpFragShader.dumpToFile();
-	glAttachShader(rpHandle, rpFragShader.getId());
-
+	loadAndAttach("fragment", rl.fgPath, fragIn, "");
 
 
 	glLinkProgram(rpHandle);
@@ -871,6 +782,8 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 
 
 	// renderType
+	Texture texture;
+	Model model;
 	if (rl.rendertype == "billboard")
 	{
 		texture.setImage(rl.path);
@@ -891,6 +804,7 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	{
 		glGenBuffers(1, &ebo);
 		glGenBuffers(1, &vbo);
+		
 		// model first mesh
 		Mesh mesh = model.meshes[0];
 
@@ -902,18 +816,19 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(GLuint),
 			&mesh.indices[0], GL_STATIC_DRAW);
 
-		// Vertex Positions
+		// vertex Positions
 		glEnableVertexAttribArray(0);
 		GLint posLocation = glGetAttribLocation(rpHandle, "position");
-		glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+		glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+			(GLvoid*)0);
 
-		// Vertex Normals
+		// vertex Normals
 		glEnableVertexAttribArray(1);
 		GLint norLocation = glGetAttribLocation(rpHandle, "normal");
 		glVertexAttribPointer(norLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
 			(GLvoid*)offsetof(Vertex, normal));
 
-		// Vertex TexCoords
+		// vertex TexCoords
 		glEnableVertexAttribArray(2);
 		GLint tcLocation = glGetAttribLocation(rpHandle, "texCoords");
 		glVertexAttribPointer(tcLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
@@ -1076,23 +991,46 @@ std::string GPLoader::createFinalShaderSource(std::vector<std::string> fPaths)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GPLoader::generateRenderHeader(atomicUmap &atomics)
+std::string GPLoader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,
+							uniformUmap &uniforms, std::string in, std::string out)
 {
-	std::string res = "#version 430\n";
+	std::string res =	"#version 430\n\n"
+						"////////////////////////////////////////////////////////////////////////////////\n"
+						"// RESOURCES\n"
+						"////////////////////////////////////////////////////////////////////////////////\n\n";
 
+	int i = 0;
 	for (auto &atm : atomics)
 	{
-		res += "layout(binding = " + std::to_string(atm.second.binding) +
+		atm.second.binding = i++;
+
+		res += "layout(binding = " + std::to_string(i) +
 				", offset = 0) uniform atomic_uint " + atm.first + ";\n";
 	}
 
-	return res + "\n";
+	res += "\n";
+
+	std::string bufferOuts = "";
+	for (auto &buf : buffers)
+	{
+		buf.second.binding = i++;
+
+		res += "in " + buf.second.type + " " + buf.second.name + in + ";\n";
+		bufferOuts += "out " + buf.second.type + " " + buf.second.name + out + ";\n";
+	}
+
+	// fragment shader has no predefined outputs
+	bufferOuts = (out != "") ? (bufferOuts) : "";
+
+	res += "\n" + bufferOuts + "uniform mat4 model, view, projection;\n\n";
+
+	return res;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GPLoader::generateComputeHeader(atomicUmap &cpAtomicHandles, bufferUmap &cpBufferHandles, uniformUmap &cpUniforms)
+std::string GPLoader::generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms)
 {
 	std::string res =	"#version 430\n"
 						"#extension GL_ARB_compute_shader : enable\n"
@@ -1102,8 +1040,9 @@ std::string GPLoader::generateComputeHeader(atomicUmap &cpAtomicHandles, bufferU
 						"// RESOURCES\n"
 						"////////////////////////////////////////////////////////////////////////////////\n\n";
 
+	// atomic binding points need to be created first since its max value is 8
 	int i = 0;
-	for (auto &atm : cpAtomicHandles)
+	for (auto &atm : atomics)
 	{
 		atm.second.binding = i;
 
@@ -1113,7 +1052,7 @@ std::string GPLoader::generateComputeHeader(atomicUmap &cpAtomicHandles, bufferU
 
 	res += "\n";
 
-	for (auto &buf : cpBufferHandles)
+	for (auto &buf : buffers)
 	{
 		buf.second.binding = i;
 
@@ -1126,7 +1065,7 @@ std::string GPLoader::generateComputeHeader(atomicUmap &cpAtomicHandles, bufferU
 
 	res += "layout(local_size_variable) in;\n\n";
 
-	for (auto &uni : cpUniforms)
+	for (auto &uni : uniforms)
 	{
 		res += "uniform " + uni.second.type + " " + uni.first + ";\n";
 	}
@@ -1134,7 +1073,6 @@ std::string GPLoader::generateComputeHeader(atomicUmap &cpAtomicHandles, bufferU
 	res += "uniform int timet;\n";
 	res += "uniform vec2 mouse;\n";
 
-	// TODO: put this on reserved header
 	res += "\nuint gid = gl_GlobalInvocationID.x;\n";
 
 	return res;

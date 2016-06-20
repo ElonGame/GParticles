@@ -19,11 +19,15 @@ public:
 	float getWindowHeight();
 
 	// resource functions
-	//void addBuffer(bufferInfo b);
+	void addBuffer(GP_Buffer b);
 	void addAtomic(GP_Atomic a);
 	void addUniform(GP_Uniform u);
-	//bufferInfo getBuffer(std::string name);
-	//atomicInfo getAtomic(std::string name);
+	bool getBuffer(std::string name, GP_Buffer &b);
+	bool getAtomic(std::string name, GP_Atomic &a);
+	bool getUniform(std::string name, GP_Uniform &u);
+	bufferUmap getBufferMap();
+	atomicUmap getAtomicMap();
+	uniformUmap getUniformMap();
 
 	template <typename T>
 	bool setUniformValue(std::string name, T value)
@@ -37,11 +41,6 @@ public:
 
 		return true;
 	}
-
-	bool getAtomic(std::string name, GP_Atomic &a);
-	bool getUniform(std::string name, GP_Uniform &u);
-	atomicUmap getAtomicMap();
-	uniformUmap getUniformMap();
 
 
 	GlobalData(GlobalData const&)		= delete;

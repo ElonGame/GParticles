@@ -1,7 +1,35 @@
 #version 430
-layout(binding = 0, offset = 0) uniform atomic_uint randomCounter;
-layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
-layout(binding = 2, offset = 0) uniform atomic_uint puddle_emissionAttempts;
+
+////////////////////////////////////////////////////////////////////////////////
+// RESOURCES
+////////////////////////////////////////////////////////////////////////////////
+
+layout(binding = 1, offset = 0) uniform atomic_uint randomCounter;
+layout(binding = 2, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 3, offset = 0) uniform atomic_uint puddle_emissionAttempts;
+
+in float puddle_floorHitV[];
+in vec4 puddle_lastPositionsV[];
+in float puddle_lifetimesV[];
+in float puddle_sizeV[];
+in float puddle_lineLifetimeV[];
+in vec4 puddle_colorsV[];
+in vec4 puddle_positionsV[];
+in vec2 puddle_texCoordsV[];
+in vec4 puddle_velocitiesV[];
+in vec4 virusPosV[];
+
+out float puddle_floorHitG;
+out vec4 puddle_lastPositionsG;
+out float puddle_lifetimesG;
+out float puddle_sizeG;
+out float puddle_lineLifetimeG;
+out vec4 puddle_colorsG;
+out vec4 puddle_positionsG;
+out vec2 puddle_texCoordsG;
+out vec4 puddle_velocitiesG;
+out vec4 virusPosG;
+uniform mat4 model, view, projection;
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -294,27 +322,17 @@ vec4[4] getStretchedQuad(float width, float height, vec3 velocity, bool horizont
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
-in vec4 puddle_velocitiesV[];
-in float puddle_lifetimesV[];
-in vec4 colorsV[];
-in float puddle_floorHitV[];
-
-out float puddle_lifetimesG;
-out vec4 colorsG;
-out vec2 puddle_texCoordsG;
-
-uniform mat4 model, view, projection;
-
-
 void main()
 {	
     puddle_lifetimesG = puddle_lifetimesV[0];
-    colorsG = colorsV[0];
+    puddle_colorsG = puddle_colorsV[0];
 
     vec4 quad[4];
 
     if (puddle_floorHitV[0] == 1)
     {
+        // puddle_lifetimesG starts at 1 so we'll a puddle with size 0.2 for a
+        // brief moment and then we shrink it until it is gone
         float edgeSize = min(puddle_lifetimesG/4, 0.2);
 
         quad = getQuad(edgeSize, edgeSize);

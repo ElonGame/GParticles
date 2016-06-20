@@ -34,7 +34,7 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName, a))
+		if (GlobalData::get().getAtomic(aName.first, a) && a.reset == true)
 		{
 			a.setCurrentValue(a.resetValue);
 		}
@@ -51,16 +51,20 @@ void ComputeProgram::printContents()
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName, a))
+		if (GlobalData::get().getAtomic(aName.first, a))
 		{
 			std::cout << a.name << " with id " << a.id << " and resetValue " << a.resetValue << std::endl;
 		}
 	}
 
 	std::cout << "Buffers" << std::endl;
-	for (auto b : buffers)
+	for (auto bName : buffers)
 	{
-		std::cout << b.first << " with binding " << b.second.id << std::endl;
+		GP_Buffer b;
+		if (GlobalData::get().getBuffer(bName.first, b))
+		{
+			std::cout << b.name << " with binding " << b.id << std::endl;
+		}
 	}
 
 	std::cout << "Uniforms" << std::endl;
@@ -80,18 +84,22 @@ void ComputeProgram::printContents()
 void ComputeProgram::bindResources()
 {
 	// bind buffers
-	for (auto b : buffers)
+	for (auto bName : buffers)
 	{
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, b.second.binding, b.second.id);
+		GP_Buffer b;
+		if (GlobalData::get().getBuffer(bName.first, b))
+		{
+			b.bind(bName.second);
+		}
 	}
 
 	// bind atomics
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName, a))
+		if (GlobalData::get().getAtomic(aName.first, a))
 		{
-			a.bind();
+			a.bind(aName.second);
 		}
 	}
 

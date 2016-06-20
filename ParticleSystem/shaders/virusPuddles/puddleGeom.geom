@@ -2,22 +2,10 @@
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
-in vec4 puddle_velocitiesV[];
-in float puddle_lifetimesV[];
-in vec4 colorsV[];
-in float puddle_floorHitV[];
-
-out float puddle_lifetimesG;
-out vec4 colorsG;
-out vec2 puddle_texCoordsG;
-
-uniform mat4 model, view, projection;
-
-
 void main()
 {	
     puddle_lifetimesG = puddle_lifetimesV[0];
-    colorsG = colorsV[0];
+    puddle_colorsG = puddle_colorsV[0];
 
     vec4 quad[4];
 

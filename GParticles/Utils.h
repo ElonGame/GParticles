@@ -6,6 +6,7 @@
 #include <glm\gtc\type_ptr.hpp>
 #include "GP_Atomic.h"
 #include "GP_Uniform.h"
+#include "GP_Buffer.h"
 
 struct Vertex
 {
@@ -14,34 +15,19 @@ struct Vertex
 	glm::vec2 texCoords;
 };
 
-struct rendererLoading
-{
-	std::vector<std::string> vsPath;
-	std::vector<std::string> fgPath;
-	std::vector<std::string> gmPath;
-	std::string rendertype;
-	std::string path;
-};
 
-struct bufferInfo
-{
-	GLuint id;
-	GLuint binding;
-	GLuint elements;
-	std::string type;
-	std::string name;
-};
+//struct bufferInfo
+//{
+//	GLuint id;
+//	GLuint binding;
+//	GLuint elements;
+//	std::string type;
+//	std::string name;
+//};
 
-struct atomicInfo
-{
-	GLuint id;
-	GLuint binding;
-	std::string name;
-	GLuint initialValue;
-	bool reset;
-};
 
-using bufferUmap = std::unordered_map<std::string, bufferInfo>;
+using resHeader = std::vector<std::pair<std::string, GLuint>>;
+using bufferUmap = std::unordered_map<std::string, GP_Buffer>;
 using atomicUmap = std::unordered_map<std::string, GP_Atomic>;
 using uniformUmap = std::unordered_map<std::string, GP_Uniform>;
 

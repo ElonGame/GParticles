@@ -11,16 +11,15 @@ GP_Atomic::~GP_Atomic()
 void GP_Atomic::init()
 {
 	glGenBuffers(1, &id);
-	binding = id;
 
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, id);
 	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_DRAW);
 	glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &resetValue);
 }
 
-void GP_Atomic::bind()
+void GP_Atomic::bind(GLuint bindingPoint)
 {
-	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, binding, id);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, bindingPoint, id);
 }
 
 GLuint GP_Atomic::getCurrentValue()

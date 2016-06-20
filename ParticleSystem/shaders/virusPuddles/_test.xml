@@ -1,5 +1,4 @@
 <project>
-	
 	<resources prefab="prefabs/resources.xml">
 		<private>
 			<buffer name="floorHit" elements=512 type="float"/>
@@ -20,7 +19,7 @@
 		<lifetime value=3 />
 		<numWorkGroups value=1 />
 
-		<override type="uniform" name="puddle_toCreate" value=1/>
+		<override type="uniform" name="puddle_toCreate" value=2/>
 		<override type="uniform" name="puddle_maxParticles" value=500/>
 
 
