@@ -1,6 +1,6 @@
 #include "Utils.h"
 #include "Window.h"
-#include "GPLoader.h"
+#include "GP_Loader.h"
 #include "GPManager.h"
 #include "Camera.h"
 #include <IL\il.h>
@@ -79,10 +79,10 @@ int main(int argc, char* args[])
 
 	// init GPManager and load xml project file
 	GPManager gpManager;
-	//GPLoader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
-	GPLoader::loadProject("shaders/virusPuddles/_test.xml", gpManager.pSystems);
-	//GPLoader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
-	//GPLoader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
+	//GP_Loader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
+	GP_Loader::loadProject("shaders/virusPuddles/_test.xml", gpManager.pSystems);
+	//GP_Loader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
+	//GP_Loader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
 
 
 	//Model myModel = Model("assets/models/nanosuit2/nanosuit.obj");
@@ -97,14 +97,14 @@ int main(int argc, char* args[])
 	//GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
 	//std::vector<std::string> paths1;
 	//paths1.push_back(std::string("shaders/rain_and_puddles/model.vert"));
-	//GPLoader::compileShaderFiles(rpVertShader, paths1);
+	//GP_Loader::compileShaderFiles(rpVertShader, paths1);
 	//glAttachShader(modelProgram, rpVertShader);
 
 	//// frag shader
 	//GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//std::vector<std::string> paths2;
 	//paths2.push_back(std::string("shaders/rain_and_puddles/model.frag"));
-	//GPLoader::compileShaderFiles(rpFragShader, paths2);
+	//GP_Loader::compileShaderFiles(rpFragShader, paths2);
 	//glAttachShader(modelProgram, rpFragShader);
 
 	//glLinkProgram(modelProgram);

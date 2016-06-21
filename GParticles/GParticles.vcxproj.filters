@@ -48,9 +48,6 @@
     <ClInclude Include="tinyxml\tinyxml.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="GPLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GPManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -61,6 +58,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GP_Buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GP_Loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -101,9 +101,6 @@
     <ClCompile Include="tinyxml\tinyxmlparser.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GPManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -114,6 +111,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GP_Buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GP_Loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

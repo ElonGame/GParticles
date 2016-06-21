@@ -27,7 +27,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
-    <ClCompile Include="GPLoader.cpp" />
+    <ClCompile Include="GP_Loader.cpp" />
     <ClCompile Include="GPManager.cpp" />
     <ClCompile Include="RendererProgram.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -46,7 +46,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ParticleSystem.h" />
-    <ClInclude Include="GPLoader.h" />
+    <ClInclude Include="GP_Loader.h" />
     <ClInclude Include="GPManager.h" />
     <ClInclude Include="RendererProgram.h" />
     <ClInclude Include="Shader.h" />

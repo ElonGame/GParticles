@@ -1,24 +1,15 @@
-void main()
+void update()
 {
-	uint gid = gl_GlobalInvocationID.x;
+	vec2 pos = vec2(virusAnimationRadius * sin(radians(virusAnimationAngle)),
+					virusAnimationRadius * cos(radians(virusAnimationAngle)));
 
-	if (virus_lifetimes[gid] <= 0)
-		return;
+	virus_positions[gid].xz = pos;
 
-	virus_lifetimes[gid] -= 0.025;
-
-	if (virus_lifetimes[gid] <= 0)
-	{
-		virus_lifetimes[gid] = -1;
-		atomicCounterDecrement(virus_aliveParticles);
-
-		return;
-	}
-	
-	virus_positions[gid].xz = vec2(	virusAnimationRadius * sin(radians(virusAnimationAngle)),
-									virusAnimationRadius * cos(radians(virusAnimationAngle)));
-
+	// store virus position in global buffer so puddle particles can access it
 	virusPos[0] = virus_positions[gid];
+}
 
-	virus_positions[gid].w = virusAnimationAngle;
+void collision()
+{
+	;
 }

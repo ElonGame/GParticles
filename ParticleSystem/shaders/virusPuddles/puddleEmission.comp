@@ -1,28 +1,8 @@
-void onEmission()
+void emission()
 {
 	puddle_floorHit[gid] = 0;
 	puddle_lifetimes[gid] = randInRange(6, 10);
 	puddle_positions[gid] = virusPos[0] + planePositionGenerator(1.5, 1.5, true, true);
 	puddle_velocities[gid].xyz = velocityGenerator(vec3(0,-1,0), vec3(0), 1);
 	puddle_colors[gid] = vec4(0.1,0.9,0.1,1);
-}
-
-void main()
-{
-	uint gid = gl_GlobalInvocationID.x;
-
-	/*LIMITERS*/
-	if (atomicCounter(puddle_aliveParticles) >= puddle_maxParticles)
-		return;
-	// -> + LIMITERS
-
-	if (puddle_lifetimes[gid] <= 0)
-	{
-		if (atomicCounterIncrement(puddle_emissionAttempts) < puddle_toCreate)
-		{
-			atomicCounterIncrement(puddle_aliveParticles);
-
-			onEmission();
-		}
-	}
 }

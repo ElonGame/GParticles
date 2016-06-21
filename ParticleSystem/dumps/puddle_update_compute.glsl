@@ -7,38 +7,38 @@
 // RESOURCES
 ////////////////////////////////////////////////////////////////////////////////
 
-layout(binding = 0, offset = 0) uniform atomic_uint randomCounter;
-layout(binding = 1, offset = 0) uniform atomic_uint puddle_aliveParticles;
-layout(binding = 2, offset = 0) uniform atomic_uint puddle_emissionAttempts;
+layout(binding = 0, offset = 0) uniform atomic_uint puddle_aliveParticles;
+layout(binding = 1, offset = 0) uniform atomic_uint puddle_emissionAttempts;
+layout(binding = 2, offset = 0) uniform atomic_uint randomCounter;
 
-layout(std430, binding = 3) buffer Puddle_floorHit
+layout(std430, binding = 3) buffer Puddle_velocities
+{
+	vec4 puddle_velocities[];
+};
+
+layout(std430, binding = 4) buffer Puddle_floorHit
 {
 	float puddle_floorHit[];
 };
 
-layout(std430, binding = 4) buffer Puddle_lastPositions
+layout(std430, binding = 5) buffer Puddle_lastPositions
 {
 	vec4 puddle_lastPositions[];
 };
 
-layout(std430, binding = 5) buffer Puddle_lifetimes
+layout(std430, binding = 6) buffer Puddle_lifetimes
 {
 	float puddle_lifetimes[];
 };
 
-layout(std430, binding = 6) buffer Puddle_size
+layout(std430, binding = 7) buffer Puddle_size
 {
 	float puddle_size[];
 };
 
-layout(std430, binding = 7) buffer Puddle_lineLifetime
+layout(std430, binding = 8) buffer Puddle_lineLifetime
 {
 	float puddle_lineLifetime[];
-};
-
-layout(std430, binding = 8) buffer Puddle_colors
-{
-	vec4 puddle_colors[];
 };
 
 layout(std430, binding = 9) buffer Puddle_positions
@@ -46,14 +46,14 @@ layout(std430, binding = 9) buffer Puddle_positions
 	vec4 puddle_positions[];
 };
 
-layout(std430, binding = 10) buffer Puddle_texCoords
+layout(std430, binding = 10) buffer Puddle_colors
 {
-	vec2 puddle_texCoords[];
+	vec4 puddle_colors[];
 };
 
-layout(std430, binding = 11) buffer Puddle_velocities
+layout(std430, binding = 11) buffer Puddle_texCoords
 {
-	vec4 puddle_velocities[];
+	vec2 puddle_texCoords[];
 };
 
 layout(std430, binding = 12) buffer VirusPos
@@ -63,16 +63,15 @@ layout(std430, binding = 12) buffer VirusPos
 
 layout(local_size_variable) in;
 
-uniform float virusAnimationAngle;
-uniform vec2 mouseXY;
 uniform float puddle_maxParticles;
 uniform float puddle_toCreate;
 uniform float puddle_deltaTime;
 uniform float virusAnimationRadius;
-uniform int timet;
-uniform vec2 mouse;
+uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
 
 uint gid = gl_GlobalInvocationID.x;
+
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,64 +87,63 @@ uint gid = gl_GlobalInvocationID.x;
 //               https://github.com/ashima/webgl-noise
 
 vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+ 	return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
 vec2 mod289(vec2 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+ 	return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
 vec3 permute(vec3 x) {
-  return mod289(((x*34.0)+1.0)*x);
+ 	return mod289(((x*34.0)+1.0)*x);
 }
 
-float snoise(vec2 v)
-  {
-  const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
-                      0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
-                     -0.577350269189626,  // -1.0 + 2.0 * C.x
-                      0.024390243902439); // 1.0 / 41.0
+float snoise(vec2 v) {
+ 	const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+					  	0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+						-0.577350269189626,  // -1.0 + 2.0 * C.x
+						0.024390243902439); // 1.0 / 41.0
 // First corner
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
+ 	vec2 i  = floor(v + dot(v, C.yy) );
+	vec2 x0 = v -   i + dot(i, C.xx);
 
 // Other corners
-  vec2 i1;
-  //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
-  //i1.y = 1.0 - i1.x;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  // x0 = x0 - 0.0 + 0.0 * C.xx ;
-  // x1 = x0 - i1 + 1.0 * C.xx ;
-  // x2 = x0 - 1.0 + 2.0 * C.xx ;
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
+	vec2 i1;
+  	//i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+  	//i1.y = 1.0 - i1.x;
+  	i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  	// x0 = x0 - 0.0 + 0.0 * C.xx ;
+  	// x1 = x0 - i1 + 1.0 * C.xx ;
+  	// x2 = x0 - 1.0 + 2.0 * C.xx ;
+  	vec4 x12 = x0.xyxy + C.xxzz;
+  	x12.xy -= i1;
 
 // Permutations
-  i = mod289(i); // Avoid truncation effects in permutation
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-		+ i.x + vec3(0.0, i1.x, 1.0 ));
+  	i = mod289(i); // Avoid truncation effects in permutation
+  	vec3 p = permute(permute( i.y + vec3(0.0, i1.y, 1.0 )) +
+					 i.x + vec3(0.0, i1.x, 1.0 ));
 
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m ;
-  m = m*m ;
+ 	vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  	m = m*m ;
+  	m = m*m ;
 
 // Gradients: 41 points uniformly over a line, mapped onto a diamond.
 // The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
 
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
+  	vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  	vec3 h = abs(x) - 0.5;
+  	vec3 ox = floor(x + 0.5);
+  	vec3 a0 = x - ox;
 
 // Normalise gradients implicitly by scaling m
 // Approximation of: m *= inversesqrt( a0*a0 + h*h );
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  	m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
 
 // Compute final noise value at P
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
+  	vec3 g;
+  	g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  	g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  	return 130.0 * dot(m, g);
 }
 
 
@@ -187,15 +185,15 @@ vec3 randInRangeV3(float minVal, float maxVal)
 ////////////////////////////////////////////////////////////////////////////////
 mat4 rotationMatrix(vec3 axis, float angle)
 {
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                0.0,                                0.0,                                0.0,                                1.0);
+	axis = normalize(axis);
+	float s = sin(angle);
+	float c = cos(angle);
+	float oc = 1.0 - c;
+	
+	return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+				oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+				oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+				0.0,                                0.0,                                0.0,                                1.0);
 }
 
 
@@ -205,23 +203,23 @@ mat4 rotationMatrix(vec3 axis, float angle)
 ////////////////////////////////////////////////////////////////////////////////
 mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 {
-    dir = normalize(dir);
-    vec3 right, up;
+	dir = normalize(dir);
+	vec3 right, up;
 
-    if (flipRight)
-      right = normalize(cross(vec3(0, 1, 0), dir));
-    else
-      right = normalize(cross(dir, vec3(0, 1, 0)));
+	if (flipRight)
+	  right = normalize(cross(vec3(0, 1, 0), dir));
+	else
+	  right = normalize(cross(dir, vec3(0, 1, 0)));
 
-    if (flipUp)
-      up = normalize(cross(right, dir));
-    else
-      up = normalize(cross(dir, right));
-    
-    return mat4(vec4(right, 0),
-                vec4(up, 0),
-                vec4(dir, 0),
-                vec4(0, 0, 0, 1));
+	if (flipUp)
+	  up = normalize(cross(right, dir));
+	else
+	  up = normalize(cross(dir, right));
+	
+	return mat4(vec4(right, 0),
+				vec4(up, 0),
+				vec4(dir, 0),
+				vec4(0, 0, 0, 1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +228,8 @@ mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 
 // Returns particle position inside a cone primitive
 ////////////////////////////////////////////////////////////////////////////////
-vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin, bool positionsInVolume)
+vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin,
+						   bool positionsInVolume)
 {
 	// compute random y in range [0, height]
 	float y = randInRange(0, 1);
@@ -283,7 +282,8 @@ vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 
 // Returns particle position from a plane primitive
 ////////////////////////////////////////////////////////////////////////////////
-vec4 planePositionGenerator(float width, float height, bool centeredAtOrigin, bool horizontal)
+vec4 planePositionGenerator(float width, float height, bool centeredAtOrigin,
+							bool horizontal)
 {
 	float minMultiplier = 0;
 	float maxMultiplier = 1;
@@ -303,11 +303,6 @@ vec4 planePositionGenerator(float width, float height, bool centeredAtOrigin, bo
 
 	return pos;
 }
-
-
-
-//
-////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -353,15 +348,21 @@ void update()
 	}
 }
 
+void collision()
+{
+	;
+}
+
 void main()
 {
-	uint gid = gl_GlobalInvocationID.x;
-
+	// if particle is not alive
 	if (puddle_lifetimes[gid] <= 0)
 		return;
 
-	puddle_lifetimes[gid] -= 2 * puddle_deltaTime;
+	// age particle
+	puddle_lifetimes[gid] -= puddle_deltaTime;
 
+	// if particle just died
 	if (puddle_lifetimes[gid] <= 0)
 	{
 		puddle_lifetimes[gid] = -1;
@@ -371,4 +372,6 @@ void main()
 	}
 	
 	update();
+
+	collision();
 }

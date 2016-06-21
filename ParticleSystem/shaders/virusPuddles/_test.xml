@@ -19,28 +19,30 @@
 		<lifetime value=3 unit="seconds" looping="true" />
 		<numWorkGroups value=1 />
 
-		<override type="uniform" name="virus_toCreate" value=1/>
-		<override type="uniform" name="virus_maxParticles" value=1/>
+		<override type="uniform" name="toCreate" value=1/>
+		<override type="uniform" name="maxParticles" value=1/>
 
 		<events>
 			<emission iterationStep=0>
-				<override type="atomic" name="virus_emissionAttempts" value=0/>
+				<override type="atomic" name="emissionAttempts" value=0/>
 
-				<file path="reserved/utilities.glsl" />
-				<file path="reserved/emission.glsl" />
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
 				<file path="shaders/virusPuddles/virusEmission.comp" />
+				<mainTemplate path="templates/emissionMain.glsl" />
 			</emission>
 
 			<update iterationStep=0>
-				<file path="reserved/utilities.glsl" />
-				<file path="reserved/emission.glsl" />
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
 				<file path="shaders/virusPuddles/virusUpdate.comp" />
+				<mainTemplate path="templates/updateMain.glsl" />
 			</update>
 
 			<render>
 				<rendertype type="model" path="assets/models/virus/virus.3ds"/>
 				
-				<vertfile path="reserved/utilities.glsl" />
+				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="shaders/virusPuddles/virusVertex.vert" />
 				<fragfile path="shaders/virusPuddles/virusFrag.frag" />
 			</render>
@@ -54,23 +56,25 @@
 		<lifetime value=3 unit="seconds"/>
 		<numWorkGroups value=1 />
 
-		<override type="uniform" name="puddle_toCreate" value=2/>
-		<override type="uniform" name="puddle_maxParticles" value=500/>
+		<override type="uniform" name="toCreate" value=2/>
+		<override type="uniform" name="maxParticles" value=500/>
 
 		<events>
 			<emission iterationStep=100>
-				<override type="atomic" name="puddle_emissionAttempts" value=0/>
+				<override type="atomic" name="emissionAttempts" value=0/>
 
-				<file path="reserved/utilities.glsl" />
-				<file path="reserved/emission.glsl" />
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
 				<file path="shaders/virusPuddles/puddleEmission.comp" />
+				<mainTemplate path="templates/emissionMain.glsl" />
 			</emission>
 
 
 			<update iterationStep=0>
-				<file path="reserved/utilities.glsl" />
-				<file path="reserved/emission.glsl" />
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
 				<file path="shaders/virusPuddles/puddleUpdate.comp" />
+				<mainTemplate path="templates/updateMain.glsl" />
 			</update>
 
 
@@ -78,8 +82,8 @@
 				<rendertype type="billboard" path="snow.png" />
 				
 				<vertfile path="shaders/virusPuddles/puddleVertex.vert" />
-				<geomfile path="reserved/utilities.glsl" />
-				<geomfile path="reserved/billboard.glsl" />
+				<geomfile path="modules/utilities.glsl" />
+				<geomfile path="modules/billboard.glsl" />
 				<geomfile path="shaders/virusPuddles/puddleGeom.geom"/>
 				<fragfile path="shaders/virusPuddles/puddleFrag.frag" />
 			</render>

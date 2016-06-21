@@ -16,9 +16,9 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	bindResources();
 
-	GLfloat windowW = (GLfloat)GlobalData::get().getWindowWidth();
-	GLfloat windowH = (GLfloat)GlobalData::get().getWindowHeight();
-	glm::mat4 projection = glm::perspective(45.0f, windowW / windowH, 0.1f, 100.0f);
+	GLfloat windowRatio = (GLfloat)GlobalData::get().getWindowWidth();
+	windowRatio /= (GLfloat)GlobalData::get().getWindowHeight();
+	glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
 
 	glm::mat4 normalMat = viewMat * modelMat;
 	normalMat = glm::transpose(glm::inverse(normalMat));
@@ -48,7 +48,7 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 		glEnable(GL_BLEND);
 
-		glDrawArrays(GL_POINTS, 0, 512);
+		glDrawArrays(GL_POINTS, 0, maxParticles);
 
 		glDisable(GL_ALPHA_TEST);
 		glDisable(GL_BLEND);
@@ -57,7 +57,8 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 	{
 		glEnable(GL_DEPTH_TEST);
 
-		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0,1);
+		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(),
+								GL_UNSIGNED_INT, 0, maxParticles);
 	}
 
 	// unbind resources
@@ -102,8 +103,9 @@ void RendererProgram::printContents()
 ///////////////////////////////////////////////////////////////////////////////
 void RendererProgram::bindResources()
 {
-	glBindVertexArray(vao);
 	glEnableClientState(GL_VERTEX_ARRAY);
+	glBindVertexArray(vao);
+	
 
 	// bind atomics
 	for (auto aName : atomics)

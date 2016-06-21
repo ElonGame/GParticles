@@ -13,8 +13,8 @@ class RendererProgram
 public:
 	RendererProgram(const GLuint ph, const resHeader &a,
 					const GLuint vao, const GLuint tex, const std::vector<std::string> &u, std::string rt,
-					Model &m)
-		: programhandle(ph), atomics(a), vao(vao), texture(tex), uniforms(u), renderType(rt), model(m) {};
+					Model &m, GLuint &mp)
+		: programhandle(ph), atomics(a), vao(vao), texture(tex), uniforms(u), renderType(rt), model(m), maxParticles(mp) {};
 	RendererProgram();
 	~RendererProgram();
 
@@ -22,6 +22,7 @@ public:
 	void printContents();
 private:
 	GLuint programhandle;
+	GLuint maxParticles;
 	resHeader atomics;
 	std::vector<std::string> uniforms;
 	GLuint vao;

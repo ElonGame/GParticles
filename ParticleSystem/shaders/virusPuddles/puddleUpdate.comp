@@ -12,22 +12,7 @@ void update()
 	}
 }
 
-void main()
+void collision()
 {
-	uint gid = gl_GlobalInvocationID.x;
-
-	if (puddle_lifetimes[gid] <= 0)
-		return;
-
-	puddle_lifetimes[gid] -= 2 * puddle_deltaTime;
-
-	if (puddle_lifetimes[gid] <= 0)
-	{
-		puddle_lifetimes[gid] = -1;
-		atomicCounterDecrement(puddle_aliveParticles);
-
-		return;
-	}
-	
-	update();
+	;
 }
