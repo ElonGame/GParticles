@@ -16,8 +16,6 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	bindResources();
 
-	setUniforms();
-
 	GLfloat windowW = (GLfloat)GlobalData::get().getWindowWidth();
 	GLfloat windowH = (GLfloat)GlobalData::get().getWindowHeight();
 	glm::mat4 projection = glm::perspective(45.0f, windowW / windowH, 0.1f, 100.0f);
@@ -45,25 +43,21 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	if (renderType != "model")
 	{
+		glAlphaFunc(GL_GREATER, 0);
+		glEnable(GL_ALPHA_TEST);
+
+		glEnable(GL_BLEND);
+
 		glDrawArrays(GL_POINTS, 0, 512);
-		//glBindBuffer(GL_ARRAY_BUFFER, 8);
-		//GLfloat *ptr = (GLfloat *)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
-		//glUnmapBuffer(GL_ARRAY_BUFFER);
-		//GLfloat currentVal = ptr[2];
-		//printf("%d LAST\n", currentVal);
+
+		glDisable(GL_ALPHA_TEST);
+		glDisable(GL_BLEND);
 	}
 	else
 	{
-
-		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
-		
-		// TODO: should be maxParticles instead of magic
+
 		glDrawElementsInstanced(GL_TRIANGLES, model.meshes[0].vertices.size(), GL_UNSIGNED_INT, 0,1);
-
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-
 	}
 
 	// unbind resources
@@ -79,19 +73,28 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 ///////////////////////////////////////////////////////////////////////////////
 void RendererProgram::printContents()
 {
-	std::cout << ">> Renderer Program" << std::endl;
+	std::cout << ">> Renderer Program " << programhandle << std::endl;
 	std::cout << "Atomics" << std::endl;
-	for each (auto b in atomicHandles)
+	for (auto aName : atomics)
 	{
-		std::cout << b.first << " with binding " << b.second.id << std::endl;
+		GP_Atomic a;
+		if (GlobalData::get().getAtomic(aName.first, a))
+		{
+			std::cout << a.name << " with id " << a.id << " and resetValue " << a.resetValue << std::endl;
+		}
 	}
-	std::cout << "Uniforms" << std::endl;
-	for each (auto b in uniforms)
-	{
-		std::cout << b.first << " " << b.second.type << " " << b.second.value[0].x << " " << std::endl;
-	}
-	std::cout << "vao " << vao << std::endl;
 
+	std::cout << "Uniforms" << std::endl;
+	for (auto uName : uniforms)
+	{
+		GP_Uniform u;
+		if (GlobalData::get().getUniform(uName, u))
+		{
+			std::cout << u.name << " " << u.type << " " << u.value[0].x << " " << std::endl;
+		}
+	}
+
+	std::cout << "vao " << vao << std::endl;
 }
 
 
@@ -103,21 +106,24 @@ void RendererProgram::bindResources()
 	glEnableClientState(GL_VERTEX_ARRAY);
 
 	// bind atomics
-	for (auto atm : atomicHandles)
+	for (auto aName : atomics)
 	{
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, atm.second.binding, atm.second.id);
+		GP_Atomic a;
+		if (GlobalData::get().getAtomic(aName.first, a))
+		{
+			a.bind(aName.second);
+		}
+	}
+
+	// bind uniforms
+	for (auto uName : uniforms)
+	{
+		GP_Uniform u;
+		if (GlobalData::get().getUniform(uName, u))
+		{
+			u.bind(glGetUniformLocation(programhandle, uName.c_str()));
+		}
 	}
 
 	glBindTexture(GL_TEXTURE_2D, texture);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-void RendererProgram::setUniforms()
-{
-	for (auto u : uniforms)
-	{
-		u.second.bind(glGetUniformLocation(programhandle, u.first.c_str()));
-	}
 }

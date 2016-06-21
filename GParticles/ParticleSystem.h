@@ -2,15 +2,11 @@
 #include "RendererProgram.h"
 #include "ComputeProgram.h"
 
-using timeClock = std::chrono::steady_clock;
-using timeP = std::chrono::time_point<timeClock>;
-using ms = std::chrono::milliseconds;
-
 class ParticleSystem
 {
 public:
-	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, GLuint nwg, unsigned int lif, bool lp)
-		: emitter(e), updater(u), renderer(r), model(m), numWorkGroups(nwg), lifetime(ms(lif)), infinite(lif == 0), looping(lp) {};
+	ParticleSystem(ComputeProgram &e, ComputeProgram &u, RendererProgram &r, glm::mat4 &m, GLuint nwg, GLuint lif, bool lp)
+		: emitter(e), updater(u), renderer(r), model(m), numWorkGroups(nwg), lifetime(lif), infinite(lif == 0), looping(lp) {};
 	~ParticleSystem();
 
 	void execute(glm::mat4 view);
@@ -29,8 +25,8 @@ private:
 	// lifetime
 	bool infinite = true;
 	bool looping = false;
-	timeClock::duration lifetime;
-	timeP lifeStart;
+	GLuint lifetime;
+	GLuint lifeStart;
 	bool alive = true;
 	bool firstExec = true;
 };

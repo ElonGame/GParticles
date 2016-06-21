@@ -189,20 +189,12 @@ void GPLoader::queryUniformValue(TiXmlElement* uElem, GP_Uniform &u)
 	}
 	else if (u.type == "float")
 	{
-		int res = uElem->QueryFloatAttribute("value", &u.value[0].x);
-		if (res != TIXML_SUCCESS)
-		{
-			std::string msg = "Must provide a value for uniform \"" + u.name
-				+ "\" on line " + std::to_string(uElem->Row());
-			Utils::exitMessage("Invalid Input", msg);
-		}
+		uElem->QueryFloatAttribute("value", &u.value[0].x);
 	}
 	else if (u.type == "vec2")
 	{
 		uElem->QueryFloatAttribute("x", &u.value[0].x);
 		uElem->QueryFloatAttribute("y", &u.value[0].y);
-
-		std::cout << "VALUE PLACE IS: " << u.value[0].x << ", " << u.value[0].y << std::endl;
 	}
 	else if (u.type == "vec4")
 	{
@@ -210,9 +202,6 @@ void GPLoader::queryUniformValue(TiXmlElement* uElem, GP_Uniform &u)
 		uElem->QueryFloatAttribute("y", &u.value[0].y);
 		uElem->QueryFloatAttribute("z", &u.value[0].z);
 		uElem->QueryFloatAttribute("w", &u.value[0].w);
-
-		std::cout << "VALUE PLACE IS: " << u.value[0].x << ", " << u.value[0].y << ", "
-			<< u.value[0].z << ", " << u.value[0].w << std::endl;
 	}
 	else if (u.type == "mat4")
 	{
@@ -405,7 +394,7 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 
 	RendererProgram render;
 	eventE = eventsE->FirstChildElement("render");
-	if (!loadRenderer(rr, eventE, render))
+	if (!loadRenderProgram(rr, eventE, render))
 	{
 		Utils::exitMessage("Fatal Error", "Unable to load render event");
 	}
@@ -661,7 +650,7 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, C
 	GLuint iterationStep = 0;
 	eventE->QueryUnsignedAttribute("iterationStep", &iterationStep);
 
-	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, rr.maxParticles, iterationStep);
+	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, name, rr.maxParticles, iterationStep);
 
 	return true;
 }
@@ -669,7 +658,7 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, C
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GPLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement* eventE)
+void GPLoader::getRenderXMLInfo(renderLoading &rl, TiXmlElement* eventE)
 {
 	if (eventE == NULL)
 		return;
@@ -714,12 +703,12 @@ void GPLoader::collectFPaths(TiXmlElement* elem, const char *tag, std::vector<st
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp)
+bool GPLoader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp)
 {
-	// fill rendererLoading struct with the final info to be processed
+	// fill renderLoading struct with the final info to be processed
 	// starting with the original file
-	rendererLoading rl;
-	getRendererXMLInfo(rl, eventE);
+	renderLoading rl;
+	getRenderXMLInfo(rl, eventE);
 
 	// check if there is a prefab and continue filling the the struct
 	std::string st;
@@ -730,7 +719,7 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* eventE, Rendere
 	{
 		TiXmlHandle docHandle(&doc);
 		eventE = docHandle.FirstChild("prefab").ToElement();
-		getRendererXMLInfo(rl, eventE);
+		getRenderXMLInfo(rl, eventE);
 	}
 
 
@@ -876,9 +865,21 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* eventE, Rendere
 		}
 	}
 
+	resHeader aHeaders;
+	for (auto a : rendAtomics)
+	{
+		aHeaders.push_back(std::make_pair(a.second.name, a.second.binding));
+	}
+
+	std::vector<std::string> uHeaders;
+	for (auto u : rendUniforms)
+	{
+		uHeaders.push_back(u.second.name);
+	}
+
 	glBindVertexArray(0);
 
-	rp = RendererProgram(rpHandle, rendAtomics, vao, texture.getId(), rendUniforms, rl.rendertype, model);
+	rp = RendererProgram(rpHandle, aHeaders, vao, texture.getId(), uHeaders, rl.rendertype, model);
 
 	return true;
 }
@@ -988,6 +989,7 @@ std::string GPLoader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atom
 						"// RESOURCES\n"
 						"////////////////////////////////////////////////////////////////////////////////\n\n";
 
+	// atomic binding points need to be created first since their max value is 8
 	int i = 0;
 	for (auto &atm : atomics)
 	{
@@ -999,6 +1001,7 @@ std::string GPLoader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atom
 
 	res += "\n";
 
+	// buffers
 	std::string bufferOuts = "";
 	for (auto &buf : buffers)
 	{
@@ -1013,7 +1016,13 @@ std::string GPLoader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atom
 
 	res += "\n" + bufferOuts + "uniform mat4 model, view, projection;\n\n";
 
-	return res;
+	// uniforms
+	for (auto uni : uniforms)
+	{
+		res += "uniform " + uni.second.type + " " + uni.second.name + ";\n";
+	}
+
+	return res + "\n";
 }
 
 
@@ -1029,7 +1038,7 @@ std::string GPLoader::generateComputeHeader(bufferUmap &buffers, atomicUmap &ato
 						"// RESOURCES\n"
 						"////////////////////////////////////////////////////////////////////////////////\n\n";
 
-	// atomic binding points need to be created first since its max value is 8
+	// atomic binding points need to be created first since their max value is 8
 	int i = 0;
 	for (auto &atm : atomics)
 	{
@@ -1041,6 +1050,7 @@ std::string GPLoader::generateComputeHeader(bufferUmap &buffers, atomicUmap &ato
 
 	res += "\n";
 
+	// buffers
 	for (auto &buf : buffers)
 	{
 		buf.second.binding = i;
@@ -1054,6 +1064,7 @@ std::string GPLoader::generateComputeHeader(bufferUmap &buffers, atomicUmap &ato
 
 	res += "layout(local_size_variable) in;\n\n";
 
+	// uniforms
 	for (auto &uni : uniforms)
 	{
 		res += "uniform " + uni.second.type + " " + uni.first + ";\n";

@@ -1,10 +1,3 @@
-﻿  GPLoader.cpp
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(101): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(146): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(255): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(290): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(323): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(352): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(523): warning C4244: '=': conversion from 'float' to 'GLuint', possible loss of data
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gploader.cpp(42): warning C4715: 'GPLoader::loadProject': not all control paths return a value
+﻿  ComputeProgram.cpp
+c:\users\tiago\desktop\pi\particlesystem\gparticles\computeprogram.cpp(53): warning C4244: 'argument': conversion from 'float' to 'GLuint', possible loss of data
   GParticles.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\GParticles.lib

@@ -67,6 +67,7 @@ uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 uniform float puddle_maxParticles;
 uniform float puddle_toCreate;
+uniform float puddle_deltaTime;
 uniform float virusAnimationRadius;
 uniform int timet;
 uniform vec2 mouse;
@@ -340,8 +341,8 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
 
 void update()
 {
-	puddle_velocities[gid].y -= 0.00025;
-	puddle_positions[gid].xyz += puddle_velocities[gid].xyz;
+	puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
+	puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
 
 	if (puddle_positions[gid].y < -4)
 	{
@@ -359,7 +360,7 @@ void main()
 	if (puddle_lifetimes[gid] <= 0)
 		return;
 
-	puddle_lifetimes[gid] -= 0.025;
+	puddle_lifetimes[gid] -= 2 * puddle_deltaTime;
 
 	if (puddle_lifetimes[gid] <= 0)
 	{

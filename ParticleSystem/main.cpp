@@ -50,20 +50,7 @@ bool processEvents()
 		c.processMouseMovement();
 	}
 
-	/*GP_Uniform u;
-	GlobalData::get().getUniform("mouseXY", u);
-	u.value[0] = glm::vec4(	c.mouseX / GlobalData::get().getWindowWidth(),
-							c.mouseY / GlobalData::get().getWindowHeight(),
-							0, 0);
-	GlobalData::get().addUniform(u);*/
-
-	//GlobalData::get().setUniform("mouseXY", -1 / GlobalData::get().getWindowWidth());
-
-	//glm::vec2 asd = glm::vec2(0.1f, 0);
-
-	//GlobalData::get().setUniformValue("mouseXY", asd);
-	//GlobalData::get().setUniformValue("uniTest", 13);
-
+	GlobalData::get().setUniformValue("mouseXY", glm::vec2(c.mouseX, c.mouseY));
 
 	return true;
 }
@@ -147,28 +134,19 @@ int main(int argc, char* args[])
 	while (processEvents())
 	{
 		i += 0.01f;
-		// user uniform manual control
-		/*GP_Uniform time;
-		GlobalData::get().getUniform("time", time);
-		time.value
-		int timeLoc = glGetUniformLocation(programhandle, "timet");
-		glUniform1ui(timeLoc, GlobalData::get().getCurrentTimeMillis());*/
+		GlobalData::get().setUniformValue("virusAnimationAngle", ++i);
+		//GlobalData::get().setUniformValue("deltaTime", );
+
 
 
 		// TODO: system ticks here
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-
 		// process all particle system
 		gpManager.processParticles(c.getViewMatrix());
-		glDisable(GL_BLEND);
 
-		GlobalData::get().setUniformValue("virusAnimationAngle", ++i);
 
 		glUseProgram(NULL);
-		glDisable(GL_DEPTH_TEST);
 
 
 

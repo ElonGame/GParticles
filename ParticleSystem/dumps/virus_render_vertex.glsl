@@ -31,6 +31,13 @@ out vec2 virus_texCoordsV;
 out vec4 virusPosV;
 uniform mat4 model, view, projection;
 
+uniform float virusAnimationRadius;
+uniform float virus_maxParticles;
+uniform float virus_toCreate;
+uniform float virus_deltaTime;
+uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
+
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 ////////////////////////////////////////////////////////////////////////////////

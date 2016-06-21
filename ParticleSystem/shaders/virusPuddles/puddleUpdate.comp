@@ -1,7 +1,7 @@
 void update()
 {
-	puddle_velocities[gid].y -= 0.00025;
-	puddle_positions[gid].xyz += puddle_velocities[gid].xyz;
+	puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
+	puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
 
 	if (puddle_positions[gid].y < -4)
 	{
@@ -19,7 +19,7 @@ void main()
 	if (puddle_lifetimes[gid] <= 0)
 		return;
 
-	puddle_lifetimes[gid] -= 0.025;
+	puddle_lifetimes[gid] -= 2 * puddle_deltaTime;
 
 	if (puddle_lifetimes[gid] <= 0)
 	{

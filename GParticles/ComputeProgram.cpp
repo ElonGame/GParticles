@@ -10,16 +10,40 @@ ComputeProgram::~ComputeProgram()
 {
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void ComputeProgram::execute(GLuint numWorkGroups)
 {
-	auto timeSpan = timeClock::now() - lastStep;
+	if (firstExec)
+	{
+		lastStep = GlobalData::get().getCurrentTimeMillis();
+		firstExec = false;
+	}
+
+	GLuint timeSpan = GlobalData::get().getCurrentTimeMillis() - lastStep;
 
 	if (timeSpan < iterationStep)
 	{
+		canKeepUpIteration = true;
 		return;
 	}
 
-	lastStep += iterationStep;
+	GlobalData::get().setUniformValue(psystem + "_deltaTime", timeSpan / 1000.0f);
+
+	// canKeepUpIteration == true means the program can keep up with the iterationStep
+	// its asked to take -> we add iterationStep to lastStep as to reduce error accumulation
+	// With canKeepUpIteration == false we must add timeSpan to lastStep so we
+	// do not create a "spiral of death" where the program falls too much behind
+	if (canKeepUpIteration)
+	{
+		lastStep += iterationStep;
+		canKeepUpIteration = false;
+	}
+	else
+	{
+		lastStep += timeSpan;
+	}
 
 	glUseProgram(programhandle);
 

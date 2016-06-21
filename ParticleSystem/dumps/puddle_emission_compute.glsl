@@ -67,6 +67,7 @@ uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 uniform float puddle_maxParticles;
 uniform float puddle_toCreate;
+uniform float puddle_deltaTime;
 uniform float virusAnimationRadius;
 uniform int timet;
 uniform vec2 mouse;
@@ -342,8 +343,8 @@ void onEmission()
 {
 	puddle_floorHit[gid] = 0;
 	puddle_lifetimes[gid] = randInRange(6, 10);
-	puddle_positions[gid] = virusPos[0] + planePositionGenerator(2, 2, true, true);
-	puddle_velocities[gid].xyz = velocityGenerator(vec3(0,-1,0), vec3(0), 0.0015);
+	puddle_positions[gid] = virusPos[0] + planePositionGenerator(1.5, 1.5, true, true);
+	puddle_velocities[gid].xyz = velocityGenerator(vec3(0,-1,0), vec3(0), 1);
 	puddle_colors[gid] = vec4(0.1,0.9,0.1,1);
 }
 

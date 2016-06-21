@@ -31,6 +31,13 @@ out vec4 puddle_velocitiesV;
 out vec4 virusPosV;
 uniform mat4 model, view, projection;
 
+uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
+uniform float puddle_maxParticles;
+uniform float puddle_toCreate;
+uniform float puddle_deltaTime;
+uniform float virusAnimationRadius;
+
 
 void main()
 {

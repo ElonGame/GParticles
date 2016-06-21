@@ -66,6 +66,7 @@ layout(local_size_variable) in;
 uniform float virusAnimationRadius;
 uniform float virus_maxParticles;
 uniform float virus_toCreate;
+uniform float virus_deltaTime;
 uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 uniform int timet;

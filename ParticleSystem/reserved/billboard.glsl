@@ -110,9 +110,9 @@ vec4[4] getQuad(float width, float height)
 
 // Returns new stretched quad coordinates vector
 ////////////////////////////////////////////////////////////////////////////////
-vec4[4] getStretchedQuad(float width, float height, vec3 velocity, bool horizontal)
+vec4[4] getStretchedQuad(float width, float height, vec3 velocity, bool horizontal, float deltaT)
 {
-    float ratio = clamp(length(velocity) * 40, 1.0, 2.0);
+    float ratio = clamp(length(velocity), 1.0, 2.0);
 
     float X = (width * 0.5) * ratio;
     float Y = (height * 0.5) / ratio;

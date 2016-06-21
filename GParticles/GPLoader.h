@@ -17,7 +17,7 @@ struct reservedResources
 	uniformUmap reservedUniforms;
 };
 
-struct rendererLoading
+struct renderLoading
 {
 	std::vector<std::string> vsPath;
 	std::vector<std::string> fgPath;
@@ -61,8 +61,8 @@ private:
 
 	// program loading functions
 	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
-	static bool loadRenderer(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
-	static void getRendererXMLInfo(rendererLoading &rl, TiXmlElement* eventE);
+	static bool loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
+	static void getRenderXMLInfo(renderLoading &rl, TiXmlElement* eventE);
 
 	// project loading utility functions
 	template <typename Func>

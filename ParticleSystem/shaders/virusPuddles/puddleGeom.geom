@@ -20,7 +20,7 @@ void main()
     }
     else
     {
-        quad = getStretchedQuad(0.1, 0.1, puddle_velocitiesV[0].xyz, false);
+        quad = getStretchedQuad(0.1, 0.1, puddle_velocitiesV[0].xyz, false, puddle_deltaTime);
         quad = billboardDirectionCamera(quad,
                                         (view*model*puddle_velocitiesV[0]).xyz,
                                         -vec3(gl_in[0].gl_Position.xyz));

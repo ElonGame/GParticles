@@ -21,6 +21,13 @@ in vec4 virusPosG;
 
 uniform mat4 model, view, projection;
 
+uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
+uniform float puddle_maxParticles;
+uniform float puddle_toCreate;
+uniform float puddle_deltaTime;
+uniform float virusAnimationRadius;
+
 
 uniform sampler2D ourTexture;
 

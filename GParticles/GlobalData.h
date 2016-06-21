@@ -13,7 +13,8 @@ class GlobalData
 public:
 	static GlobalData& get();
 
-	int getCurrentTimeMillis();
+	unsigned int getCurrentTimeMillis();
+	float getCurrentTimeSeconds();
 	void setWindowDimensions(float w, float h);
 	float getWindowWidth();
 	float getWindowHeight();
@@ -49,6 +50,7 @@ public:
 private:
 	float windowWidth;
 	float windowHeight;
+	int lastIteration;
 
 	// resources
 	bufferUmap buffers;

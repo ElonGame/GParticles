@@ -10,11 +10,11 @@ void ParticleSystem::execute(glm::mat4 view)
 {
 	if (firstExec)
 	{
-		lifeStart = timeClock::now();
+		lifeStart = GlobalData::get().getCurrentTimeMillis();
 		firstExec = false;
 	}
 
-	timeP currTime = timeClock::now();
+	GLuint currTime = GlobalData::get().getCurrentTimeMillis();
 	auto age = currTime - lifeStart;
 	if (age > lifetime)
 	{

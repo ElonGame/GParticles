@@ -21,6 +21,13 @@ in vec4 virusPosV;
 
 uniform mat4 model, view, projection;
 
+uniform float virusAnimationRadius;
+uniform float virus_maxParticles;
+uniform float virus_toCreate;
+uniform float virus_deltaTime;
+uniform float virusAnimationAngle;
+uniform vec2 mouseXY;
+
 
 in vec3 normalV;
 in vec3 lightDirV;
