@@ -196,7 +196,6 @@ void GPLoader::queryUniformValue(TiXmlElement* uElem, GP_Uniform &u)
 				+ "\" on line " + std::to_string(uElem->Row());
 			Utils::exitMessage("Invalid Input", msg);
 		}
-		std::cout << "VALUE PLACE IS: " << u.value[0].x << std::endl;
 	}
 	else if (u.type == "vec2")
 	{
@@ -383,27 +382,32 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 	reservedResources rr;
 	loadReservedPSResources(rr, psystemE);
 
+	TiXmlElement* eventsE = psystemE->FirstChildElement("events");
+	if (!eventsE)
+	{
+		Utils::exitMessage("Fatal Error", "psystem must have an events tag");
+	}
 
-	// load psystem main components (emitter, updater, renderer)
+	// load psystem events (emission, update, render)
 	ComputeProgram emission;
-	TiXmlElement* programE = psystemE->FirstChildElement("emitter");
-	if (!loadComputeProgram(rr, programE, emission))
+	TiXmlElement* eventE = eventsE->FirstChildElement("emission");
+	if (!loadComputeProgram(rr, eventE, emission))
 	{
 		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
 	ComputeProgram update;
-	programE = psystemE->FirstChildElement("updater");
-	if (!loadComputeProgram(rr, programE, update))
+	eventE = eventsE->FirstChildElement("update");
+	if (!loadComputeProgram(rr, eventE, update))
 	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
+		Utils::exitMessage("Fatal Error", "Unable to load update event");
 	}
 
 	RendererProgram render;
-	programE = psystemE->FirstChildElement("renderer");
-	if (!loadRenderer(rr, programE, render))
+	eventE = eventsE->FirstChildElement("render");
+	if (!loadRenderer(rr, eventE, render))
 	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
+		Utils::exitMessage("Fatal Error", "Unable to load render event");
 	}
 
 
@@ -443,6 +447,37 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 	model = glm::rotate(model, glm::radians(angle), rot);
 	model = glm::scale(model, scale);
 
+
+	// lifetime
+	unsigned int lifetime;
+	std::string unit;
+	bool looping = true;
+	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
+	if (!lifetimeE)
+	{
+		Utils::exitMessage("Fatal Error", "psystem must have a lifetime tag");
+	}
+
+	queryAttribute(	[&](TiXmlElement* e) {return e->QueryUnsignedAttribute("value", &lifetime);},
+					lifetimeE, "Must provide lifetime tag with a value attribute");
+
+	queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("unit", &unit);},
+					lifetimeE, "Must provide lifetime tag with a unit attribute");
+
+	// looping attribute is optional, defaults to true
+	lifetimeE->QueryBoolAttribute("looping", &looping);
+
+	if (unit == "seconds")
+	{
+		lifetime *= 1000;
+	}
+	else if (unit == "milliseconds");
+	else
+	{
+		Utils::exitMessage("Invalide Input", "Unrecognized time unit. Supported time units are: seconds, milliseconds");
+	}
+
+
 	// numWorkGroups
 	GLuint numWorkGroups = 1;
 	TiXmlElement* nWorkGroupE = psystemE->FirstChildElement("numWorkGroups");
@@ -450,22 +485,6 @@ ParticleSystem GPLoader::loadParticleSystem(TiXmlElement* psystemE)
 	{
 		nWorkGroupE->QueryUnsignedAttribute("value", &numWorkGroups);
 	}
-
-	// lifetime
-	unsigned int lifetime = 3600;
-	bool looping = true;
-	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
-	if (lifetimeE->QueryUnsignedAttribute("value", &lifetime) == TIXML_SUCCESS)
-	{
-		lifetime *= 1000;
-
-		if (lifetimeE->QueryBoolAttribute("looping", &looping) != TIXML_SUCCESS)
-		{
-			looping = true;
-		}
-	}
-
-	// TODO: add more psystem porperties
 
 
 	return ParticleSystem(emission, update, render, model, numWorkGroups, lifetime, looping);
@@ -574,7 +593,7 @@ void GPLoader::loadIterationResourceOverrides(
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE, ComputeProgram &cp)
+bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp)
 {
 	// parse and store program resource info for later binding
 	// start by adding the program reserved resources
@@ -588,21 +607,25 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
 
 	// and mark the indicated resources to be reset every iteration
-	loadIterationResourceOverrides(programE, cpAtomics, cpBuffers, cpUniforms);
+	loadIterationResourceOverrides(eventE, cpAtomics, cpBuffers, cpUniforms);
+
 
 	// create shader program
 	GLuint cpHandle = glCreateProgram();
 
 	// parse file paths that compose final shader
 	std::vector<std::string> fPaths;
-	collectFPaths(programE, "file", fPaths);
+	collectFPaths(eventE, "file", fPaths);
 
 	// shader source = header (from resource info) + filepaths source
 	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms);
 	shaderSource += createFinalShaderSource(fPaths);
 
+
 	// compile, attach and check link status
-	Shader cpShader("compute", shaderSource);
+	std::string name;
+	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
+	Shader cpShader("compute", shaderSource, name + "_" + eventE->ValueStr());
 
 	glAttachShader(cpHandle, cpShader.getId());
 	glLinkProgram(cpHandle);
@@ -636,7 +659,7 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 	}
 
 	GLuint iterationStep = 0;
-	programE->QueryUnsignedAttribute("iterationStep", &iterationStep);
+	eventE->QueryUnsignedAttribute("iterationStep", &iterationStep);
 
 	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, rr.maxParticles, iterationStep);
 
@@ -646,26 +669,26 @@ bool GPLoader::loadComputeProgram(reservedResources &rr, TiXmlElement* programE,
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GPLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement* programE)
+void GPLoader::getRendererXMLInfo(rendererLoading &rl, TiXmlElement* eventE)
 {
-	if (programE == NULL)
+	if (eventE == NULL)
 		return;
 	
 	// renderType
-	TiXmlElement* renderType = programE->FirstChildElement("rendertype");
-	if (renderType != NULL && rl.rendertype.empty())
+	TiXmlElement* renderTypeE = eventE->FirstChildElement("rendertype");
+	if (renderTypeE != NULL && rl.rendertype.empty())
 	{
-		queryAttribute(	[&rl](TiXmlElement* e) {return e->QueryStringAttribute("type", &rl.rendertype);},
-						renderType, "Must provide rendertype with a type");
+		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("type", &rl.rendertype);},
+						renderTypeE, "Must provide rendertype with a type");
 
-		queryAttribute(	[&rl](TiXmlElement* e) {return e->QueryStringAttribute("path", &rl.path);},
-						renderType, "Must provide rendertype with a resource path");
+		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("path", &rl.path);},
+						renderTypeE, "Must provide rendertype with a resource path");
 	}
 
 	// collect shader file paths
-	collectFPaths(programE, "vertfile", rl.vsPath);
-	collectFPaths(programE, "geomfile", rl.gmPath);
-	collectFPaths(programE, "fragfile", rl.fgPath);
+	collectFPaths(eventE, "vertfile", rl.vsPath);
+	collectFPaths(eventE, "geomfile", rl.gmPath);
+	collectFPaths(eventE, "fragfile", rl.fgPath);
 }
 
 
@@ -691,23 +714,23 @@ void GPLoader::collectFPaths(TiXmlElement* elem, const char *tag, std::vector<st
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, RendererProgram &rp)
+bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp)
 {
 	// fill rendererLoading struct with the final info to be processed
 	// starting with the original file
 	rendererLoading rl;
-	getRendererXMLInfo(rl, programE);
+	getRendererXMLInfo(rl, eventE);
 
 	// check if there is a prefab and continue filling the the struct
 	std::string st;
-	programE->QueryStringAttribute("prefab", &st);
+	eventE->QueryStringAttribute("prefab", &st);
 	
 	TiXmlDocument doc(st);
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docHandle(&doc);
-		programE = docHandle.FirstChild("prefab").ToElement();
-		getRendererXMLInfo(rl, programE);
+		eventE = docHandle.FirstChild("prefab").ToElement();
+		getRendererXMLInfo(rl, eventE);
 	}
 
 
@@ -736,11 +759,12 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	// create shader program
 	GLuint rpHandle = glCreateProgram();
 
-	auto loadAndAttach = [&rpHandle, &rendBuffers, &rendAtomics, &rendUniforms]
-						 (auto type, auto paths, auto in, auto out)
+	auto loadAndAttach = [&](auto type, auto paths, auto in, auto out)
 	{
+		std::string name;
+		eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
 		std::string header = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
-		Shader shader(type, header + createFinalShaderSource(paths));
+		Shader shader(type, header + createFinalShaderSource(paths), name + "_" + eventE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
 	};
 
@@ -855,41 +879,6 @@ bool GPLoader::loadRenderer(reservedResources &rr, TiXmlElement* programE, Rende
 	glBindVertexArray(0);
 
 	rp = RendererProgram(rpHandle, rendAtomics, vao, texture.getId(), rendUniforms, rl.rendertype, model);
-
-	return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-bool GPLoader::compileShaderFiles(GLuint shaderID, std::vector<std::string> fPaths, std::string header)
-{
-	// parse file fragments into string
-	std::string shaderString = header;
-	for (std::string fPath : fPaths)
-	{
-		shaderString = shaderString + fileToString(fPath);
-	}
-
-	// dump final file
-	std::string name = "dumps/" + std::to_string(shaderID) + "_shader.comp";
-	std::ofstream out(name);
-	out << shaderString;
-	out.close();
-
-	// compile shader files
-	const GLchar* shaderSource = shaderString.c_str();
-	glShaderSource(shaderID, 1, (const GLchar**)&shaderSource, NULL);
-	glCompileShader(shaderID);
-
-	GLint cShaderCompiled = GL_FALSE;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &cShaderCompiled);
-	if (cShaderCompiled != GL_TRUE)
-	{
-		printf("Unable to compile compute shader %d!\n", shaderID);
-		printShaderLog(shaderID);
-		return false;
-	}
 
 	return true;
 }

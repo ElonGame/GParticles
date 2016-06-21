@@ -31,7 +31,6 @@ class GPLoader
 public:
 	// parses file and fills psContainer with ParticleSystem objects
 	static bool loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer);
-	static bool compileShaderFiles(GLuint shaderID, std::vector<std::string> filePaths, std::string header = "");
 
 private:
 	static void loadResources(TiXmlHandle projectH);
@@ -61,9 +60,9 @@ private:
 
 
 	// program loading functions
-	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* programE, ComputeProgram &cp);
-	static bool loadRenderer(reservedResources &rr, TiXmlElement* programE, RendererProgram &rp);
-	static void getRendererXMLInfo(rendererLoading &rl, TiXmlElement* programE);
+	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
+	static bool loadRenderer(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
+	static void getRendererXMLInfo(rendererLoading &rl, TiXmlElement* eventE);
 
 	// project loading utility functions
 	template <typename Func>

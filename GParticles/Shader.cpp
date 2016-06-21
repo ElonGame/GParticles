@@ -9,18 +9,19 @@ std::map<std::string, GLenum> Shader::shaderTypeMap =
 };
 
 
-Shader::Shader(const std::string &type)
+Shader::Shader(const std::string &shaderType)
 {
-	shaderType = type;
-	id = glCreateShader(shaderTypeMap.at(shaderType));
+	type = shaderType;
+	id = glCreateShader(shaderTypeMap.at(type));
 }
 
-Shader::Shader(const std::string &type, const std::string source)
+Shader::Shader(const std::string &shaderType, const std::string shaderSource, const std::string shaderName)
 {
-	shaderType = type;
-	GLenum shaderTypeInt = shaderTypeMap.at(shaderType);
+	type = shaderType;
+	name = shaderName;
+	GLenum shaderTypeInt = shaderTypeMap.at(type);
 	id = glCreateShader(shaderTypeInt);
-	loadShader(source);
+	loadShader(shaderSource);
 }
 
 
@@ -51,8 +52,8 @@ bool Shader::loadShader(const std::string sourceString)
 
 void Shader::dumpToFile()
 {
-	std::string name = "dumps/" + std::to_string(id) + "_shader.comp";
-	std::ofstream out(name);
+	std::string finalName = "dumps/" + name + "_" + type + ".glsl";
+	std::ofstream out(finalName);
 	out << source;
 	out.close();
 }
@@ -62,14 +63,19 @@ GLuint Shader::getId()
 	return id;
 }
 
-std::string Shader::getShaderType()
+std::string Shader::getType()
 {
-	return shaderType;
+	return type;
 }
 
 std::string Shader::getSource()
 {
 	return source;
+}
+
+std::string Shader::getName()
+{
+	return name;
 }
 
 void Shader::printShaderLog()
