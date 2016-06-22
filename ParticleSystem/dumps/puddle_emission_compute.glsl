@@ -70,7 +70,24 @@ uniform float virusAnimationRadius;
 uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 
-uint gid = gl_GlobalInvocationID.x;
+
+const uint MAX_SPHERES = 2;
+const vec4 spheres[MAX_SPHERES] =
+{
+	vec4(0.000000, -2.000000, -3.000000, 1.000000),
+	vec4(-3.000000, -2.000000, 0.000000, 1.000000)
+};
+
+const uint MAX_PLANES = 1;
+const vec4 planes[MAX_PLANES] =
+{
+	vec4(0.000000, 1.000000, 0.000000, 3.000000)
+};
+
+
+const uint gid = gl_GlobalInvocationID.x;
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES

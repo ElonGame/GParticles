@@ -13,6 +13,8 @@ struct reservedResources
 	bufferUmap reservedBuffers;
 	atomicUmap reservedAtomics;
 	uniformUmap reservedUniforms;
+	std::vector<glm::vec4> spheres;
+	std::vector<glm::vec4> planes;
 };
 
 struct renderLoading
@@ -53,6 +55,7 @@ private:
 
 	static void collectReservedResourceInfo(TiXmlHandle reservedResH);
 	static bool loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE);
+	static void collectColliders(reservedResources &rr, TiXmlElement* collidersE);
 	static void loadInitialResourceOverrides(reservedResources &rr, TiXmlElement* psystemE);
 	static void loadReservedProgramResources(reservedResources &rr, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
 
@@ -75,15 +78,14 @@ private:
 	}
 
 
-	static void collectFPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
+	static void collectPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
-	static std::string createFinalShaderSource(std::vector<std::string> filePaths);
-	static std::string fillTemplate(std::string templateHeader, std::string psystemName);
-	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms,
-											std::string in, std::string out);
-	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms);
+	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::vector<std::string> tPaths, std::string psystemName);
+	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms, std::string in, std::string out);
+	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms, std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes);
 	static std::string fileToString(std::string filePath);
+	static std::string fillTemplate(std::string templateHeader, std::string psystemName);
 	static void printShaderLog(GLuint shader);
 	static void printProgramLog(GLuint program);
 

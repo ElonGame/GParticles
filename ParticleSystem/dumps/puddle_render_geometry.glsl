@@ -38,6 +38,8 @@ uniform float virusAnimationRadius;
 uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +325,6 @@ vec4[4] getStretchedQuad(float width, float height, vec3 velocity,
 
     return quad;
 }
-
 
 
 layout(points) in;

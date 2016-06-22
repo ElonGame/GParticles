@@ -30,16 +30,11 @@ bool GP_Loader::loadProject(std::string filePath, std::vector<ParticleSystem> &p
 
 	// load global resources and store reserved resources info
 	loadResources(projectH.FirstChild("resources"));
-
-
 	 
-	 /*std::ofstream out("dumps/templateTEEEEEST.glsl");
-	 out << fillTemplate("templates/updateMain.glsl", "test");
-	 out.close();*/
 
 	// iterate through and load particle systems
 	TiXmlElement* psystemE = projectH.FirstChildElement("psystem").ToElement();
-	for (; psystemE; psystemE = psystemE->NextSiblingElement())
+	for (; psystemE; psystemE = psystemE->NextSiblingElement("psystem"))
 	{
 		psContainer.push_back(loadParticleSystem(psystemE));
 		psContainer.back().printContents();
@@ -100,7 +95,7 @@ void GP_Loader::loadGlobalBuffers(TiXmlHandle globalResH)
 		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("name", &b.name);},
 						bufferE, "Must provide buffer attribute with a name");
 
-		if (GlobalData::get().getBuffer(b.name, b))
+		if (GPARTICLES.getBuffer(b.name, b))
 		{
 			printf(	"Skipping loading of buffer %s! Another buffer with the "
 					"same name has already been loaded!\n", b.name);
@@ -117,7 +112,7 @@ void GP_Loader::loadGlobalBuffers(TiXmlHandle globalResH)
 		b.init();
 
 		globalBufferInfo.emplace(b.name, b);
-		GlobalData::get().addBuffer(b);
+		GPARTICLES.addBuffer(b);
 
 		std::cout << "(GLOBAL) INIT: buffer " << b.name << " with number " << b.id
 			<< ", " << b.elements << " elements of type " << b.type << std::endl; // DUMP
@@ -145,7 +140,7 @@ void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH)
 		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryStringAttribute("name", &a.name);},
 						atomicE, "Must provide atomic attribute with a name");
 		
-		if (GlobalData::get().getAtomic(a.name, a))
+		if (GPARTICLES.getAtomic(a.name, a))
 		{
 			printf("Skipping loading of atomic %s! Another atomic with the "
 				"same name has already been loaded!\n", a.name);
@@ -160,7 +155,7 @@ void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH)
 		a.init();
 
 		globalAtomicInfo.emplace(a.name, a);
-		GlobalData::get().addAtomic(a);
+		GPARTICLES.addAtomic(a);
 
 		std::cout << "(GLOBAL) INIT: atomic " << a.name << " with number " <<
 			a.id << " and starting value " << a.resetValue << std::endl; // DUMP
@@ -243,7 +238,7 @@ void GP_Loader::loadGlobalUniforms(TiXmlHandle globalResH)
 		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("name", &u.name);},
 						uniformE, "Must provide uniform attribute with a name");
 
-		if (GlobalData::get().getUniform(u.name, u))
+		if (GPARTICLES.getUniform(u.name, u))
 		{
 			printf("Skipping loading of uniform %s! Another uniform with the "
 				"same name has already been loaded!\n", u.name);
@@ -257,7 +252,7 @@ void GP_Loader::loadGlobalUniforms(TiXmlHandle globalResH)
 		queryUniformValue(uniformE, u);
 
 		globalUniformInfo.emplace(u.name, u);
-		GlobalData::get().addUniform(u);
+		GPARTICLES.addUniform(u);
 
 		std::cout << "(GLOBAL) INIT: uniform " << u.name<< " of type " <<
 			u.type << " and value " << u.value[0].x << std::endl; // DUMP
@@ -367,22 +362,64 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::collectColliders(reservedResources &rr, TiXmlElement* collidersE)
+{
+	if (!collidersE)
+	{
+		return;
+	}
+
+	// collect static colliders
+	std::string type;
+	glm::vec4 value;
+	TiXmlElement* colliderE = collidersE->FirstChildElement("static");
+	for (; colliderE; colliderE = colliderE->NextSiblingElement("static"))
+	{
+		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("type", &type);},
+						colliderE, "Must provide static tag with a type attribute");
+
+		colliderE->QueryFloatAttribute("x", &value.x);
+		colliderE->QueryFloatAttribute("y", &value.y);
+		colliderE->QueryFloatAttribute("z", &value.z);
+
+		if (type == "sphere")
+		{
+			colliderE->QueryFloatAttribute("r", &value.w);
+			if (value.w <= 0)
+			{
+				Utils::exitMessage("Invalid Input", "Sphere radius must be > 0");
+			}
+
+			rr.spheres.push_back(value);
+		}
+		else if (type == "plane")
+		{
+			colliderE->QueryFloatAttribute("d", &value.w);
+			rr.planes.push_back(value);
+		}
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 {
-	// load reserved resources
+	// load particle system reserved resources
 	reservedResources rr;
 	loadReservedPSResources(rr, psystemE);
+	collectColliders(rr, psystemE->FirstChildElement("colliders"));
 
+
+	// load psystem events (emission, update, render)
 	TiXmlElement* eventsE = psystemE->FirstChildElement("events");
 	if (!eventsE)
 	{
 		Utils::exitMessage("Fatal Error", "psystem must have an events tag");
 	}
 
-	// load psystem events (emission, update, render)
 	ComputeProgram emission;
 	TiXmlElement* eventE = eventsE->FirstChildElement("emission");
 	if (!loadComputeProgram(rr, eventE, emission))
@@ -502,7 +539,7 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		u.name = psystemName + "_" + u.name;
 
 		rr.reservedUniforms.emplace(originalname, u);
-		GlobalData::get().addUniform(u);
+		GPARTICLES.addUniform(u);
 	}
 
 	for (auto resAtmInfo : reservedAtomicInfo)
@@ -515,7 +552,7 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		a.init();
 
 		rr.reservedAtomics.emplace(originalname, a);
-		GlobalData::get().addAtomic(a);
+		GPARTICLES.addAtomic(a);
 	}
 
 	// check and apply resource value overrides
@@ -532,7 +569,7 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		b.init(rr.maxParticles);
 
 		rr.reservedBuffers.emplace(originalName, b);
-		GlobalData::get().addBuffer(b);
+		GPARTICLES.addBuffer(b);
 	}
 
 	return true;
@@ -552,7 +589,7 @@ void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElemen
 		// TODO: check res type
 		queryUniformValue(resE, rr.reservedUniforms.at(resName));
 
-		GlobalData::get().addUniform(rr.reservedUniforms.at(resName));
+		GPARTICLES.addUniform(rr.reservedUniforms.at(resName));
 	}
 }
 
@@ -562,14 +599,20 @@ void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElemen
 void GP_Loader::loadIterationResourceOverrides(
 	TiXmlElement * programE, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
 {
-	if (programE == nullptr) { return; }
+	if (programE == nullptr)
+	{
+		return;
+	}
 
 	TiXmlElement* resE = programE->FirstChildElement("override");
 	
-	if (resE == nullptr) { return; }
+	if (resE == nullptr)
+	{
+		return;
+	}
 
 	std::string resType, resName, resValue;
-	for (; resE; resE = resE->NextSiblingElement())
+	for (; resE; resE = resE->NextSiblingElement("override"))
 	{
 		resE->QueryStringAttribute("type", &resType);
 		resE->QueryStringAttribute("name", &resName);
@@ -579,12 +622,12 @@ void GP_Loader::loadIterationResourceOverrides(
 		{
 			aum.at(resName).reset = true;
 			aum.at(resName).resetValue = std::stoul(resValue, nullptr, 0);
-			GlobalData::get().addAtomic(aum.at(resName));
+			GPARTICLES.addAtomic(aum.at(resName));
 		}
 		else if (resType == "uniform")
 		{ 
 			uum.at(resName).value[0].x = std::stof(resValue);
-			GlobalData::get().addUniform(uum.at(resName));
+			GPARTICLES.addUniform(uum.at(resName));
 		}
 	}
 }
@@ -612,27 +655,21 @@ bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, 
 	// create shader program
 	GLuint cpHandle = glCreateProgram();
 
-	// parse file paths that compose final shader
+
+	// parse file and template paths that compose final shader
 	std::vector<std::string> fPaths;
-	collectFPaths(eventE, "file", fPaths);
+	collectPaths(eventE, "file", fPaths);
 
-	// shader source = resource header + filepaths source + optional main logic
-	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms);
-	shaderSource += createFinalShaderSource(fPaths);
+	std::vector<std::string> tPaths;
+	collectPaths(eventE, "template", tPaths);
 
+	// shader source = resource header + files source + optional template logic
 	std::string psystemName;
 	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 
-	std::string templatePath;
-	TiXmlElement* templateE = eventE->FirstChildElement("mainTemplate");
-	if (templateE)
-	{
-		int res = templateE->QueryStringAttribute("path", &templatePath);
-		if (res == TIXML_SUCCESS)
-		{
-			shaderSource += fillTemplate(templatePath, psystemName);
-		}
-	}
+	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms, rr.spheres, rr.planes);
+	shaderSource += createFinalShaderSource(fPaths, tPaths, psystemName);
+
 
 	// compile, attach and check link status
 	Shader cpShader("compute", shaderSource, psystemName + "_" + eventE->ValueStr());
@@ -696,28 +733,28 @@ void GP_Loader::getRenderXMLInfo(renderLoading &rl, TiXmlElement* eventE)
 	}
 
 	// collect shader file paths
-	collectFPaths(eventE, "vertfile", rl.vsPath);
-	collectFPaths(eventE, "geomfile", rl.gmPath);
-	collectFPaths(eventE, "fragfile", rl.fgPath);
+	collectPaths(eventE, "vertfile", rl.vsPath);
+	collectPaths(eventE, "geomfile", rl.gmPath);
+	collectPaths(eventE, "fragfile", rl.fgPath);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::collectFPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target)
+void GP_Loader::collectPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target)
 {
 	if (!target.empty())
 		return;
 
-	TiXmlElement* fPathE = elem->FirstChildElement(tag);
-	if (fPathE == NULL)
+	TiXmlElement* pathE = elem->FirstChildElement(tag);
+	if (pathE == NULL)
 		return;
 	
-	std::string fragmentPath;
-	for (; fPathE; fPathE = fPathE->NextSiblingElement(tag))
+	std::string pathStr;
+	for (; pathE; pathE = pathE->NextSiblingElement(tag))
 	{
-		fPathE->QueryStringAttribute("path", &fragmentPath);
-		target.push_back(fragmentPath);
+		pathE->QueryStringAttribute("path", &pathStr);
+		target.push_back(pathStr);
 	}
 }
 
@@ -773,8 +810,9 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 	{
 		std::string name;
 		eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
-		std::string header = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
-		Shader shader(type, header + createFinalShaderSource(paths), name + "_" + eventE->ValueStr());
+		std::string shaderSource = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
+		shaderSource += createFinalShaderSource(paths,std::vector<std::string>(),"");
+		Shader shader(type, shaderSource, name + "_" + eventE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
 	};
 
@@ -988,14 +1026,21 @@ void GP_Loader::printProgramLog(GLuint program)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GP_Loader::createFinalShaderSource(std::vector<std::string> fPaths)
+std::string GP_Loader::createFinalShaderSource(std::vector<std::string> fPaths,
+					  std::vector<std::string> tPaths, std::string psystemName)
 {
-	// parse file fragments into string
+	// parse file and template fragments into string
 	std::string shaderString = "";
-	for (std::string fPath : fPaths)
+	for (auto fPath : fPaths)
 	{
-		shaderString = shaderString + fileToString(fPath);
+		shaderString += "\n\n" + fileToString(fPath);
 	}
+
+	for (auto tPath : tPaths)
+	{
+		shaderString += fillTemplate(tPath, psystemName);
+	}
+
 	return shaderString;
 }
 
@@ -1068,7 +1113,8 @@ std::string GP_Loader::fillTemplate(std::string templatePath, std::string psyste
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms)
+std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms,
+											 std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes)
 {
 	std::string res =	"#version 430\n"
 						"#extension GL_ARB_compute_shader : enable\n"
@@ -1111,7 +1157,44 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 		res += "uniform " + uni.second.type + " " + uni.second.name + ";\n";
 	}
 
-	res += "\nuint gid = gl_GlobalInvocationID.x;\n\n";
+	// world colliders
+	// spheres
+	if (!spheres.empty())
+	{
+		res +=	"\n\nconst uint MAX_SPHERES = " + std::to_string(spheres.size())
+				+ ";\nconst vec4 spheres[MAX_SPHERES] =\n{";
+		for (int i = 0; i < spheres.size() - 1; i++)
+		{
+			auto s = spheres[i];
+
+			res +=	"\n\tvec4(" + std::to_string(s.x) + ", " + std::to_string(s.y)
+					+ ", " + std::to_string(s.z) + ", " + std::to_string(s.w) + "),";
+		}
+
+		auto s = spheres[spheres.size() - 1];
+		res +=	"\n\tvec4(" + std::to_string(s.x) + ", " + std::to_string(s.y) + ", "
+				+ std::to_string(s.z) + ", " + std::to_string(s.w) + ")\n};";
+	}
+
+	// planes
+	if (!planes.empty())
+	{
+		res +=	"\n\nconst uint MAX_PLANES = " + std::to_string(planes.size())
+				+ ";\nconst vec4 planes[MAX_PLANES] =\n{";
+		for (int i = 0; i < planes.size() - 1; i++)
+		{
+			auto p = planes[i];
+
+			res +=	"\n\tvec4(" + std::to_string(p.x) + ", " + std::to_string(p.y)
+					+ ", " + std::to_string(p.z) + ", " + std::to_string(p.w) + "),";
+		}
+
+		auto p = planes[planes.size() - 1];
+		res += "\n\tvec4(" + std::to_string(p.x) + ", " + std::to_string(p.y) + ", "
+			+ std::to_string(p.z) + ", " + std::to_string(p.w) + ")\n};";
+	}
+
+	res += "\n\n\nconst uint gid = gl_GlobalInvocationID.x;\n\n";
 
 	return res;
 }

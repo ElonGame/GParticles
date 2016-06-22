@@ -133,5 +133,3 @@ vec4[4] getStretchedQuad(float width, float height, vec3 velocity,
 
     return quad;
 }
-
-

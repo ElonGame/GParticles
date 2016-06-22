@@ -1,18 +1,12 @@
 void update()
 {
-	puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
-	puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
-
-	if (puddle_positions[gid].y < -4)
+	// if particle hasn't hit the floor update its position and velocity
+	if (puddle_floorHit[gid] == 0)
 	{
-		if (puddle_floorHit[gid] == 0)
-			puddle_lifetimes[gid] = 1;
-		puddle_positions[gid].y = -4;
-		puddle_floorHit[gid] = 1.0;
-	}
-}
+		puddle_lastPositions[gid].xyz = puddle_positions[gid].xyz;
 
-void collision()
-{
-	;
+		// add a little "gravity"
+		puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
+		puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
+	}
 }

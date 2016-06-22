@@ -70,7 +70,11 @@ uniform float virusAnimationRadius;
 uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 
-uint gid = gl_GlobalInvocationID.x;
+
+
+const uint gid = gl_GlobalInvocationID.x;
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES

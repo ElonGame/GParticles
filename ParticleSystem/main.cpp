@@ -50,12 +50,10 @@ bool processEvents()
 		c.processMouseMovement();
 	}
 
-	GlobalData::get().setUniformValue("mouseXY", glm::vec2(c.mouseX, c.mouseY));
+	GPARTICLES.setUniformValue("mouseXY", glm::vec2(c.mouseX, c.mouseY));
 
 	return true;
 }
-
-
 
 int main(int argc, char* args[])
 {
@@ -67,7 +65,7 @@ int main(int argc, char* args[])
 		return 1;
 	}
 
-	GlobalData::get().setWindowDimensions(1024, 576);
+	GPARTICLES.setWindowDimensions(1024, 576);
 
 	// init opengl stuff
 	Utils::initGL();
@@ -80,7 +78,7 @@ int main(int argc, char* args[])
 	// init GPManager and load xml project file
 	GPManager gpManager;
 	//GP_Loader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
-	GP_Loader::loadProject("shaders/virusPuddles/_test.xml", gpManager.pSystems);
+	GP_Loader::loadProject("shaders/virusPuddles/_virusPuddles.xml", gpManager.pSystems);
 	//GP_Loader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
 	//GP_Loader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
 
@@ -128,28 +126,16 @@ int main(int argc, char* args[])
 
 
 	GP_Uniform u;
-	GlobalData::get().getUniform("virusAnimationAngle", u);
+	GPARTICLES.getUniform("virusAnimationAngle", u);
 	float i = u.value[0].x;
 	// system loop
 	while (processEvents())
 	{
 		i += 0.01f;
-		GlobalData::get().setUniformValue("virusAnimationAngle", ++i);
-		//GlobalData::get().setUniformValue("deltaTime", );
-
-
-
-		// TODO: system ticks here
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GPARTICLES.setUniformValue("virusAnimationAngle", ++i);
 
 		// process all particle system
 		gpManager.processParticles(c.getViewMatrix());
-
-
-		glUseProgram(NULL);
-
-
-
 
 		window.swapWindow();
 	}

@@ -1,10 +1,12 @@
 ﻿  GP_Loader.cpp
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(106): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(151): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(249): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(284): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(317): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(346): warning C4018: '<': signed/unsigned mismatch
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(525): warning C4244: '=': conversion from 'float' to 'GLuint', possible loss of data
-c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(47): warning C4715: 'GP_Loader::loadProject': not all control paths return a value
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(101): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(146): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(244): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(279): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(312): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(341): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(562): warning C4244: '=': conversion from 'float' to 'GLuint', possible loss of data
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(1166): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(1184): warning C4018: '<': signed/unsigned mismatch
+c:\users\tiago\desktop\pi\particlesystem\gparticles\gp_loader.cpp(42): warning C4715: 'GP_Loader::loadProject': not all control paths return a value
   GParticles.vcxproj -> C:\Users\Tiago\Desktop\PI\ParticleSystem\Debug\GParticles.lib

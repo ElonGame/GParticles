@@ -4,6 +4,8 @@
 #include <iostream>
 #include "Utils.h"
 
+#define GPARTICLES GlobalData::get()
+
 using timeClock = std::chrono::steady_clock;
 using timeP = std::chrono::time_point<timeClock>;
 using ms = std::chrono::milliseconds;

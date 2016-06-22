@@ -70,7 +70,24 @@ uniform float virusAnimationRadius;
 uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 
-uint gid = gl_GlobalInvocationID.x;
+
+const uint MAX_SPHERES = 2;
+const vec4 spheres[MAX_SPHERES] =
+{
+	vec4(0.000000, -2.000000, -3.000000, 1.000000),
+	vec4(-3.000000, -2.000000, 0.000000, 1.000000)
+};
+
+const uint MAX_PLANES = 1;
+const vec4 planes[MAX_PLANES] =
+{
+	vec4(0.000000, 1.000000, 0.000000, 3.000000)
+};
+
+
+const uint gid = gl_GlobalInvocationID.x;
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
@@ -222,135 +239,67 @@ mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 				vec4(0, 0, 0, 1));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// EMISSION - requires: utilities.glsl
-////////////////////////////////////////////////////////////////////////////////
-
-// Returns particle position inside a cone primitive
-////////////////////////////////////////////////////////////////////////////////
-vec4 conePositionGenerator(float radius, float height, bool coneBaseIsOrigin,
-						   bool positionsInVolume)
-{
-	// compute random y in range [0, height]
-	float y = randInRange(0, 1);
-
-	// compute particle horizontal distance from cone axis
-	float newRadius = (radius * y) / height;
-	float dist = newRadius;
-	if (positionsInVolume)
-	{
-		dist = randInRange(0, newRadius);
-	}
-
-	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(0, 360);
-
-	// calculate corresponding x and z polar coordinates
-	float x = dist * sin(angle);
-	float z = dist * cos(angle);
-
-	// compute cone orientation
-	y = (coneBaseIsOrigin) ? height - y : y;
-
-	return vec4(x, y, z, 1);
-}
-
-
-
-// Returns particle position inside a sphere primitive
-////////////////////////////////////////////////////////////////////////////////
-vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
-{
-	float radius = maxRadius;
-	if (positionsInVolume)
-		radius = randInRange(0, maxRadius);
-
-	// compute rotation angle (in degrees) around cone axis
-	float angle = randInRange(0, 360);
-	float angle2 = randInRange(0, 180);
-
-	// calculate corresponding x and z polar coordinates
-	float x = radius * sin(angle) * cos(angle2);
-	float z = radius * cos(angle);
-	float y = radius * sin(angle) * sin(angle2);
-
-	return vec4(x, y, z, 1);
-}
-
-
-
-
-// Returns particle position from a plane primitive
-////////////////////////////////////////////////////////////////////////////////
-vec4 planePositionGenerator(float width, float height, bool centeredAtOrigin,
-							bool horizontal)
-{
-	float minMultiplier = 0;
-	float maxMultiplier = 1;
-	if (centeredAtOrigin)
-	{
-		minMultiplier = 0.5;
-		maxMultiplier = 0.5;
-	}
-
-	vec4 pos = vec4(0,0,0,1);
-
-	pos.x = randInRange(-width * minMultiplier, width * maxMultiplier);
-	pos.y = randInRange(-height * minMultiplier, height * maxMultiplier);
-
-	if (horizontal)
-		pos.zy = pos.yz;
-
-	return pos;
-}
-
-
-
-// Returns velocity vector with magnitude = intensity
-////////////////////////////////////////////////////////////////////////////////
-vec3 velocityGenerator(vec3 dir, vec3 randomize, float intensity)
-{
-	vec3 vel = dir;
-
-	// check if any direction should be randomized
-	if (randomize.x > 0) vel.x = randInRange(-1,1);
-	if (randomize.y > 0) vel.y = randInRange(-1,1);
-	if (randomize.z > 0) vel.z = randInRange(-1,1);
-
-	// avoid normalizing a zero vector
-	if (vel != vec3(0)) vel = normalize(vel);
-
-	return vel * intensity;
-}
-
-
-
-// Returns velocity vector with random magnitude (minInt < magnitude < maxInt)
-////////////////////////////////////////////////////////////////////////////////
-vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
-{
-	float intensity = randInRange(minInt, maxInt);
-
-	return velocityGenerator(dir, randomize, intensity);
-}
-
 void update()
 {
-	puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
-	puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
-
-	if (puddle_positions[gid].y < -4)
+	// if particle hasn't hit the floor update its position and velocity
+	if (puddle_floorHit[gid] == 0)
 	{
-		if (puddle_floorHit[gid] == 0)
-			puddle_lifetimes[gid] = 1;
-		puddle_positions[gid].y = -4;
-		puddle_floorHit[gid] = 1.0;
+		puddle_lastPositions[gid].xyz = puddle_positions[gid].xyz;
+
+		// add a little "gravity"
+		puddle_velocities[gid].y -= 0.5 * puddle_deltaTime;
+		puddle_positions[gid].xyz += puddle_velocities[gid].xyz * puddle_deltaTime;
+	}
+}
+
+void sphereCollision(vec4 sphere, vec3 collisionPoint, vec3 normal)
+{
+	// offset particle position to collision point
+	puddle_positions[gid].xyz = collisionPoint;
+	puddle_velocities[gid].xyz = reflect(puddle_velocities[gid].xyz, normal) * 0.85;
+}
+
+void planeCollision(vec4 plane, vec3 collisionPoint, float distance)
+{
+	if (distance < 0)
+	{
+		puddle_floorHit[gid] = 1;
+		puddle_positions[gid].xyz = collisionPoint;
+		puddle_lifetimes[gid] = 1;
 	}
 }
 
 void collision()
 {
-	;
+	for (int i = 0; i < MAX_SPHERES; i++)
+	{
+		vec4 sphere = spheres[i];
+		if (distance(puddle_positions[gid].xyz, sphere.xyz) < sphere.w )
+		{
+			vec3 normal = normalize(puddle_positions[gid].xyz - sphere.xyz);
+			vec3 collisionPoint = sphere.xyz + normal * sphere.w;
+
+			sphereCollision(sphere, collisionPoint, normal);
+		}
+	}
+
+	for (int i = 0; i < MAX_PLANES; i++)
+	{
+		vec4 plane = planes[i];
+
+		vec3 vCurrent = plane.xyz * puddle_positions[gid].xyz;
+		vec3 vLast = plane.xyz * puddle_lastPositions[gid].xyz;
+		float currentDist = vCurrent.x + vCurrent.y + vCurrent.z + plane.w;
+		float previousDist = vLast.x + vLast.y + vLast.z + plane.w;
+
+		// there is a collision if point "passed through" plane
+		if (sign(currentDist) + sign(previousDist) == 0)
+		{
+			vec3 collisionPoint = puddle_positions[gid].xyz + puddle_velocities[gid].xyz * currentDist;
+
+			planeCollision(plane, collisionPoint, currentDist);
+		}
+	}
 }
 
 void main()

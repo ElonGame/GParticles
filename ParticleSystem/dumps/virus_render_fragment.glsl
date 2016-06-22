@@ -29,6 +29,8 @@ uniform float virusAnimationAngle;
 uniform vec2 mouseXY;
 
 
+
+
 in vec3 normalV;
 in vec3 lightDirV;
 

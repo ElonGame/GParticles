@@ -147,4 +147,3 @@ mat4 construct3DSpace(vec3 dir, bool flipRight, bool flipUp)
 				vec4(dir, 0),
 				vec4(0, 0, 0, 1));
 }
-

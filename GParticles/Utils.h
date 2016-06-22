@@ -8,24 +8,6 @@
 #include "GP_Uniform.h"
 #include "GP_Buffer.h"
 
-struct Vertex
-{
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 texCoords;
-};
-
-
-//struct bufferInfo
-//{
-//	GLuint id;
-//	GLuint binding;
-//	GLuint elements;
-//	std::string type;
-//	std::string name;
-//};
-
-
 using resHeader = std::vector<std::pair<std::string, GLuint>>;
 using bufferUmap = std::unordered_map<std::string, GP_Buffer>;
 using atomicUmap = std::unordered_map<std::string, GP_Atomic>;

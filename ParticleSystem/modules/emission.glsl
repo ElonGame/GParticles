@@ -109,4 +109,3 @@ vec3 velocityGenerator(vec3 dir, vec3 randomize, float minInt, float maxInt)
 
 	return velocityGenerator(dir, randomize, intensity);
 }
-
