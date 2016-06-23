@@ -17,13 +17,37 @@ struct reservedResources
 	std::vector<glm::vec4> planes;
 };
 
-struct renderLoading
+struct psProperties
+{
+	glm::mat4 model;
+	GLuint lifetime;
+	bool looping;
+	GLuint numWorkGroups;
+	
+	psProperties() : model(glm::mat4()), lifetime(0), looping(true), numWorkGroups(1) {};
+};
+
+struct computeInfo
+{
+	std::vector<std::string> fPaths;
+	std::vector<std::string> overrided;
+	GLuint iterationStep;
+};
+
+struct renderInfo
 {
 	std::vector<std::string> vsPath;
 	std::vector<std::string> fgPath;
 	std::vector<std::string> gmPath;
 	std::string rendertype;
 	std::string path;
+};
+
+enum loadFunctionInfo
+{
+	NO_PREFAB,
+	FIRST_ITERATION,
+	SECOND_ITERATION
 };
 
 class GP_Loader
@@ -34,7 +58,8 @@ public:
 
 private:
 	static void loadResources(TiXmlHandle projectH);
-	static ParticleSystem loadParticleSystem(TiXmlElement* psystemE); // TODO: single psystem loading?
+	static ParticleSystem loadParticleSystem(TiXmlElement* psystemE);
+	static void loadProperties(TiXmlElement* propertiesE, psProperties &psp, loadFunctionInfo lfi);
 	
 	// global resource info
 	static bufferUmap globalBufferInfo;
@@ -63,7 +88,7 @@ private:
 	// program loading functions
 	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
 	static bool loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
-	static void getRenderXMLInfo(renderLoading &rl, TiXmlElement* eventE);
+	static void getRenderInfo(renderInfo &rl, TiXmlElement* eventE);
 
 	// project loading utility functions
 	template <typename Func>
@@ -81,7 +106,7 @@ private:
 	static void collectPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
-	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::vector<std::string> tPaths, std::string psystemName);
+	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::string psystemName);
 	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms, std::string in, std::string out);
 	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms, std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes);
 	static std::string fileToString(std::string filePath);

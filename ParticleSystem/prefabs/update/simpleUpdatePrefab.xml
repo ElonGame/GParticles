@@ -1,0 +1,5 @@
+<update iterationStep=0>
+	<file path="modules/utilities.glsl" />
+	<file path="prefabs/update/simpleUpdate.comp" />
+	<file path="templates/updateMain.glsl" />
+</update>

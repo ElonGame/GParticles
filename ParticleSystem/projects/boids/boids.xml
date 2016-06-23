@@ -1,0 +1,73 @@
+<project>
+	<resources prefab="prefabs/resources.xml" />
+
+	<psystem name="leader">
+		<position x=0 y=0 z=-5 />
+		<rotation x=1 y=0 z=0 angle=0/>
+		<scale x=1 y=1 z=1 />
+		<lifetime unit="sec" limit=3600 />
+		<numWorkGroups value=1 />
+
+		<override type="uniform" name="leader_toCreate" value=1/>
+		<override type="uniform" name="leader_maxParticles" value=1/>
+
+		<emitter iterationStep=100>
+			<override type="atomic" name="leader_emissionAttempts" value=0/>
+
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/leaderEmitter.comp" />
+		</emitter>
+
+		<updater iterationStep=0>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/leaderUpdater.comp" />
+		</updater>
+
+		<renderer prefab="prefabs/simplePointRenderer.xml">
+			<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
+
+			<vertfile path="reserved/utilities.glsl" />
+			<vertfile path="shaders/boids/modelLeader.vert" />
+			<fragfile path="shaders/boids/modelLeader.frag" />
+		</renderer>
+	</psystem>
+
+	<psystem name="rocket">
+		<position x=0 y=0 z=-5 />
+		<rotation x=1 y=0 z=0 angle=0/>
+		<scale x=1 y=1 z=1 />
+		<lifetime unit="sec" limit=3600 />
+		<numWorkGroups value=1 />
+
+		<override type="uniform" name="rocket_toCreate" value=1/>
+		<override type="uniform" name="rocket_maxParticles" value=5/>
+
+		<emitter iterationStep=100>
+			<override type="atomic" name="rocket_emissionAttempts" value=0/>
+
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/rocketEmitter.comp" />
+		</emitter>
+
+		<updater iterationStep=0>
+			<file path="reserved/utilities.glsl" />
+			<file path="reserved/emission.glsl" />
+			<file path="shaders/boids/rocketUpdater.comp" />
+		</updater>
+
+		<renderer prefab="prefabs/simplePointRenderer.xml">
+			<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
+
+			<vertfile path="reserved/utilities.glsl" />
+			<vertfile path="shaders/boids/model.vert" />
+			<fragfile path="shaders/boids/model.frag" />
+		</renderer>
+	</psystem>
+
+
+
+ 
+</project>

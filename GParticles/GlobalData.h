@@ -45,7 +45,6 @@ public:
 		return true;
 	}
 
-
 	GlobalData(GlobalData const&)		= delete;
 	void operator=(GlobalData const&)	= delete;
 

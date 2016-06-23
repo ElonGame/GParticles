@@ -1,0 +1,5 @@
+void emission()
+{
+	virus_size[gid] = 0.025;
+	virus_lifetimes[gid] = 3600;
+}

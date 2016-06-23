@@ -1,0 +1,27 @@
+void onEmission()
+{
+	leader_lifetimes[gid] = /*snoise(vec2(gid,gid*gid)) +*/ 3600;
+	leader_positions[gid] = spherePositionGenerator(1.5, false);
+	leader_velocities[gid].xyz = velocityGenerator(leader_positions[gid].xyz, vec3(0), 0.005);
+	leader_lastPositions[gid] = leader_positions[gid];
+	leader_lineLifetime[gid] = 0.5;
+	leader_colors[gid] = vec4(0.1,0.9,0.1,1);
+}
+
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (atomicCounter(leader_aliveParticles) >= leader_maxParticles)
+		return;
+
+	if (leader_lifetimes[gid] <= 0)
+	{
+		if (atomicCounterIncrement(leader_emissionAttempts) < leader_toCreate)
+		{
+			atomicCounterIncrement(leader_aliveParticles);
+
+			onEmission();
+		}
+	}
+}

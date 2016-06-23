@@ -1,0 +1,133 @@
+<project>
+<!-- GLOBAL RESOURCES
+	<buffers>
+		<buffer name="" type="float/vec4" elements=n/>
+	</buffers>
+	<atomics>
+		<atomic name="" initialValue=n/>
+	</atomics>
+	<uniforms>
+		<uniform name="" type="float" initialValue=n>
+	</uniforms>
+-->
+	<resources>
+		<buffers>
+			<buffer name="rdpPos" elements=512 type="vec4"/>
+			<buffer name="rdpActive" elements=512 type="float"/>
+		</buffers>
+		
+		<atomics>
+			<atomic name="rdpLast" value=0/>
+			<atomic name="randomCounter" value=0 />
+		</atomics>
+
+		<uniforms>
+			<uniform name="rdpCreate" type="float" value=4/>
+			<uniform name="rdpSize" type="float" value=512/>
+		</uniforms>
+	</resources>
+
+	<psystem name="rocket">
+		<position x=0 y=0 z=0 />
+		<rotation x=1 y=0 z=0 angle=0/>
+		<scale x=1 y=1 z=1 />
+		<lifetime unit="sec" limit=3600 />
+		<numWorkGroups value=1 />
+
+		<uniformOverride name="rocket_toCreate" value=100/>
+		<uniformOverride name="rocket_maxParticles" value=100/>
+
+			<!-- reserverd should just be maxParticls, easier override, add '_' at linking phase-->
+
+		<emitter>
+			<actions>
+				<override type="atomic" name="rocket_emissionAttempts" value=0/>
+			</actions>
+
+			<files>
+				<file path="shaders/fireworks/rocketEmitter.comp" />
+			</files>
+		</emitter>
+
+		<updater>
+			<files>
+				<file path="shaders/fireworks/rocketUpdater.comp" />
+			</files>
+		</updater>
+
+		<renderer prefab="prefabs/simplePointRenderer.xml">
+			<!--rendertype type="model" path="assets/models/agent/eagle.3ds"/>
+			<vertfiles>
+				<file path="shaders/fireworks/model.vert" />
+			</vertfiles>
+			<fragfiles>
+				<file path="shaders/fireworks/model.frag" />
+			</fragfiles-->
+			<!--rendertype type="billboard" path="snow.png" orientation=vertical/>
+
+			<vertfiles>
+				<file path="shaders/fireworks/rocketVertex.vert" />
+			</vertfiles>
+			<geomfiles>
+				<file path="shaders/fireworks/rocketGeom.geom"/>
+			</geomfiles>
+			<fragfiles>
+				<file path="shaders/fireworks/rocketFrag.frag" />
+			</fragfiles-->
+		</renderer>
+
+
+	</psystem>
+
+	<psystem name="exp">
+		<position x=0 y=0 z=0 />
+		<rotation x=1 y=0 z=0 angle=0/>
+		<scale x=1 y=1 z=1 />
+		<numWorkGroups value=1 />
+		<lifetime unit="sec" limit=3600 />
+
+		<actions>
+			<uniformOverride name="exp_maxParticles" value=512/>
+		</actions>
+
+
+
+		<emitter>
+			<actions>
+				<override type="atomic" name="exp_emissionAttempts" value=0/>
+				<override type="atomic" name="rdpLast" value=0/>
+			</actions>
+
+			<files>
+				<file path="shaders/fireworks/expEmitter.comp" />
+			</files>
+		</emitter>
+
+		<updater>
+			<files>
+				<file path="shaders/fireworks/expUpdater.comp" />
+			</files>
+		</updater>
+
+		<collision>
+			<!--particleBounds type="point"/-->
+			<particleBounds type="sphere" r=0.01/>
+			<!--particleBounds type="aabb"/-->
+
+			<worldPrimitive type="sphere" x=0 y=0 z=-50.5 r=0.5/>
+			<!--worldPrimitive type="cone" x1=0 y1=0 z1=-0.5 x1=0 y1=0 z1=0 r=0.5/-->
+
+			<onCollision/>
+		</collision>
+
+		<renderer>
+			<rendertype type="point" />
+			<vertfiles>
+				<file path="shaders/fireworks/expVertex.vert" />
+			</vertfiles>
+			<fragfiles>
+				<file path="shaders/fireworks/expFrag.frag" />
+			</fragfiles>
+		</renderer>
+	</psystem>
+</project>

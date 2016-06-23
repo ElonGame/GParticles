@@ -1,0 +1,20 @@
+void main()
+{
+	uint gid = gl_GlobalInvocationID.x;
+
+	if (exp_lifetimes[gid] <= 0)
+		return;
+
+	exp_lifetimes[gid] -= 0.01;
+
+	if (exp_lifetimes[gid] <= 0)
+	{
+		atomicCounterDecrement(exp_aliveParticles);
+			rdpActive[gid] = 0;
+		
+		return;
+	}
+
+	exp_positions[gid].xyz += exp_velocities[gid].xyz;
+	exp_positions[gid].a = 1;
+}

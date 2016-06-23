@@ -1,0 +1,23 @@
+<project>
+	<resources prefab="prefabs/resources/defaultResources.xml"/>
+
+	<psystem name="simple">
+		<properties>
+			<position x=0 y=0 z=-5 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=500 />
+
+
+		<events>
+			<emission prefab="prefabs/emission/simpleEmissionPrefab.xml" />
+
+			<update prefab="prefabs/update/simpleUpdatePrefab.xml" />
+
+			<render prefab="prefabs/render/simpleRenderPrefab.xml" />
+		</events>
+	</psystem>
+</project>

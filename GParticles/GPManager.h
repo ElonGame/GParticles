@@ -9,6 +9,6 @@ public:
 	GPManager();
 	~GPManager();
 
-	void processParticles(glm::mat4 view);
+	void processParticles(glm::mat4 view = glm::mat4());
 };
 

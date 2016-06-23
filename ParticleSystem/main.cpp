@@ -78,51 +78,10 @@ int main(int argc, char* args[])
 	// init GPManager and load xml project file
 	GPManager gpManager;
 	//GP_Loader::loadProject("shaders/fireworks/fireworks.xml", gpManager.pSystems);
-	GP_Loader::loadProject("shaders/virusPuddles/_virusPuddles.xml", gpManager.pSystems);
+	//GP_Loader::loadProject("projects/virusPuddles/_virusPuddles.xml", gpManager.pSystems);
 	//GP_Loader::loadProject("shaders/boids/boids.xml", gpManager.pSystems);
-	//GP_Loader::loadProject("shaders/Tutorial_1/_test.xml", gpManager.pSystems);
+	GP_Loader::loadProject("projects/Tutorial_2/Tutorial_2.xml", gpManager.pSystems);
 
-
-	//Model myModel = Model("assets/models/nanosuit2/nanosuit.obj");
-	//Model myModel = Model("assets/models/agent/agent.blend");
-	//myModel = Model("assets/models/paperPlane/3d-model.obj");
-	//Model myModel("assets/models/sphere/sphere.obj");
-	//Model myModel = Model("assets/models/virus/virus.3ds");
-
-	//GLuint modelProgram = glCreateProgram();
-
-	//// vertex shader
-	//GLuint rpVertShader = glCreateShader(GL_VERTEX_SHADER);
-	//std::vector<std::string> paths1;
-	//paths1.push_back(std::string("shaders/rain_and_puddles/model.vert"));
-	//GP_Loader::compileShaderFiles(rpVertShader, paths1);
-	//glAttachShader(modelProgram, rpVertShader);
-
-	//// frag shader
-	//GLuint rpFragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	//std::vector<std::string> paths2;
-	//paths2.push_back(std::string("shaders/rain_and_puddles/model.frag"));
-	//GP_Loader::compileShaderFiles(rpFragShader, paths2);
-	//glAttachShader(modelProgram, rpFragShader);
-
-	//glLinkProgram(modelProgram);
-
-	//GLint programSuccess = GL_FALSE;
-	//glGetProgramiv(modelProgram, GL_LINK_STATUS, &programSuccess);
-	//if (programSuccess == GL_FALSE)
-	//{
-	//	printf("Error linking program %d!\n", modelProgram);
-	//	return false;
-	//}
-
-	//printf("MODEL PROGRAM NUMBER IS %d!\n", modelProgram);
-
-	GP_Atomic atm;
-	atm.resetValue = 3;
-	atm.init();
-	GLuint aaa = atm.getCurrentValue();
-	atm.setCurrentValue(5);
-	aaa = atm.getCurrentValue();
 
 
 	GP_Uniform u;

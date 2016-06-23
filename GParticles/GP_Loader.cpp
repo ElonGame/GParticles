@@ -46,7 +46,7 @@ bool GP_Loader::loadProject(std::string filePath, std::vector<ParticleSystem> &p
 ///////////////////////////////////////////////////////////////////////////////
 void GP_Loader::loadResources(TiXmlHandle resourcesH)
 {
-	auto lambda = [](TiXmlHandle globalResH, TiXmlHandle reservedResH)
+	auto lResources = [](TiXmlHandle globalResH, TiXmlHandle reservedResH)
 	{	// load global project resources
 		loadGlobalBuffers(globalResH);
 		loadGlobalAtomics(globalResH);
@@ -57,20 +57,20 @@ void GP_Loader::loadResources(TiXmlHandle resourcesH)
 	};
 
 	// start by processing current file
-	lambda(resourcesH.FirstChild("global"), resourcesH.FirstChild("private"));
+	lResources(resourcesH.FirstChild("global"), resourcesH.FirstChild("private"));
 
 
 	// if there is a resources prefab continue loading/collecting resources
-	std::string st;
-	resourcesH.ToElement()->QueryStringAttribute("prefab", &st);
+	std::string prefabPath;
+	resourcesH.ToElement()->QueryStringAttribute("prefab", &prefabPath);
 
-	TiXmlDocument doc(st);
+	TiXmlDocument doc(prefabPath);
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docH(&doc);
 		TiXmlHandle prefabH = docH.FirstChild("prefab").FirstChild("resources");
 		
-		lambda(prefabH.FirstChild("global"), prefabH.FirstChild("private"));
+		lResources(prefabH.FirstChild("global"), prefabH.FirstChild("private"));
 	}
 }
 
@@ -405,12 +405,117 @@ void GP_Loader::collectColliders(reservedResources &rr, TiXmlElement* collidersE
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::loadProperties(TiXmlElement* propertiesE, psProperties &psp, loadFunctionInfo lfi)
+{
+	// model matrix
+	glm::vec3 pos = glm::vec3();
+	TiXmlElement* transformE = propertiesE->FirstChildElement("position");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &pos.x);
+		transformE->QueryFloatAttribute("y", &pos.y);
+		transformE->QueryFloatAttribute("z", &pos.z);
+	}
+
+	float angle = 0;
+	glm::vec3 rot = glm::vec3(0,1,0);
+	transformE = propertiesE->FirstChildElement("rotation");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &rot.x);
+		transformE->QueryFloatAttribute("y", &rot.y);
+		transformE->QueryFloatAttribute("z", &rot.z);
+		transformE->QueryFloatAttribute("angle", &angle);
+	}
+
+	glm::vec3 scale = glm::vec3(1);
+	transformE = propertiesE->FirstChildElement("scale");
+	if (transformE)
+	{
+		transformE->QueryFloatAttribute("x", &scale.x);
+		transformE->QueryFloatAttribute("y", &scale.y);
+		transformE->QueryFloatAttribute("z", &scale.z);
+	}
+
+	// if model matrix has not been set
+	if (psp.model == glm::mat4())
+	{
+		psp.model = glm::translate(psp.model, pos);
+		psp.model = glm::rotate(psp.model, glm::radians(angle), rot);
+		psp.model = glm::scale(psp.model, scale);
+	}
+	
+
+	// lifetime
+	std::string unit;
+	TiXmlElement* lifetimeE = propertiesE->FirstChildElement("lifetime");
+	if (lifetimeE && psp.lifetime == 0 && (NO_PREFAB || SECOND_ITERATION))
+	{
+		queryAttribute([&](TiXmlElement* e) {return e->QueryUnsignedAttribute("value", &psp.lifetime);},
+			lifetimeE, "Must provide lifetime tag with a value attribute");
+
+		queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("unit", &unit);},
+			lifetimeE, "Must provide lifetime tag with a unit attribute");
+
+		// looping attribute is optional, defaults to true
+		lifetimeE->QueryBoolAttribute("looping", &psp.looping);
+
+		if (unit == "seconds")
+		{
+			psp.lifetime *= 1000;
+		}
+		else if (unit == "milliseconds");
+		else
+		{
+			Utils::exitMessage("Invalide Input", "Unrecognized time unit. Supported time units are: seconds, milliseconds");
+		}
+	}
+
+
+	// numWorkGroups
+	TiXmlElement* nWorkGroupE = propertiesE->FirstChildElement("numWorkGroups");
+	if (nWorkGroupE)
+	{
+		nWorkGroupE->QueryUnsignedAttribute("value", &psp.numWorkGroups);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 {
 	// load particle system reserved resources
 	reservedResources rr;
 	loadReservedPSResources(rr, psystemE);
 	collectColliders(rr, psystemE->FirstChildElement("colliders"));
+
+
+	// load psystem properties
+	TiXmlElement* propertiesE = psystemE->FirstChildElement("properties");
+	if (!propertiesE)
+	{
+		Utils::exitMessage("Fatal Error", "psystem must have a properties tag");
+	}
+
+	psProperties psp;
+
+	std::string prefabPath = "";
+	propertiesE->QueryStringAttribute("prefab", &prefabPath);
+	
+	TiXmlDocument doc(prefabPath);
+	if (doc.LoadFile())
+	{
+		loadProperties(propertiesE, psp, FIRST_ITERATION);
+
+		TiXmlHandle docH(&doc);
+		propertiesE = docH.FirstChild("properties").ToElement();
+
+		loadProperties(propertiesE, psp, SECOND_ITERATION);
+	}
+	else
+	{
+		loadProperties(propertiesE, psp, NO_PREFAB);
+	}
 
 
 	// load psystem events (emission, update, render)
@@ -442,83 +547,9 @@ ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 	}
 
 
-	// load psystem properties
-	// model matrix
-	glm::mat4 model = glm::mat4();
-	glm::vec3 pos = glm::vec3();
-	TiXmlElement* transformE = psystemE->FirstChildElement("position");
-	if (transformE)
-	{
-		transformE->QueryFloatAttribute("x", &pos.x);
-		transformE->QueryFloatAttribute("y", &pos.y);
-		transformE->QueryFloatAttribute("z", &pos.z);
-	}
 
-	float angle = 0;
-	glm::vec3 rot = glm::vec3();
-	transformE = psystemE->FirstChildElement("rotation");
-	if (transformE)
-	{
-		transformE->QueryFloatAttribute("x", &rot.x);
-		transformE->QueryFloatAttribute("y", &rot.y);
-		transformE->QueryFloatAttribute("z", &rot.z);
-		transformE->QueryFloatAttribute("angle", &angle);
-	}
-
-	glm::vec3 scale = glm::vec3();
-	transformE = psystemE->FirstChildElement("scale");
-	if (transformE)
-	{
-		transformE->QueryFloatAttribute("x", &scale.x);
-		transformE->QueryFloatAttribute("y", &scale.y);
-		transformE->QueryFloatAttribute("z", &scale.z);
-	}
-
-	model = glm::translate(model, pos);
-	model = glm::rotate(model, glm::radians(angle), rot);
-	model = glm::scale(model, scale);
-
-
-	// lifetime
-	unsigned int lifetime;
-	std::string unit;
-	bool looping = true;
-	TiXmlElement* lifetimeE = psystemE->FirstChildElement("lifetime");
-	if (!lifetimeE)
-	{
-		Utils::exitMessage("Fatal Error", "psystem must have a lifetime tag");
-	}
-
-	queryAttribute(	[&](TiXmlElement* e) {return e->QueryUnsignedAttribute("value", &lifetime);},
-					lifetimeE, "Must provide lifetime tag with a value attribute");
-
-	queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("unit", &unit);},
-					lifetimeE, "Must provide lifetime tag with a unit attribute");
-
-	// looping attribute is optional, defaults to true
-	lifetimeE->QueryBoolAttribute("looping", &looping);
-
-	if (unit == "seconds")
-	{
-		lifetime *= 1000;
-	}
-	else if (unit == "milliseconds");
-	else
-	{
-		Utils::exitMessage("Invalide Input", "Unrecognized time unit. Supported time units are: seconds, milliseconds");
-	}
-
-
-	// numWorkGroups
-	GLuint numWorkGroups = 1;
-	TiXmlElement* nWorkGroupE = psystemE->FirstChildElement("numWorkGroups");
-	if (nWorkGroupE)
-	{
-		nWorkGroupE->QueryUnsignedAttribute("value", &numWorkGroups);
-	}
-
-
-	return ParticleSystem(emission, update, render, model, numWorkGroups, lifetime, looping);
+	return ParticleSystem(	emission, update, render, psp.model,
+							psp.numWorkGroups, psp.lifetime, psp.looping);
 }
 
 
@@ -587,7 +618,10 @@ void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElemen
 	{
 		resE->QueryStringAttribute("name", &resName);
 		// TODO: check res type
-		queryUniformValue(resE, rr.reservedUniforms.at(resName));
+		if (rr.reservedUniforms.find(resName) != rr.reservedUniforms.end())
+		{
+			queryUniformValue(resE, rr.reservedUniforms.at(resName));
+		}
 
 		GPARTICLES.addUniform(rr.reservedUniforms.at(resName));
 	}
@@ -648,27 +682,43 @@ bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, 
 	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
 	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
 
-	// and mark the indicated resources to be reset every iteration
-	loadIterationResourceOverrides(eventE, cpAtomics, cpBuffers, cpUniforms);
+
+	GLuint iterationStep = 0;
+	std::vector<std::string> fPaths;
+
+	auto getComputeInfo = [&](TiXmlElement* e)
+	{	// and mark the indicated resources to be reset every iteration
+		loadIterationResourceOverrides(e, cpAtomics, cpBuffers, cpUniforms);
+
+		// parse file paths that compose final shader
+		if (fPaths.empty()) collectPaths(e, "file", fPaths);
+
+		e->QueryUnsignedAttribute("iterationStep", &iterationStep);
+
+	};
+	getComputeInfo(eventE);
+
+	// if there is an event prefab continue loading/collecting resources
+	std::string prefabPath;
+	eventE->QueryStringAttribute("prefab", &prefabPath);
+
+	TiXmlDocument doc(prefabPath);
+	if (doc.LoadFile())
+	{
+		TiXmlHandle docH(&doc);
+		getComputeInfo(docH.FirstChild(eventE->ValueStr()).ToElement());
+	}
 
 
 	// create shader program
 	GLuint cpHandle = glCreateProgram();
 
-
-	// parse file and template paths that compose final shader
-	std::vector<std::string> fPaths;
-	collectPaths(eventE, "file", fPaths);
-
-	std::vector<std::string> tPaths;
-	collectPaths(eventE, "template", tPaths);
-
-	// shader source = resource header + files source + optional template logic
+	// shader source = resource header + files source
 	std::string psystemName;
 	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 
 	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms, rr.spheres, rr.planes);
-	shaderSource += createFinalShaderSource(fPaths, tPaths, psystemName);
+	shaderSource += createFinalShaderSource(fPaths, psystemName);
 
 
 	// compile, attach and check link status
@@ -705,9 +755,6 @@ bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, 
 		uHeaders.push_back(u.second.name);
 	}
 
-	GLuint iterationStep = 0;
-	eventE->QueryUnsignedAttribute("iterationStep", &iterationStep);
-
 	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, psystemName, rr.maxParticles, iterationStep);
 
 	return true;
@@ -716,20 +763,22 @@ bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::getRenderXMLInfo(renderLoading &rl, TiXmlElement* eventE)
+void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* eventE)
 {
 	if (eventE == NULL)
 		return;
 	
 	// renderType
 	TiXmlElement* renderTypeE = eventE->FirstChildElement("rendertype");
-	if (renderTypeE != NULL && rl.rendertype.empty())
+	if (renderTypeE && rl.rendertype.empty())
 	{
-		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("type", &rl.rendertype);},
-						renderTypeE, "Must provide rendertype with a type");
+		eventE->QueryStringAttribute("type", &rl.rendertype);
 
-		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("path", &rl.path);},
-						renderTypeE, "Must provide rendertype with a resource path");
+		if (rl.rendertype == "billboard" || rl.rendertype == "model")
+		{
+			queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("path", &rl.path);},
+				renderTypeE, "Must provide rendertype with a resource path");
+		}
 	}
 
 	// collect shader file paths
@@ -763,21 +812,21 @@ void GP_Loader::collectPaths(TiXmlElement* elem, const char *tag, std::vector<st
 ///////////////////////////////////////////////////////////////////////////////
 bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp)
 {
-	// fill renderLoading struct with the final info to be processed
+	// fill renderInfo struct with the final info to be processed
 	// starting with the original file
-	renderLoading rl;
-	getRenderXMLInfo(rl, eventE);
+	renderInfo rl;
+	getRenderInfo(rl, eventE);
 
 	// check if there is a prefab and continue filling the the struct
-	std::string st;
-	eventE->QueryStringAttribute("prefab", &st);
+	std::string prefabPath;
+	eventE->QueryStringAttribute("prefab", &prefabPath);
 	
-	TiXmlDocument doc(st);
+	TiXmlDocument doc(prefabPath);
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docHandle(&doc);
-		eventE = docHandle.FirstChild("prefab").ToElement();
-		getRenderXMLInfo(rl, eventE);
+		TiXmlElement* prefabE = docHandle.FirstChild("prefab").ToElement();
+		getRenderInfo(rl, prefabE);
 	}
 
 
@@ -811,7 +860,7 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 		std::string name;
 		eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
 		std::string shaderSource = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
-		shaderSource += createFinalShaderSource(paths,std::vector<std::string>(),"");
+		shaderSource += createFinalShaderSource(paths,name);
 		Shader shader(type, shaderSource, name + "_" + eventE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
 	};
@@ -1027,18 +1076,13 @@ void GP_Loader::printProgramLog(GLuint program)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 std::string GP_Loader::createFinalShaderSource(std::vector<std::string> fPaths,
-					  std::vector<std::string> tPaths, std::string psystemName)
+											   std::string psystemName)
 {
-	// parse file and template fragments into string
+	// parse file fragments into string
 	std::string shaderString = "";
 	for (auto fPath : fPaths)
 	{
-		shaderString += "\n\n" + fileToString(fPath);
-	}
-
-	for (auto tPath : tPaths)
-	{
-		shaderString += fillTemplate(tPath, psystemName);
+		shaderString += "\n\n" + fillTemplate(fPath, psystemName);
 	}
 
 	return shaderString;

@@ -1,0 +1,6 @@
+<prefab>
+	<rendertype type="point" />
+
+	<vertfile path="prefabs/render/simpleRender.vert" />
+	<fragfile path="prefabs/render/simpleRender.frag" />
+</prefab>

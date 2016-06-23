@@ -1,0 +1,16 @@
+void sphereCollision(vec4 sphere, vec3 collisionPoint, vec3 normal)
+{
+	// offset particle position to collision point
+	puddle_positions[gid].xyz = collisionPoint;
+	puddle_velocities[gid].xyz = reflect(puddle_velocities[gid].xyz, normal) * 0.85;
+}
+
+void planeCollision(vec4 plane, vec3 collisionPoint, float distance)
+{
+	if (distance < 0)
+	{
+		puddle_floorHit[gid] = 1;
+		puddle_positions[gid].xyz = collisionPoint;
+		puddle_lifetimes[gid] = 1;
+	}
+}

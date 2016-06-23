@@ -1,0 +1,8 @@
+<emission iterationStep=100>
+	<override type="atomic" name="emissionAttempts" value=0/>
+
+	<file path="modules/utilities.glsl" />
+	<file path="modules/emission.glsl" />
+	<file path="prefabs/emission/simpleEmission.comp" />
+	<file path="templates/emissionMain.glsl" />
+</emission>
