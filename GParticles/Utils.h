@@ -1,5 +1,6 @@
 #pragma once
-#include <glew\glew.h>
+#include <GL\glew.h>
+#include <IL\il.h>
 #include <sdl2\SDL.h>
 #include <unordered_map>
 #include <glm\gtc\matrix_transform.hpp>
@@ -15,7 +16,7 @@ using uniformUmap = std::unordered_map<std::string, GP_Uniform>;
 
 namespace Utils
 {
-	inline void initGL()
+	inline void init(GLuint w, GLuint h)
 	{
 		// init GLEW
 		glewExperimental = GL_TRUE;
@@ -25,12 +26,14 @@ namespace Utils
 			printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
 		}
 
-		// set viewport
-		glViewport(0, 0, 1024, 576);
-
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
-		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		//glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+		// init devIL
+		ilInit();
+
+		glViewport(0, 0, w, h);
 	}
 
 	inline void exitMessage(std::string title, std::string msg)

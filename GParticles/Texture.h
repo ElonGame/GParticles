@@ -1,7 +1,7 @@
 #pragma once
 #include <IL\il.h>
 #pragma comment(lib,"devil.lib")
-#include <glew\glew.h>
+#include <GL\glew.h>
 #include <string>
 
 class Texture

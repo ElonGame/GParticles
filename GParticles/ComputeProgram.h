@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "Utils.h"
-#include "GlobalData.h"
+#include "GP_Data.h"
 
 class ComputeProgram
 {

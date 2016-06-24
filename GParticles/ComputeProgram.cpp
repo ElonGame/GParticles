@@ -17,11 +17,11 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 {
 	if (firstExec)
 	{
-		lastStep = GlobalData::get().getCurrentTimeMillis();
+		lastStep = GPDATA.getCurrentTimeMillis();
 		firstExec = false;
 	}
 
-	GLuint timeSpan = GlobalData::get().getCurrentTimeMillis() - lastStep;
+	GLuint timeSpan = GPDATA.getCurrentTimeMillis() - lastStep;
 
 	if (timeSpan < iterationStep)
 	{
@@ -29,7 +29,7 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 		return;
 	}
 
-	GlobalData::get().setUniformValue(psystem + "_deltaTime", timeSpan / 1000.0f);
+	GPDATA.setUniformValue(psystem + "_deltaTime", timeSpan / 1000.0f);
 
 	// canKeepUpIteration == true means the program can keep up with the iterationStep
 	// its asked to take -> we add iterationStep to lastStep as to reduce error accumulation
@@ -49,8 +49,10 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 
 	bindResources();
 
-	glDispatchComputeGroupSizeARB((float)maxParticles / numWorkGroups, 1, 1,
-		numWorkGroups, 1, 1);
+	// GLuint division with ceiling
+	GLuint numGroups = (maxParticles + numWorkGroups - 1) / numWorkGroups;
+	// process data
+	glDispatchComputeGroupSizeARB(numGroups, 1, 1, numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 
@@ -58,7 +60,7 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName.first, a) && a.reset == true)
+		if (GPDATA.getAtomic(aName.first, a) && a.reset == true)
 		{
 			a.setCurrentValue(a.resetValue);
 		}
@@ -75,7 +77,7 @@ void ComputeProgram::printContents()
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName.first, a))
+		if (GPDATA.getAtomic(aName.first, a))
 		{
 			std::cout << a.name << " with id " << a.id << " and resetValue " << a.resetValue << std::endl;
 		}
@@ -85,7 +87,7 @@ void ComputeProgram::printContents()
 	for (auto bName : buffers)
 	{
 		GP_Buffer b;
-		if (GlobalData::get().getBuffer(bName.first, b))
+		if (GPDATA.getBuffer(bName.first, b))
 		{
 			std::cout << b.name << " with binding " << b.id << std::endl;
 		}
@@ -95,7 +97,7 @@ void ComputeProgram::printContents()
 	for (auto uName : uniforms)
 	{
 		GP_Uniform u;
-		if (GlobalData::get().getUniform(uName, u))
+		if (GPDATA.getUniform(uName, u))
 		{
 			std::cout << u.name << " " << u.type << " " << u.value[0].x << " " << std::endl;
 		}
@@ -111,7 +113,7 @@ void ComputeProgram::bindResources()
 	for (auto bName : buffers)
 	{
 		GP_Buffer b;
-		if (GlobalData::get().getBuffer(bName.first, b))
+		if (GPDATA.getBuffer(bName.first, b))
 		{
 			b.bind(bName.second);
 		}
@@ -121,7 +123,7 @@ void ComputeProgram::bindResources()
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName.first, a))
+		if (GPDATA.getAtomic(aName.first, a))
 		{
 			a.bind(aName.second);
 		}
@@ -131,7 +133,7 @@ void ComputeProgram::bindResources()
 	for (auto uName : uniforms)
 	{
 		GP_Uniform u;
-		if (GlobalData::get().getUniform(uName, u))
+		if (GPDATA.getUniform(uName, u))
 		{
 			u.bind(glGetUniformLocation(programhandle, uName.c_str()));
 		}

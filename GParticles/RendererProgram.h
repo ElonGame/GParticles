@@ -1,12 +1,12 @@
 #pragma once
-#include <glew\glew.h>
+#include <GL\glew.h>
 #include <unordered_map>
 #include <vector>
 #include <iostream>
 #include <string>
 #include "Utils.h"
 #include "Model.h"
-#include "GlobalData.h"
+#include "GP_Data.h"
 
 class RendererProgram
 {

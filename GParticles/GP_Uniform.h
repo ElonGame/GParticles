@@ -1,5 +1,5 @@
 #pragma once
-#include <glew\glew.h>
+#include <GL\glew.h>
 #include <string>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>

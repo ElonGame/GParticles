@@ -24,16 +24,10 @@
     <ClInclude Include="ComputeProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GlobalData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RendererProgram.h">
@@ -48,9 +42,6 @@
     <ClInclude Include="tinyxml\tinyxml.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="GPManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GP_Uniform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -63,6 +54,15 @@
     <ClInclude Include="GP_Loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GP_Particles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GP_Data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GP_PSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shader.cpp">
@@ -71,16 +71,10 @@
     <ClCompile Include="ComputeProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RendererProgram.cpp">
@@ -101,9 +95,6 @@
     <ClCompile Include="tinyxml\tinyxmlparser.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GP_Uniform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -114,6 +105,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GP_Loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GP_Particles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GP_Data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GP_PSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

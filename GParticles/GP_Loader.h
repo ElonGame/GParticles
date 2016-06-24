@@ -1,6 +1,6 @@
 #pragma once
 #include <regex>
-#include "ParticleSystem.h"
+#include "GP_Particles.h"
 #include "Texture.h"
 #include "Model.h"
 #include "Shader.h"
@@ -54,11 +54,11 @@ class GP_Loader
 {
 public:
 	// parses file and fills psContainer with ParticleSystem objects
-	static bool loadProject(std::string filePath, std::vector<ParticleSystem> &psContainer);
+	static void loadProject(std::string filePath);
 
 private:
 	static void loadResources(TiXmlHandle projectH);
-	static ParticleSystem loadParticleSystem(TiXmlElement* psystemE);
+	static GP_PSystem loadParticleSystem(TiXmlElement* psystemE);
 	static void loadProperties(TiXmlElement* propertiesE, psProperties &psp, loadFunctionInfo lfi);
 	
 	// global resource info

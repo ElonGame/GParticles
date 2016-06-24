@@ -16,8 +16,8 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	bindResources();
 
-	GLfloat windowRatio = (GLfloat)GlobalData::get().getWindowWidth();
-	windowRatio /= (GLfloat)GlobalData::get().getWindowHeight();
+	GLfloat windowRatio = (GLfloat)GP_Data::get().getWindowWidth();
+	windowRatio /= (GLfloat)GP_Data::get().getWindowHeight();
 	glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
 
 	glm::mat4 normalMat = viewMat * modelMat;
@@ -29,7 +29,7 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 	GLint projLoc = glGetUniformLocation(programhandle, "projection");
 	GLint normalMatLoc = glGetUniformLocation(programhandle, "normalMatrix");
 
-	glm::mat4 mm = glm::scale(modelMat, glm::vec3(0.025));
+	glm::mat4 mm = glm::scale(modelMat, glm::vec3(0.025f));
 
 	// Pass the matrices to the shader
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
@@ -79,7 +79,7 @@ void RendererProgram::printContents()
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName.first, a))
+		if (GP_Data::get().getAtomic(aName.first, a))
 		{
 			std::cout << a.name << " with id " << a.id << " and resetValue " << a.resetValue << std::endl;
 		}
@@ -89,7 +89,7 @@ void RendererProgram::printContents()
 	for (auto uName : uniforms)
 	{
 		GP_Uniform u;
-		if (GlobalData::get().getUniform(uName, u))
+		if (GP_Data::get().getUniform(uName, u))
 		{
 			std::cout << u.name << " " << u.type << " " << u.value[0].x << " " << std::endl;
 		}
@@ -111,7 +111,7 @@ void RendererProgram::bindResources()
 	for (auto aName : atomics)
 	{
 		GP_Atomic a;
-		if (GlobalData::get().getAtomic(aName.first, a))
+		if (GP_Data::get().getAtomic(aName.first, a))
 		{
 			a.bind(aName.second);
 		}
@@ -121,7 +121,7 @@ void RendererProgram::bindResources()
 	for (auto uName : uniforms)
 	{
 		GP_Uniform u;
-		if (GlobalData::get().getUniform(uName, u))
+		if (GP_Data::get().getUniform(uName, u))
 		{
 			u.bind(glGetUniformLocation(programhandle, uName.c_str()));
 		}
