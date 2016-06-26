@@ -58,7 +58,7 @@ void GP_Loader::loadResources(TiXmlHandle resourcesH)
 	};
 
 	// start by processing current file
-	lResources(resourcesH.FirstChild("global"), resourcesH.FirstChild("private"));
+	lResources(resourcesH.FirstChild("global"), resourcesH.FirstChild("instance"));
 
 
 	// if there is a resources prefab continue loading/collecting resources
@@ -69,9 +69,9 @@ void GP_Loader::loadResources(TiXmlHandle resourcesH)
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docH(&doc);
-		TiXmlHandle prefabH = docH.FirstChild("prefab").FirstChild("resources");
+		TiXmlHandle prefabH = docH.FirstChild("resources");
 		
-		lResources(prefabH.FirstChild("global"), prefabH.FirstChild("private"));
+		lResources(prefabH.FirstChild("global"), prefabH.FirstChild("instance"));
 	}
 }
 
@@ -582,6 +582,11 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 	loadInitialResourceOverrides(rr, psystemE);
 
 	// load default reserved atomics, uniforms and buffers
+	if (rr.reservedUniforms.find("maxParticles") == rr.reservedUniforms.end())
+	{
+		Utils::exitMessage("Fatal error", "maxParticles uniform instance definition required!");
+	}
+
 	rr.maxParticles = (GLuint)rr.reservedUniforms.at("maxParticles").value[0].x;
 	for (auto resBufInfo : reservedBufferInfo)
 	{
@@ -608,14 +613,18 @@ void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElemen
 	std::string resType, resName;
 	for (; resE; resE = resE->NextSiblingElement("override"))
 	{
-		resE->QueryStringAttribute("name", &resName);
+		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("name", &resName);},
+						resE, "Must provide override tag with a name attribute");
+
+		queryAttribute(	[&](TiXmlElement* e) {return e->QueryStringAttribute("type", &resType);},
+						resE, "Must provide override tag with a type attribute");
+
 		// TODO: check res type
-		if (rr.reservedUniforms.find(resName) != rr.reservedUniforms.end())
+		if (resType == "uniform" && rr.reservedUniforms.find(resName) != rr.reservedUniforms.end())
 		{
 			queryUniformValue(resE, rr.reservedUniforms.at(resName));
+			GPDATA.addUniform(rr.reservedUniforms.at(resName));
 		}
-
-		GPDATA.addUniform(rr.reservedUniforms.at(resName));
 	}
 }
 
@@ -851,7 +860,8 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 	{
 		std::string name;
 		eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
-		std::string shaderSource = generateRenderHeader(rendBuffers, rendAtomics, rendUniforms, in, out);
+		std::string shaderSource = generateRenderHeader(rendBuffers,
+								   rendAtomics, rendUniforms, in, out, rl.rendertype);
 		shaderSource += createFinalShaderSource(paths,name);
 		Shader shader(type, shaderSource, name + "_" + eventE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
@@ -931,13 +941,13 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 
 		// vertex Positions
 		glEnableVertexAttribArray(0);
-		GLint posLocation = glGetAttribLocation(rpHandle, "position");
+		GLint posLocation = glGetAttribLocation(rpHandle, "vertexPosition");
 		glVertexAttribPointer(posLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
 			(GLvoid*)0);
 
 		// vertex Normals
 		glEnableVertexAttribArray(1);
-		GLint norLocation = glGetAttribLocation(rpHandle, "normal");
+		GLint norLocation = glGetAttribLocation(rpHandle, "vertexNormal");
 		glVertexAttribPointer(norLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
 			(GLvoid*)offsetof(Vertex, normal));
 
@@ -1084,7 +1094,7 @@ std::string GP_Loader::createFinalShaderSource(std::vector<std::string> fPaths,
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 std::string GP_Loader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,
-							uniformUmap &uniforms, std::string in, std::string out)
+	uniformUmap &uniforms, std::string in, std::string out, std::string renderType)
 {
 	std::string res =	"#version 430\n\n"
 						"////////////////////////////////////////////////////////////////////////////////\n"
@@ -1114,9 +1124,15 @@ std::string GP_Loader::generateRenderHeader(bufferUmap &buffers, atomicUmap &ato
 	}
 
 	// fragment shader has no predefined outputs
-	bufferOuts = (out != "") ? (bufferOuts) : "";
+	res += "\n" + (out != "") ? (bufferOuts) : "";
 
-	res += "\n" + bufferOuts + "uniform mat4 model, view, projection;\n\n";
+	if (renderType == "model")
+	{
+		res += "\nin vec3 vertexPosition" + in + ";\nin vec3 vertexNormal" + in + ";\n\n"
+			   "out vec3 vertexPosition" + out + ";\nout vec3 vertexNormal" + out + ";\n\n";
+	}
+
+	res += "uniform mat4 model, view, projection;\n\n";
 
 	// uniforms
 	for (auto uni : uniforms)
@@ -1140,7 +1156,6 @@ std::string GP_Loader::fillTemplate(std::string templatePath, std::string psyste
 	while ((start_pos = mainStr.find(chr, start_pos)) != std::string::npos)
 	{
 		mainStr.replace(start_pos, chr.length(), to);
-		start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
 	}
 
 	return "\n\n" + mainStr;
@@ -1194,6 +1209,8 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 	}
 
 	// world colliders
+	//res += "\n\nvec4 sphere, plane;\nvec3 collisionPoint, normal;\n";
+
 	// spheres
 	if (!spheres.empty())
 	{
@@ -1210,6 +1227,10 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 		auto s = spheres[spheres.size() - 1];
 		res +=	"\n\tvec4(" + std::to_string(s.x) + ", " + std::to_string(s.y) + ", "
 				+ std::to_string(s.z) + ", " + std::to_string(s.w) + ")\n};";
+	}
+	else
+	{
+		res += "\n\nconst uint MAX_SPHERES = 0;\nconst vec4 spheres[1] = {vec4(0)};";
 	}
 
 	// planes
@@ -1228,6 +1249,10 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 		auto p = planes[planes.size() - 1];
 		res += "\n\tvec4(" + std::to_string(p.x) + ", " + std::to_string(p.y) + ", "
 			+ std::to_string(p.z) + ", " + std::to_string(p.w) + ")\n};";
+	}
+	else
+	{
+		res += "\n\nconst uint MAX_PLANES = 0;\nconst vec4 planes[1] = {vec4(0)};";
 	}
 
 	res += "\n\n\nconst uint gid = gl_GlobalInvocationID.x;\n\n";

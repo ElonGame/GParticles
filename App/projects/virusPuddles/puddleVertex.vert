@@ -1,4 +1,3 @@
-
 void main()
 {
 	puddle_velocitiesV = puddle_velocities;

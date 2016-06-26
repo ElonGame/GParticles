@@ -1,7 +1,7 @@
 void update()
 {
-	vec2 pos = vec2(virusAnimationRadius * sin(radians(virusAnimationAngle)),
-					virusAnimationRadius * cos(radians(virusAnimationAngle)));
+	vec2 pos = vec2(virusAnimationRadius * sin(radians(animationAngle)),
+					virusAnimationRadius * cos(radians(animationAngle)));
 
 	virus_positions[gid].xz = pos;
 

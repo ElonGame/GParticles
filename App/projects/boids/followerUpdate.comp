@@ -1,0 +1,61 @@
+float agentRadius = 1;
+float tooCloseRadius = 0.65;
+float centerMassLimit = 0.7;
+float maxAlignChange = 0.00003;
+float maxTooCloseChange = 0.00006;
+float maxCenterMassChange = 0.00001;
+
+void update()
+{
+	// check neighbours and align
+	float agentsInRange = 1;
+	vec3 alignDir = leaderPos[0].xyz - @positions[gid].xyz;
+	vec3 neighboursAvgPos = vec3(0);
+	vec3 centreMass = vec3(0);
+	float tooCloseAgents = 0;
+	vec3 tooCloseDir = vec3(0);
+	for (int i = 0; i < @maxParticles && @lifetimes[i] > 0; i++)
+	{
+		// if in range, process
+		float dist = distance(@positions[i].xyz, @positions[gid].xyz);
+		if (dist < agentRadius)
+		{
+			alignDir += @velocities[i].xyz;
+			if (dist > centerMassLimit)
+			{
+				neighboursAvgPos += @positions[i].xyz;
+			}
+			agentsInRange++;
+
+			if (dist < tooCloseRadius && i != gid)
+			{
+				tooCloseDir = tooCloseDir + (@positions[i].xyz - @positions[gid].xyz);
+				tooCloseAgents++;
+			}
+		}
+	}
+
+
+	if (tooCloseAgents > 0)
+	{
+		tooCloseDir = -normalize(tooCloseDir / tooCloseAgents);
+		@velocities[gid].xyz += clamp(tooCloseDir, -vec3(maxTooCloseChange), vec3(maxTooCloseChange));
+	}
+	else
+	{
+		alignDir = normalize(alignDir / agentsInRange);
+		@velocities[gid].xyz += clamp(alignDir, -vec3(maxAlignChange), vec3(maxAlignChange));
+
+		neighboursAvgPos /= alignDir;
+		centreMass = normalize(neighboursAvgPos - @positions[gid].xyz);
+		@velocities[gid].xyz += clamp(centreMass, -vec3(maxCenterMassChange), vec3(maxCenterMassChange));
+	}
+	@velocities[gid].xyz = normalize(@velocities[gid].xyz) * 0.005;
+	//@velocities[gid].xyz = normalize(virusPos[0].xyz - @positions[gid].xyz) * 0.005;
+
+	@lastPositions[gid].xyz = @positions[gid].xyz;
+	@positions[gid].xyz += @velocities[gid].xyz;
+	//@lastPositions[gid].xyz = vec3(0);
+
+	//@positions[gid].xyz = vec3(0,1,0);// - @positions[gid].xyz;
+}

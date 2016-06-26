@@ -3,7 +3,6 @@
 #include "Camera.h"
 #include <math.h>
 #pragma comment(lib,"devil.lib")
-#include "Model.h"
 #include "GP_Particles.h"
 
 Camera c;
@@ -77,19 +76,22 @@ int main(int argc, char* args[])
 
 
 	// load xml project file
-	//GPARTICLES-loadProject("shaders/fireworks/fireworks.xml");
-	//GPARTICLES.loadProject("shaders/boids/boids.xml");
+	GPARTICLES.loadProject("projects/Tutorial_1/Tutorial_1.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_2/Tutorial_2.xml");
-	GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
+	//GPARTICLES.loadProject("projects/Tutorial_3/Tutorial_3.xml");
+	//GPARTICLES.loadProject("projects/Tutorial_4/Tutorial_4.xml");
+	//GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
+	//GPARTICLES.loadProject("projects/boids/boids.xml");
+
 
 	GP_Uniform u;
-	GPDATA.getUniform("virusAnimationAngle", u);
+	GPDATA.getUniform("animationAngle", u);
 	float i = u.value[0].x;
 	// system loop
 	while (processEvents())
 	{
 		i += 0.01f;
-		GPDATA.setUniformValue("virusAnimationAngle", ++i);
+		GPDATA.setUniformValue("animationAngle", ++i);
 
 		// process all particle system
 		GPARTICLES.processParticles(c.getViewMatrix());

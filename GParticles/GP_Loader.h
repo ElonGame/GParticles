@@ -107,7 +107,7 @@ private:
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
 	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::string psystemName);
-	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms, std::string in, std::string out);
+	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms, std::string in, std::string out, std::string renderType);
 	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms, std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes);
 	static std::string fileToString(std::string filePath);
 	static std::string fillTemplate(std::string templateHeader, std::string psystemName);

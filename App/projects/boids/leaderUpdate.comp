@@ -1,0 +1,19 @@
+void update()
+{
+	float l = length(@velocities[gid].xyz);
+	vec3 dir = normalize(@velocities[gid].xyz);
+
+	float rotSpeed = 0.1;
+	float animationRadius = 2;
+	dir.x += animationRadius * sin(radians(animationAngle * rotSpeed));
+	dir.z += animationRadius * cos(radians(animationAngle * rotSpeed));
+	@velocities[gid].xyz = normalize(dir) * length(@velocities[gid].xyz);
+
+	/*@lastPositions[gid] = @positions[gid];
+	@positions[gid] += @velocities[gid];*/
+
+	@lastPositions[gid] = vec4(0,0,0,1);
+	@positions[gid] = vec4(1,0,0,1);
+
+	leaderPos[0] = @positions[gid];
+}

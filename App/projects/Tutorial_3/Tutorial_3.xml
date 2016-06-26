@@ -1,0 +1,43 @@
+<project>
+	<resources prefab="prefabs/resources/defaultResources.xml"/>
+
+	<psystem name="simple">
+		<properties>
+			<position x=0 y=0 z=-5 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=500 />
+
+
+		<events>
+			<emission>
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/Tutorial_3/emission.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</emission>
+
+			<update>
+				<file path="modules/utilities.glsl" />
+				<file path="projects/Tutorial_3/update.glsl" />
+				<file path="templates/updateMain.glsl" />
+			</update>
+
+			<render>
+				<rendertype type="billboard" path="assets/images/snow.png" />
+
+				<vertfile path="projects/Tutorial_3/billboard.vert" />
+				<geomfile path="modules/utilities.glsl" />
+				<geomfile path="modules/billboard.glsl" />
+				<geomfile path="projects/Tutorial_3/billboard.geom" />
+				<geomfile path="templates/billboardMain.glsl" />
+				<fragfile path="projects/Tutorial_3/billboardColor.frag" />
+			</render>
+		</events>
+	</psystem>
+</project>

@@ -16,26 +16,19 @@ void RendererProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat)
 
 	bindResources();
 
-	GLfloat windowRatio = (GLfloat)GP_Data::get().getWindowWidth();
-	windowRatio /= (GLfloat)GP_Data::get().getWindowHeight();
+	float windowRatio = GPDATA.getWindowWidth() / GPDATA.getWindowHeight();
 	glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
 
-	glm::mat4 normalMat = viewMat * modelMat;
-	normalMat = glm::transpose(glm::inverse(normalMat));
 
 	// Get their uniform location
 	GLint modelLoc = glGetUniformLocation(programhandle, "model");
 	GLint viewLoc = glGetUniformLocation(programhandle, "view");
 	GLint projLoc = glGetUniformLocation(programhandle, "projection");
-	GLint normalMatLoc = glGetUniformLocation(programhandle, "normalMatrix");
-
-	glm::mat4 mm = glm::scale(modelMat, glm::vec3(0.025f));
 
 	// Pass the matrices to the shader
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-	glUniformMatrix4fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(normalMat));
 
 	// render
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);

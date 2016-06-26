@@ -1,13 +1,13 @@
 <project>
 	<resources prefab="prefabs/resources/defaultResources.xml">
-		<private>
+		<instance>
 			<buffer name="floorHit" elements=512 type="float"/>
-		</private>
+		</instance>
 
 		<global>
 			<uniform name="virusAnimationRadius" type="float" value=3 />
 			<buffer name="virusPos" elements=512 type="vec4"/>
-			<uniform name="virusAnimationAngle" type="float" value=180/>
+			<uniform name="animationAngle" type="float" value=180/>
 		</global>
 	</resources>
 
@@ -85,7 +85,6 @@
 				<file path="modules/utilities.glsl" />
 				<file path="projects/virusPuddles/puddleUpdate.comp" />
 				<file path="projects/virusPuddles/puddleCollision.comp" />
-				<file path="templates/collision.glsl" />
 				<file path="templates/updateCollisionMain.glsl" />
 			</update>
 

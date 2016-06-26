@@ -24,9 +24,10 @@ void collision()
 		// there is a collision if point "passed through" plane
 		if (sign(currentDist) + sign(previousDist) == 0)
 		{
+			vec3 normal = normalize(-plane.xyz);
 			vec3 collisionPoint = @positions[gid].xyz + @velocities[gid].xyz * currentDist;
 
-			planeCollision(plane, collisionPoint, currentDist);
+			planeCollision(plane, collisionPoint, normal, currentDist);
 		}
 	}
 }
