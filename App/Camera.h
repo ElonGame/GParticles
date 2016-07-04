@@ -43,6 +43,9 @@ public:
 
 	//TODO: needs destructor ~Camera();
 
+	glm::vec4 getPosition();
+	glm::vec4 getFront();
+	glm::vec4 getUp();
 	glm::mat4 getViewMatrix();
 	void processKeyboard(Camera_Movement direction);
 	void processMouseMovement();

@@ -474,7 +474,7 @@ void GP_Loader::loadProperties(TiXmlElement* propertiesE, psProperties &psp, loa
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GP_PSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
+GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 {
 	// load particle system reserved resources
 	reservedResources rr;
@@ -540,7 +540,7 @@ GP_PSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 
 
 
-	return GP_PSystem(	emission, update, render, psp.model,
+	return GP_ParticleSystem(	emission, update, render, psp.model,
 						psp.numWorkGroups, psp.lifetime, psp.looping);
 }
 
@@ -1201,6 +1201,7 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 	}
 
 	res += "layout(local_size_variable) in;\n\n";
+	res += "uniform mat4 model, view, projection;\n\n";
 
 	// uniforms
 	for (auto &uni : uniforms)

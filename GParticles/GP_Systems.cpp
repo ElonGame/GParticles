@@ -1,14 +1,14 @@
-#include "GP_Particles.h"
+#include "GP_Systems.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-GP_Particles& GP_Particles::get()
+GP_Systems& GP_Systems::get()
 {
-	static GP_Particles instance;
+	static GP_Systems instance;
 	return instance;
 }
 
-void GP_Particles::processParticles(glm::mat4 view)
+void GP_Systems::processParticles(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -16,7 +16,7 @@ void GP_Particles::processParticles(glm::mat4 view)
 	{
 		if (pSystems[i].isAlive())
 		{
-			pSystems[i].execute(view);
+			pSystems[i].execute(model, view, projection);
 		}
 		else
 		{
@@ -28,7 +28,7 @@ void GP_Particles::processParticles(glm::mat4 view)
 	glUseProgram(NULL);
 }
 
-void GP_Particles::loadProject(std::string filePath)
+void GP_Systems::loadProject(std::string filePath)
 {
 	GP_Loader::loadProject(filePath);
 }

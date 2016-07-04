@@ -1,0 +1,5 @@
+- Move around with wasd keys
+- Move camera by holding left button and dragging mouse
+- Press right mouse button to shoot
+- Hold space to charge super shot, release to shoot when fully charged
+- Press R to retrieve particle ammo

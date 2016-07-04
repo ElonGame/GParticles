@@ -14,6 +14,7 @@ public:
 	Window();
 
 	bool init(int screenWidth, int screeHeight);
+	void setSize(int screenWidth, int screeHeight);
 	void swapWindow();
 	void quit();
 };

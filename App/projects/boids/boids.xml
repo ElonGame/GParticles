@@ -1,8 +1,10 @@
 <project>
 	<resources prefab="prefabs/resources/defaultResources.xml">
 		<global>
-			<buffer name="leaderPos" elements=1 type="vec4"/>
+			<uniform name="virusAnimationRadius" type="float" value=3 />
+			<buffer name="virusPos" elements=512 type="vec4"/>
 			<uniform name="animationAngle" type="float" value=180/>
+			<buffer name="leaderPos" elements=1 type="vec4"/>
 		</global>
 	</resources>
 
@@ -30,13 +32,13 @@
 
 			<update iterationStep=0>
 				<file path="modules/utilities.glsl" />
-				<file path="modules/emission.glsl" />
 				<file path="projects/boids/leaderUpdate.comp" />
 				<file path="templates/updateMain.glsl" />
 			</update>
 
 			<render prefab="prefabs/simplePointRenderer.xml">
 				<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
+				
 
 				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="projects/boids/boidModel.vert" />
@@ -45,7 +47,46 @@
 		</events>
 	</psystem>
 
-	<psystem name="follower">
+<psystem name="virus">
+		<properties>
+			<position x=0 y=0 z=-5 />
+			<rotation x=1 y=0 z=0 angle=0/>
+			<scale x=1 y=1 z=1 />
+			<lifetime value=3 unit="seconds" looping="true" />
+			<numWorkGroups value=1 />
+		</properties>
+
+		<override type="uniform" name="toCreate" value=1/>
+		<override type="uniform" name="maxParticles" value=1/>
+
+		<events>
+			<emission iterationStep=0>
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/virusPuddles/virusEmission.comp" />
+				<file path="templates/emissionMain.glsl" />
+			</emission>
+
+			<update iterationStep=0>
+				<file path="modules/utilities.glsl" />
+				<file path="projects/virusPuddles/virusUpdate.comp" />
+				<file path="templates/updateMain.glsl" />
+			</update>
+
+
+			<render>
+				<rendertype type="model" path="assets/models/virus/virus.3ds"/>
+				
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/virusPuddles/virusVertex.vert" />
+				<fragfile path="projects/virusPuddles/virusFrag.frag" />
+			</render>
+		</events>
+	</psystem>
+
+	<!--psystem name="follower">
 		<properties>
 			<position x=0 y=0 z=-5 />
 			<rotation x=1 y=0 z=0 angle=0/>
@@ -82,9 +123,5 @@
 				<fragfile path="projects/boids/boidModel.frag" />
 			</render>
 		</events>
-	</psystem>
-
-
-
- 
+	</psystem-->
 </project>

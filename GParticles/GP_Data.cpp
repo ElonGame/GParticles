@@ -34,6 +34,7 @@ void GP_Data::setWindowDimensions(float w, float h)
 {
 	windowWidth = w;
 	windowHeight = h;
+	glViewport(0, 0, windowWidth, windowHeight);
 }
 
 

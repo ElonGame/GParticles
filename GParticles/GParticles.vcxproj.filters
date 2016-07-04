@@ -54,13 +54,13 @@
     <ClInclude Include="GP_Loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GP_Particles.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GP_Data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GP_PSystem.h">
+    <ClInclude Include="GP_Systems.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GP_ParticleSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,13 +107,13 @@
     <ClCompile Include="GP_Loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GP_Particles.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GP_Data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GP_PSystem.cpp">
+    <ClCompile Include="GP_Systems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GP_ParticleSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

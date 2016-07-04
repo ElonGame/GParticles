@@ -14,7 +14,7 @@ public:
 	ComputeProgram();
 	~ComputeProgram();
 
-	void execute(GLuint numWorkGroups);
+	void execute(glm::mat4 &modelMat, glm::mat4 &viewMat, GLuint numWorkGroups);
 	void printContents();
 
 

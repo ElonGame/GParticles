@@ -50,6 +50,11 @@ bool Window::init(int screenW, int screenH)
 	return success;
 }
 
+void Window::setSize(int screenWidth, int screeHeight)
+{
+	SDL_SetWindowSize(window, screenWidth, screeHeight);
+}
+
 void Window::swapWindow()
 {
 	SDL_GL_SwapWindow(window);

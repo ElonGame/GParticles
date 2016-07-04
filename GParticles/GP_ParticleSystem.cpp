@@ -1,12 +1,12 @@
-#include "GP_PSystem.h"
+#include "GP_ParticleSystem.h"
 
 
-GP_PSystem::~GP_PSystem()
+GP_ParticleSystem::~GP_ParticleSystem()
 {
 }
 
 
-void GP_PSystem::execute(glm::mat4 view)
+void GP_ParticleSystem::execute(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
 	if (firstExec)
 	{
@@ -24,19 +24,21 @@ void GP_PSystem::execute(glm::mat4 view)
 			alive = false;
 	}
 
-	emitter.execute(numWorkGroups);
-	updater.execute(numWorkGroups);
-	renderer.execute(model, view);
+	glm::mat4 newModel = model * psModel;
+
+	emitter.execute(newModel, view, numWorkGroups);
+	updater.execute(newModel, view, numWorkGroups);
+	renderer.execute(newModel, view, projection);
 }
 
-void GP_PSystem::printContents()
+void GP_ParticleSystem::printContents()
 {
 	emitter.printContents();
 	updater.printContents();
 	renderer.printContents();
 }
 
-bool GP_PSystem::isAlive()
+bool GP_ParticleSystem::isAlive()
 {
 	return alive;
 }

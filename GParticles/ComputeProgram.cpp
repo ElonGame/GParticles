@@ -13,7 +13,7 @@ ComputeProgram::~ComputeProgram()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ComputeProgram::execute(GLuint numWorkGroups)
+void ComputeProgram::execute(glm::mat4 &modelMat, glm::mat4 &viewMat, GLuint numWorkGroups)
 {
 	if (firstExec)
 	{
@@ -30,6 +30,19 @@ void ComputeProgram::execute(GLuint numWorkGroups)
 	}
 
 	GPDATA.setUniformValue(psystem + "_deltaTime", timeSpan / 1000.0f);
+	float windowRatio = GPDATA.getWindowWidth() / GPDATA.getWindowHeight();
+	glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
+
+
+	// Get their uniform location
+	GLint modelLoc = glGetUniformLocation(programhandle, "model");
+	GLint viewLoc = glGetUniformLocation(programhandle, "view");
+	GLint projLoc = glGetUniformLocation(programhandle, "projection");
+
+	// Pass the matrices to the shader
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	// canKeepUpIteration == true means the program can keep up with the iterationStep
 	// its asked to take -> we add iterationStep to lastStep as to reduce error accumulation

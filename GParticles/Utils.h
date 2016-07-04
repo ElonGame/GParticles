@@ -16,7 +16,7 @@ using uniformUmap = std::unordered_map<std::string, GP_Uniform>;
 
 namespace Utils
 {
-	inline void init(GLuint w, GLuint h)
+	inline void init()
 	{
 		// init GLEW
 		glewExperimental = GL_TRUE;
@@ -32,8 +32,6 @@ namespace Utils
 
 		// init devIL
 		ilInit();
-
-		glViewport(0, 0, w, h);
 	}
 
 	inline void exitMessage(std::string title, std::string msg)

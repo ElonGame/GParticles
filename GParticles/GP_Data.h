@@ -52,7 +52,6 @@ public:
 private:
 	float windowWidth;
 	float windowHeight;
-	int lastIteration;
 
 	// resources
 	bufferUmap buffers;

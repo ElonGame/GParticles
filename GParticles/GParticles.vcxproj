@@ -21,13 +21,13 @@
   <ItemGroup>
     <ClCompile Include="ComputeProgram.cpp" />
     <ClCompile Include="GP_Data.cpp" />
-    <ClCompile Include="GP_Particles.cpp" />
+    <ClCompile Include="GP_Systems.cpp" />
     <ClCompile Include="GP_Atomic.cpp" />
     <ClCompile Include="GP_Buffer.cpp" />
     <ClCompile Include="GP_Uniform.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
-    <ClCompile Include="GP_PSystem.cpp" />
+    <ClCompile Include="GP_ParticleSystem.cpp" />
     <ClCompile Include="GP_Loader.cpp" />
     <ClCompile Include="RendererProgram.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -40,13 +40,13 @@
   <ItemGroup>
     <ClInclude Include="ComputeProgram.h" />
     <ClInclude Include="GP_Data.h" />
-    <ClInclude Include="GP_Particles.h" />
+    <ClInclude Include="GP_Systems.h" />
     <ClInclude Include="GP_Atomic.h" />
     <ClInclude Include="GP_Buffer.h" />
     <ClInclude Include="GP_Uniform.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="GP_PSystem.h" />
+    <ClInclude Include="GP_ParticleSystem.h" />
     <ClInclude Include="GP_Loader.h" />
     <ClInclude Include="RendererProgram.h" />
     <ClInclude Include="Shader.h" />

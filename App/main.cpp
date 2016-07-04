@@ -3,9 +3,12 @@
 #include "Camera.h"
 #include <math.h>
 #pragma comment(lib,"devil.lib")
-#include "GP_Particles.h"
+#include "GP_Systems.h"
 
 Camera c;
+Window window;
+
+bool mouseDown;
 
 bool processEvents()
 {
@@ -36,6 +39,24 @@ bool processEvents()
 	{
 		c.processKeyboard(Camera_Movement::BACKWARD);
 	}
+	if (keystate[SDL_SCANCODE_SPACE])
+	{
+		GPDATA.setUniformValue("spaceHold", 1);
+	}
+	else
+	{
+		GPDATA.setUniformValue("spaceHold", 0);
+	}
+	if (keystate[SDL_SCANCODE_R])
+	{
+		GPDATA.setUniformValue("reload", 1);
+	}
+	else
+	{
+		GPDATA.setUniformValue("reload", 0);
+	}
+
+
 
 	// process mouse input and position
 	c.lastMouseX = c.mouseX;
@@ -46,7 +67,21 @@ bool processEvents()
 		c.processMouseMovement();
 	}
 
+	glm::vec4 gunPoint = c.getPosition() + c.getUp() * -2.0f + c.getFront() * 5.0f;
+	GPDATA.setUniformValue("gunPoint", gunPoint);
+	GPDATA.setUniformValue("camPos", c.getPosition());
+	GPDATA.setUniformValue("camDir", c.getFront());
+	GPDATA.setUniformValue("camUp", c.getUp());
 	GPDATA.setUniformValue("mouseXY", glm::vec2(c.mouseX, c.mouseY));
+
+	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT)
+	{
+		GPDATA.setUniformValue("rightHold", 1);
+	}
+	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT)
+	{
+		GPDATA.setUniformValue("rightHold", 0);
+	}
 
 	return true;
 }
@@ -59,7 +94,7 @@ int main(int argc, char* args[])
 	//}
 
 	// init SDL
-	Window window = Window();
+	window = Window();
 	if (!window.init(1024, 576))
 	{
 		printf("Failed to initialize SDLWindow!\n");
@@ -67,7 +102,7 @@ int main(int argc, char* args[])
 	}
 
 	// init opengl, devIL and set glViewPort
-	Utils::init(1024, 576);
+	Utils::init();
 
 	GPDATA.setWindowDimensions(1024, 576);
 
@@ -76,11 +111,12 @@ int main(int argc, char* args[])
 
 
 	// load xml project file
-	GPARTICLES.loadProject("projects/Tutorial_1/Tutorial_1.xml");
+	//GPARTICLES.loadProject("projects/Tutorial_1/Tutorial_1.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_2/Tutorial_2.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_3/Tutorial_3.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_4/Tutorial_4.xml");
-	//GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
+	//GPARTICLES.loadProject("projects/gun/gun.xml");
+	GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
 	//GPARTICLES.loadProject("projects/boids/boids.xml");
 
 
@@ -90,11 +126,14 @@ int main(int argc, char* args[])
 	// system loop
 	while (processEvents())
 	{
-		i += 0.01f;
-		GPDATA.setUniformValue("animationAngle", ++i);
+		i++;
+		GPDATA.setUniformValue("animationAngle", i);
+
+		float windowRatio = GPDATA.getWindowWidth() / GPDATA.getWindowHeight();
+		glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
 
 		// process all particle system
-		GPARTICLES.processParticles(c.getViewMatrix());
+		GPARTICLES.processParticles(glm::mat4(), c.getViewMatrix(), projection);
 
 		window.swapWindow();
 	}

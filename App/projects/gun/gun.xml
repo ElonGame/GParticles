@@ -1,0 +1,78 @@
+<project>
+	<resources prefab="prefabs/resources/defaultResources.xml">
+		<instance>
+			<buffer name="state" elements=512 type="float" />
+		</instance>
+
+		<global>
+			<uniform name="gunPoint" type="vec4" />
+
+			<uniform name="reload" type="float" />
+
+			<atomic name="cooldownAttempts" value=0 />
+			<buffer name="cooldown" elements=1 type="float" />
+			<atomic name="fireAttempts" value=0 />
+			<uniform name="fireDelay" type="float" value=0.3 />
+			<uniform name="rightHold" type="float" />
+
+			<atomic name="chargeAttempts" value=0 />
+			<buffer name="chargedParticles" elements=11 type="vec4" />
+			<atomic name="holdTimeAttempts" value=0 />
+			<buffer name="holdTime" elements=1 type="float" />
+			<uniform name="delayPerCharge" type="float" value=0.1 />
+			<uniform name="superParticles" type="float" value=11 />
+			<uniform name="spaceHold" type="float" />
+			<uniform name="chargedAngle" type="float" value=1 />
+		</global>
+	</resources>
+
+	<psystem name="gun">
+		<properties>
+			<position x=0 y=0 z=-5 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=35 />
+
+		<colliders>
+			<static type="sphere" x=0 y=-2 z=-3 r=1 />
+			<static type="plane" x=0 y=0 z=1 d=50 />
+		</colliders>
+
+		<events>
+			<emission >
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/gun/emission.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</emission>
+
+			<update iterationStep=10>
+				<override type="atomic" name="fireAttempts" value=0 />
+				<override type="atomic" name="cooldownAttempts" value=0 />
+				<override type="atomic" name="holdTimeAttempts" value=0 />
+				<override type="atomic" name="chargeAttempts" value=0 />
+
+				<file path="modules/utilities.glsl" />
+				<file path="projects/gun/update.glsl" />
+				<file path="projects/gun/collision.glsl" />
+				<file path="templates/updateCollisionMain.glsl" />
+			</update>
+
+			<render>
+				<rendertype type="billboard" path="assets/images/snow.png" />
+
+				<vertfile path="projects/gun/billboard.vert" />
+				<geomfile path="modules/utilities.glsl" />
+				<geomfile path="modules/billboard.glsl" />
+				<geomfile path="projects/gun/billboard.geom" />
+				<geomfile path="templates/billboardMain.glsl" />
+				<fragfile path="projects/gun/billboardColor.frag" />
+			</render>
+		</events>
+	</psystem>
+</project>

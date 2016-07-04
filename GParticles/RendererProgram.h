@@ -18,7 +18,7 @@ public:
 	RendererProgram();
 	~RendererProgram();
 
-	void execute(glm::mat4 &modelMat, glm::mat4 &viewMat);
+	void execute(glm::mat4 &modelMat, glm::mat4 &viewMat, glm::mat4 &projectionMat);
 	void printContents();
 private:
 	GLuint programhandle;

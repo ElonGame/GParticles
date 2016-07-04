@@ -1,6 +1,6 @@
 #pragma once
 #include <regex>
-#include "GP_Particles.h"
+#include "GP_Systems.h"
 #include "Texture.h"
 #include "Model.h"
 #include "Shader.h"
@@ -58,7 +58,7 @@ public:
 
 private:
 	static void loadResources(TiXmlHandle projectH);
-	static GP_PSystem loadParticleSystem(TiXmlElement* psystemE);
+	static GP_ParticleSystem loadParticleSystem(TiXmlElement* psystemE);
 	static void loadProperties(TiXmlElement* propertiesE, psProperties &psp, loadFunctionInfo lfi);
 	
 	// global resource info
