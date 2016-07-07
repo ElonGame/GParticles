@@ -13,7 +13,7 @@
 			<position x=0 y=0 z=-5 />
 			<rotation x=1 y=0 z=0 angle=0/>
 			<scale x=1 y=1 z=1 />
-			<lifetime unit="seconds" value=3600 />
+			<lifetime value=3600 unit="seconds" looping="true" />
 			<numWorkGroups value=1 />
 		</properties>
 
@@ -36,52 +36,12 @@
 				<file path="templates/updateMain.glsl" />
 			</update>
 
-			<render prefab="prefabs/simplePointRenderer.xml">
+			<render>
 				<rendertype type="model" path="assets/models/agent/eagle.3ds"/>
 				
-
 				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="projects/boids/boidModel.vert" />
 				<fragfile path="projects/boids/boidModel.frag" />
-			</render>
-		</events>
-	</psystem>
-
-<psystem name="virus">
-		<properties>
-			<position x=0 y=0 z=-5 />
-			<rotation x=1 y=0 z=0 angle=0/>
-			<scale x=1 y=1 z=1 />
-			<lifetime value=3 unit="seconds" looping="true" />
-			<numWorkGroups value=1 />
-		</properties>
-
-		<override type="uniform" name="toCreate" value=1/>
-		<override type="uniform" name="maxParticles" value=1/>
-
-		<events>
-			<emission iterationStep=0>
-				<override type="atomic" name="emissionAttempts" value=0/>
-
-				<file path="modules/utilities.glsl" />
-				<file path="modules/emission.glsl" />
-				<file path="projects/virusPuddles/virusEmission.comp" />
-				<file path="templates/emissionMain.glsl" />
-			</emission>
-
-			<update iterationStep=0>
-				<file path="modules/utilities.glsl" />
-				<file path="projects/virusPuddles/virusUpdate.comp" />
-				<file path="templates/updateMain.glsl" />
-			</update>
-
-
-			<render>
-				<rendertype type="model" path="assets/models/virus/virus.3ds"/>
-				
-				<vertfile path="modules/utilities.glsl" />
-				<vertfile path="projects/virusPuddles/virusVertex.vert" />
-				<fragfile path="projects/virusPuddles/virusFrag.frag" />
 			</render>
 		</events>
 	</psystem>

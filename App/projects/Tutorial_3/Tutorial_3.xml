@@ -9,7 +9,7 @@
 			<lifetime value=30 unit="seconds"/>
 		</properties>
 
-		<override type="uniform" name="maxParticles" value=2 />
+		<override type="uniform" name="maxParticles" value=500 />
 
 
 		<events>
@@ -29,11 +29,14 @@
 			</update>
 
 			<render>
+			    <rendertype type="billboard" path="assets/images/snow.png" />
 
-<rendertype type="model" path="assets/models/sphere/sphere.obj"/>
-
-    <vertfile path="projects/Tutorial_3/model.vert" />
-    <fragfile path="projects/Tutorial_3/color.frag" />
+			    <vertfile path="projects/Tutorial_3/billboard.vert" />
+			    <geomfile path="modules/utilities.glsl" />
+			    <geomfile path="modules/billboard.glsl" />
+			    <geomfile path="projects/Tutorial_3/billboard.geom" />
+			    <geomfile path="templates/billboardMain.glsl" />
+			    <fragfile path="projects/Tutorial_3/billboardColor.frag" />
 			</render>
 		</events>
 	</psystem>
