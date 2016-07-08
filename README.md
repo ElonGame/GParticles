@@ -17,7 +17,7 @@ Here are a few examples of what can be achieved with GParticles:
 
   ![](http://i.imgur.com/dKQiQl2.gif)
 
-This project was an assignment for the Computer Engineering Lab class of my [Computer Engineering Master's Degree](https://www.di.uminho.pt/miei.html). I chose [Computer Graphics](http://www3.di.uminho.pt/uce-cg/>) as the project profile and developed GParticles with the guidance of [informatic department](https://www.di.uminho.pt/) assistant professor Atónio Ramires (<http://www.lighthouse3d.com/>, <https://github.com/Nau3D/nau>).
+This project was an assignment for the Computer Engineering Lab class of my [Computer Engineering Master's Degree](https://www.di.uminho.pt/miei.html). I chose [Computer Graphics](http://www3.di.uminho.pt/uce-cg/>) as the project profile and developed GParticles with the guidance of [informatic department](https://www.di.uminho.pt/) assistant professor António Ramires (<http://www.lighthouse3d.com/>, <https://github.com/Nau3D/nau>).
 
 
 ## LICENSE
