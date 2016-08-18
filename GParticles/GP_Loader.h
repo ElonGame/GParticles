@@ -41,6 +41,7 @@ struct renderInfo
 	std::vector<std::string> gmPath;
 	std::string rendertype;
 	std::string path;
+	GLuint iterationStep;
 };
 
 enum loadFunctionInfo
@@ -86,7 +87,7 @@ private:
 
 
 	// program loading functions
-	static bool loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
+	static bool loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
 	static bool loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
 	static void getRenderInfo(renderInfo &rl, TiXmlElement* eventE);
 

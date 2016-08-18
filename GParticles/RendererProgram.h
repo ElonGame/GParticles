@@ -1,34 +1,30 @@
 #pragma once
+#include "AbstractProgram.h"
 #include <GL\glew.h>
-#include <unordered_map>
-#include <vector>
-#include <iostream>
-#include <string>
-#include "Utils.h"
 #include "Model.h"
-#include "GP_Data.h"
 
-class RendererProgram
+class RendererProgram : public AbstractProgram
 {
 public:
-	RendererProgram(const GLuint ph, const resHeader &a,
-					const GLuint vao, const GLuint tex, const std::vector<std::string> &u, std::string rt,
-					Model &m, GLuint &mp)
-		: programhandle(ph), atomics(a), vao(vao), texture(tex), uniforms(u), renderType(rt), model(m), maxParticles(mp) {};
 	RendererProgram();
+	RendererProgram(const GLuint ph, const GLuint mp, const resHeader &a,
+		const std::vector<std::string> &u, const std::string &psystemName,
+		const GLuint iStep, const GLuint v, const GLuint t, const Model &m,
+		const std::string &rType)
+		: AbstractProgram(ph, mp, a, u, psystemName, iStep), vao(v), texture(t),
+		geoModel(m), renderType(rType)
+	{
+	};
 	~RendererProgram();
 
-	void execute(glm::mat4 &modelMat, glm::mat4 &viewMat, glm::mat4 &projectionMat);
+	void execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection);
 	void printContents();
+
 private:
-	GLuint programhandle;
-	GLuint maxParticles;
-	resHeader atomics;
-	std::vector<std::string> uniforms;
 	GLuint vao;
 	GLuint texture;
-	Model model;
+	Model geoModel;
 	std::string renderType;
-	
+
 	void bindResources();
 };

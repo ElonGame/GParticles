@@ -26,8 +26,8 @@ void GP_ParticleSystem::execute(glm::mat4 model, glm::mat4 view, glm::mat4 proje
 
 	glm::mat4 newModel = model * psModel;
 
-	emitter.execute(newModel, view, numWorkGroups);
-	updater.execute(newModel, view, numWorkGroups);
+	emitter.execute(newModel, view, projection);
+	updater.execute(newModel, view, projection);
 	renderer.execute(newModel, view, projection);
 }
 

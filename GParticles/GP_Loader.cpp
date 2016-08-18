@@ -519,14 +519,14 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 
 	ComputeProgram emission;
 	TiXmlElement* eventE = eventsE->FirstChildElement("emission");
-	if (!loadComputeProgram(rr, eventE, emission))
+	if (!loadComputeProgram(psp.numWorkGroups, rr, eventE, emission))
 	{
 		Utils::exitMessage("Fatal Error", "Unable to load emission event");
 	}
 
 	ComputeProgram update;
 	eventE = eventsE->FirstChildElement("update");
-	if (!loadComputeProgram(rr, eventE, update))
+	if (!loadComputeProgram(psp.numWorkGroups, rr, eventE, update))
 	{
 		Utils::exitMessage("Fatal Error", "Unable to load update event");
 	}
@@ -670,7 +670,7 @@ void GP_Loader::loadIterationResourceOverrides(
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp)
+bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp)
 {
 	// parse and store program resource info for later binding
 	// start by adding the program reserved resources
@@ -756,7 +756,7 @@ bool GP_Loader::loadComputeProgram(reservedResources &rr, TiXmlElement* eventE, 
 		uHeaders.push_back(u.second.name);
 	}
 
-	cp = ComputeProgram(cpHandle, bHeaders, aHeaders, uHeaders, psystemName, rr.maxParticles, iterationStep);
+	cp = ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, iterationStep, numWorkGroups, bHeaders);
 
 	return true;
 }
@@ -781,6 +781,9 @@ void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* eventE)
 				renderTypeE, "Must provide rendertype with a resource path");
 		}
 	}
+
+	// collect iterationStep
+	eventE->QueryUnsignedAttribute("iterationStep", &rl.iterationStep);
 
 	// collect shader file paths
 	collectPaths(eventE, "vertfile", rl.vsPath);
@@ -856,14 +859,14 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 	// create shader program
 	GLuint rpHandle = glCreateProgram();
 
+	std::string psystemName;
+	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 	auto loadAndAttach = [&](auto type, auto paths, auto in, auto out)
 	{
-		std::string name;
-		eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &name);
 		std::string shaderSource = generateRenderHeader(rendBuffers,
 								   rendAtomics, rendUniforms, in, out, rl.rendertype);
-		shaderSource += createFinalShaderSource(paths,name);
-		Shader shader(type, shaderSource, name + "_" + eventE->ValueStr());
+		shaderSource += createFinalShaderSource(paths, psystemName);
+		Shader shader(type, shaderSource, psystemName + "_" + eventE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
 	};
 
@@ -989,7 +992,7 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 
 	glBindVertexArray(0);
 
-	rp = RendererProgram(rpHandle, aHeaders, vao, texture.getId(), uHeaders, rl.rendertype, model, rr.maxParticles);
+	rp = RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 
 	return true;
 }

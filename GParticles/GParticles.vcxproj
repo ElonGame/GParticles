@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractProgram.cpp" />
     <ClCompile Include="ComputeProgram.cpp" />
     <ClCompile Include="GP_Data.cpp" />
     <ClCompile Include="GP_Systems.cpp" />
@@ -38,6 +39,7 @@
     <ClCompile Include="tinyxml\tinyxmlparser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractProgram.h" />
     <ClInclude Include="ComputeProgram.h" />
     <ClInclude Include="GP_Data.h" />
     <ClInclude Include="GP_Systems.h" />

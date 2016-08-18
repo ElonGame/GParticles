@@ -41,7 +41,7 @@
 			</update>
 
 
-			<render>
+			<render iterationStep=0>
 				<rendertype type="model" path="assets/models/virus/virus.3ds"/>
 				
 				<vertfile path="modules/utilities.glsl" />
@@ -89,7 +89,7 @@
 			</update>
 
 
-			<render>
+			<render iterationStep=0>
 				<rendertype type="billboard" path="assets/images/snow.png" />
 				
 				<vertfile path="projects/virusPuddles/puddleVertex.vert" />
