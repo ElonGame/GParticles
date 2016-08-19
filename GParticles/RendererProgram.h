@@ -9,7 +9,7 @@ public:
 	RendererProgram();
 	RendererProgram(const GLuint ph, const GLuint mp, const resHeader &a,
 		const std::vector<std::string> &u, const std::string &psystemName,
-		const std::vector<std::string> &tgs, const GLuint iStep, const GLuint v,
+		const std::set<std::string> &tgs, const GLuint iStep, const GLuint v,
 		const GLuint t, const Model &m, const std::string &rType)
 		: AbstractProgram(ph, mp, a, u, psystemName, tgs, iStep), vao(v),
 		texture(t), geoModel(m), renderType(rType)

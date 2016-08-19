@@ -41,22 +41,20 @@
 			<static type="plane" x=0 y=0 z=1 d=50 />
 		</colliders>
 
-		<events>
-			<!--event iterationStep=0>
+		<stages>
+			<stage iterationStep=0>
 				<tag name="emission"/>
 				<tag name="debug"/>
 
-				<override type="atomic" name="emissionAttempts" value=0/>
-
-				<file path="modules/utilities.glsl" />
-				<file path="modules/emission.glsl" />
-				<file path="projects/gun/emission.glsl" />
-				<file path="templates/emissionMain.glsl" />
-			</event-->
-
-			<emission iterationStep=0>
-				<tag name="emission"/>
-				<tag name="debug"/>
+				<!--listener uniform="state">
+					<when value="trigger">
+						<action change="thrusters" to="false" />
+						<action addTag="disabled" />
+					</when>
+					<when value="explode">
+						<action change="explosion" to="true" />
+					</when>
+				</listener-->
 				
 				<override type="atomic" name="emissionAttempts" value=0/>
 
@@ -64,9 +62,11 @@
 				<file path="modules/emission.glsl" />
 				<file path="projects/gun/emission.glsl" />
 				<file path="templates/emissionMain.glsl" />
-			</emission>
+			</stage>
 
-			<update iterationStep=10>
+			<stage iterationStep=10>
+				<tag name="update"/>
+
 				<override type="atomic" name="fireAttempts" value=0 />
 				<override type="atomic" name="cooldownAttempts" value=0 />
 				<override type="atomic" name="holdTimeAttempts" value=0 />
@@ -76,9 +76,17 @@
 				<file path="projects/gun/update.glsl" />
 				<file path="projects/gun/collision.glsl" />
 				<file path="templates/updateCollisionMain.glsl" />
-			</update>
+			</stage>
 
-			<render iterationStep=0>
+			<stage iterationStep=10>
+				<tag name="update"/>
+
+				<file path="projects/gun/custom.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
 				<rendertype type="billboard" path="assets/images/snow.png" />
 
 				<vertfile path="projects/gun/billboard.vert" />
@@ -87,7 +95,7 @@
 				<geomfile path="projects/gun/billboard.geom" />
 				<geomfile path="templates/billboardMain.glsl" />
 				<fragfile path="projects/gun/billboardColor.frag" />
-			</render>
-		</events>
+			</stage>
+		</stages>
 	</psystem>
 </project>

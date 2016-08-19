@@ -31,10 +31,6 @@ void GP_ParticleSystem::execute(glm::mat4 model, glm::mat4 view, glm::mat4 proje
 	{
 		p->execute(newModel, view, projection);
 	}
-
-	//emitter->execute(newModel, view, projection);
-	//updater->execute(newModel, view, projection);
-	//renderer->execute(newModel, view, projection);
 }
 
 void GP_ParticleSystem::printContents()
@@ -43,9 +39,6 @@ void GP_ParticleSystem::printContents()
 	{
 		p->printContents();
 	}
-	/*emitter->printContents();
-	updater->printContents();
-	renderer->printContents();*/
 }
 
 bool GP_ParticleSystem::isAlive()

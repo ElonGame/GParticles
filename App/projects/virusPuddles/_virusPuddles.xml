@@ -24,31 +24,37 @@
 		<override type="uniform" name="toCreate" value=1/>
 		<override type="uniform" name="maxParticles" value=1/>
 
-		<events>
-			<emission iterationStep=0>
+		<stages>
+			<stage iterationStep=0>
+				<tag name="emission"/>
+
 				<override type="atomic" name="emissionAttempts" value=0/>
 
 				<file path="modules/utilities.glsl" />
 				<file path="modules/emission.glsl" />
 				<file path="projects/virusPuddles/virusEmission.comp" />
 				<file path="templates/emissionMain.glsl" />
-			</emission>
+			</stage>
 
-			<update iterationStep=0>
+			<stage iterationStep=0>
+				<tag name="update"/>
+
 				<file path="modules/utilities.glsl" />
 				<file path="projects/virusPuddles/virusUpdate.comp" />
 				<file path="templates/updateMain.glsl" />
-			</update>
+			</stage>
 
 
-			<render iterationStep=0>
+			<stage iterationStep=0>
+				<tag name="render"/>
+
 				<rendertype type="model" path="assets/models/virus/virus.3ds"/>
 				
 				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="projects/virusPuddles/virusVertex.vert" />
 				<fragfile path="projects/virusPuddles/virusFrag.frag" />
-			</render>
-		</events>
+			</stage>
+		</stages>
 	</psystem>
 
 
@@ -70,26 +76,32 @@
 			<static type="plane" x=0 y=1 z=0 d=3 />
 		</colliders>
 
-		<events>
-			<emission iterationStep=100>
+		<stages>
+			<stage iterationStep=100>
+				<tag name="emission"/>
+
 				<override type="atomic" name="emissionAttempts" value=0/>
 
 				<file path="modules/utilities.glsl" />
 				<file path="modules/emission.glsl" />
 				<file path="projects/virusPuddles/puddleEmission.comp" />
 				<file path="templates/emissionMain.glsl" />
-			</emission>
+			</stage>
 
 
-			<update iterationStep=0>
+			<stage iterationStep=0>
+				<tag name="update"/>
+
 				<file path="modules/utilities.glsl" />
 				<file path="projects/virusPuddles/puddleUpdate.comp" />
 				<file path="projects/virusPuddles/puddleCollision.comp" />
 				<file path="templates/updateCollisionMain.glsl" />
-			</update>
+			</stage>
 
 
-			<render iterationStep=0>
+			<stage iterationStep=0>
+				<tag name="render"/>
+
 				<rendertype type="billboard" path="assets/images/snow.png" />
 				
 				<vertfile path="projects/virusPuddles/puddleVertex.vert" />
@@ -97,7 +109,7 @@
 				<geomfile path="modules/billboard.glsl" />
 				<geomfile path="projects/virusPuddles/puddleGeom.geom"/>
 				<fragfile path="projects/virusPuddles/puddleFrag.frag" />
-			</render>
-		</events>
+			</stage>
+		</stages>
 	</psystem>
 </project>

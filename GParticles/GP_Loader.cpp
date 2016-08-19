@@ -16,16 +16,16 @@ void GP_Loader::loadProject(std::string filePath)
 	TiXmlDocument doc(filePath);
 	if (!doc.LoadFile())
 	{
-		Utils::exitMessage("Fatal Error",
-						   "Failed to load file " + filePath + "! Exiting...");
+		Utils::exitMessage(
+			"Fatal Error", "Failed to load file " + filePath + "! Exiting...");
 	}
 
 	TiXmlHandle docH(&doc);
 	TiXmlHandle projectH = docH.FirstChild("project");
 	if (!projectH.Element())
 	{
-		Utils::exitMessage("Invalid Input",
-						   "Input file must have an outer project tag");
+		Utils::exitMessage(
+			"Invalid Input", "Input file must have an outer project tag");
 	}
 
 
@@ -212,6 +212,27 @@ void GP_Loader::queryUniformValue(TiXmlElement* uElem, GP_Uniform &u)
 			uElem->QueryFloatAttribute(attribute[3].c_str(), &u.value[i].w);
 		}
 	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+std::set<std::string> GP_Loader::getTags(TiXmlElement* stageE)
+{
+	TiXmlElement* tagE = stageE->FirstChildElement("tag");
+	std::set<std::string> tags;
+
+	if (tagE != NULL)
+	{
+		std::string tagName;
+		for (; tagE; tagE = tagE->NextSiblingElement("tag"))
+		{
+			tagE->QueryStringAttribute("name", &tagName);
+			tags.insert(tagName);
+		}
+	}
+
+	return tags;
 }
 
 
@@ -512,38 +533,32 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 	}
 
 
-	// load psystem events (emission, update, render)
-	TiXmlElement* eventsE = psystemE->FirstChildElement("events");
-	if (!eventsE)
+	// load psystem stages
+	TiXmlElement* stagesE = psystemE->FirstChildElement("stages");
+	if (!stagesE)
 	{
-		Utils::exitMessage("Fatal Error", "psystem must have an events tag");
-	}
-
-	ComputeProgram emission;
-	TiXmlElement* eventE = eventsE->FirstChildElement("emission");
-	if (!loadComputeProgram(psp.numWorkGroups, rr, eventE, emission))
-	{
-		Utils::exitMessage("Fatal Error", "Unable to load emission event");
-	}
-
-	ComputeProgram update;
-	eventE = eventsE->FirstChildElement("update");
-	if (!loadComputeProgram(psp.numWorkGroups, rr, eventE, update))
-	{
-		Utils::exitMessage("Fatal Error", "Unable to load update event");
-	}
-
-	RendererProgram render;
-	eventE = eventsE->FirstChildElement("render");
-	if (!loadRenderProgram(rr, eventE, render))
-	{
-		Utils::exitMessage("Fatal Error", "Unable to load render event");
+		Utils::exitMessage("Fatal Error", "psystem must have a stages tag");
 	}
 
 	std::vector<AbstractProgram *> programs;
-	programs.push_back(new ComputeProgram(emission));
-	programs.push_back(new ComputeProgram(update));
-	programs.push_back(new RendererProgram(render));
+	TiXmlElement* stageE = stagesE->FirstChildElement("stage");
+	for (; stageE; stageE = stageE->NextSiblingElement("stage"))
+	{
+		AbstractProgram *ap;
+
+		auto tags = getTags(stageE);
+		if (tags.find("emission") != tags.end() ||
+			tags.find("update") != tags.end())
+		{
+			ap = loadComputeProgram(psp.numWorkGroups, rr, tags, stageE);
+		}
+		else if (tags.find("render") != tags.end())
+		{
+			ap = loadRenderProgram(rr, tags, stageE);
+		}
+
+		programs.push_back(ap);
+	}
 
 	return GP_ParticleSystem(programs, psp.model, psp.numWorkGroups, psp.lifetime, psp.looping);
 }
@@ -674,7 +689,7 @@ void GP_Loader::loadIterationResourceOverrides(
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp)
+AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE)
 {
 	// parse and store program resource info for later binding
 	// start by adding the program reserved resources
@@ -701,17 +716,17 @@ bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, 
 		e->QueryUnsignedAttribute("iterationStep", &iterationStep);
 
 	};
-	getComputeInfo(eventE);
+	getComputeInfo(stageE);
 
-	// if there is an event prefab continue loading/collecting resources
+	// if there is a stage prefab continue loading/collecting resources
 	std::string prefabPath;
-	eventE->QueryStringAttribute("prefab", &prefabPath);
+	stageE->QueryStringAttribute("prefab", &prefabPath);
 
 	TiXmlDocument doc(prefabPath);
 	if (doc.LoadFile())
 	{
 		TiXmlHandle docH(&doc);
-		getComputeInfo(docH.FirstChild(eventE->ValueStr()).ToElement());
+		getComputeInfo(docH.FirstChild(stageE->ValueStr()).ToElement());
 	}
 
 
@@ -720,14 +735,14 @@ bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, 
 
 	// shader source = resource header + files source
 	std::string psystemName;
-	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
+	stageE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 
 	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms, rr.spheres, rr.planes);
 	shaderSource += createFinalShaderSource(fPaths, psystemName);
 
 
 	// compile, attach and check link status
-	Shader cpShader("compute", shaderSource, psystemName + "_" + eventE->ValueStr());
+	Shader cpShader("compute", shaderSource, psystemName + "_" + stageE->ValueStr());
 
 	glAttachShader(cpHandle, cpShader.getId());
 	glLinkProgram(cpHandle);
@@ -760,35 +775,20 @@ bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, 
 		uHeaders.push_back(u.second.name);
 	}
 
-	// tags
-	TiXmlElement* tagE = eventE->FirstChildElement("tag");
-	std::vector<std::string> tags;
-	
-	if (tagE != NULL)
-	{
-		std::string tagName;
-		for (; tagE; tagE = tagE->NextSiblingElement("tag"))
-		{
-			tagE->QueryStringAttribute("name", &tagName);
-			tags.push_back(tagName);
-		}
-	}
-
-	cp = ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, iterationStep, numWorkGroups, bHeaders);
-
-	return true;
+	return new ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders,
+		psystemName, tags, iterationStep, numWorkGroups, bHeaders);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* eventE)
+void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* stageE)
 {
-	if (eventE == NULL)
+	if (stageE == NULL)
 		return;
 	
 	// renderType
-	TiXmlElement* renderTypeE = eventE->FirstChildElement("rendertype");
+	TiXmlElement* renderTypeE = stageE->FirstChildElement("rendertype");
 	if (renderTypeE && rl.rendertype.empty())
 	{
 		renderTypeE->QueryStringAttribute("type", &rl.rendertype);
@@ -801,12 +801,12 @@ void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* eventE)
 	}
 
 	// collect iterationStep
-	eventE->QueryUnsignedAttribute("iterationStep", &rl.iterationStep);
+	stageE->QueryUnsignedAttribute("iterationStep", &rl.iterationStep);
 
 	// collect shader file paths
-	collectPaths(eventE, "vertfile", rl.vsPath);
-	collectPaths(eventE, "geomfile", rl.gmPath);
-	collectPaths(eventE, "fragfile", rl.fgPath);
+	collectPaths(stageE, "vertfile", rl.vsPath);
+	collectPaths(stageE, "geomfile", rl.gmPath);
+	collectPaths(stageE, "fragfile", rl.fgPath);
 }
 
 
@@ -832,16 +832,16 @@ void GP_Loader::collectPaths(TiXmlElement* elem, const char *tag, std::vector<st
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp)
+AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE)
 {
 	// fill renderInfo struct with the final info to be processed
 	// starting with the original file
 	renderInfo rl;
-	getRenderInfo(rl, eventE);
+	getRenderInfo(rl, stageE);
 
 	// check if there is a prefab and continue filling the the struct
 	std::string prefabPath;
-	eventE->QueryStringAttribute("prefab", &prefabPath);
+	stageE->QueryStringAttribute("prefab", &prefabPath);
 	
 	TiXmlDocument doc(prefabPath);
 	if (doc.LoadFile())
@@ -878,13 +878,13 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 	GLuint rpHandle = glCreateProgram();
 
 	std::string psystemName;
-	eventE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
+	stageE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 	auto loadAndAttach = [&](auto type, auto paths, auto in, auto out)
 	{
 		std::string shaderSource = generateRenderHeader(rendBuffers,
 								   rendAtomics, rendUniforms, in, out, rl.rendertype);
 		shaderSource += createFinalShaderSource(paths, psystemName);
-		Shader shader(type, shaderSource, psystemName + "_" + eventE->ValueStr());
+		Shader shader(type, shaderSource, psystemName + "_" + stageE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
 	};
 
@@ -1010,23 +1010,7 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 
 	glBindVertexArray(0);
 
-	// tags
-	TiXmlElement* tagE = eventE->FirstChildElement("tag");
-	std::vector<std::string> tags;
-
-	if (tagE != NULL)
-	{
-		std::string tagName;
-		for (; tagE; tagE = tagE->NextSiblingElement("tag"))
-		{
-			tagE->QueryStringAttribute("name", &tagName);
-			tags.push_back(tagName);
-		}
-	}
-
-	rp = RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
-
-	return true;
+	return new RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 }
 
 

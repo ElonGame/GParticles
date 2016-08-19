@@ -78,18 +78,18 @@ private:
 	static void loadGlobalUniforms(TiXmlHandle globalResH);
 	static void loadIterationResourceOverrides(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
 	static void queryUniformValue(TiXmlElement* uElem, GP_Uniform &u);
+	static std::set<std::string> GP_Loader::getTags(TiXmlElement* stageE);
 
 	static void collectReservedResourceInfo(TiXmlHandle reservedResH);
 	static bool loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE);
 	static void collectColliders(reservedResources &rr, TiXmlElement* collidersE);
 	static void loadInitialResourceOverrides(reservedResources &rr, TiXmlElement* psystemE);
-	static void loadReservedProgramResources(reservedResources &rr, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum, std::vector<GLuint> &aToReset);
 
 
 	// program loading functions
-	static bool loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, TiXmlElement* eventE, ComputeProgram &cp);
-	static bool loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, RendererProgram &rp);
-	static void getRenderInfo(renderInfo &rl, TiXmlElement* eventE);
+	static AbstractProgram* loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE);
+	static AbstractProgram* loadRenderProgram(reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE);
+	static void getRenderInfo(renderInfo &rl, TiXmlElement* stageE);
 
 	// project loading utility functions
 	template <typename Func>
