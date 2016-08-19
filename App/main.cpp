@@ -115,8 +115,8 @@ int main(int argc, char* args[])
 	//GPARTICLES.loadProject("projects/Tutorial_2/Tutorial_2.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_3/Tutorial_3.xml");
 	//GPARTICLES.loadProject("projects/Tutorial_4/Tutorial_4.xml");
-	//GPARTICLES.loadProject("projects/gun/gun.xml");
-	GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
+	GPARTICLES.loadProject("projects/gun/gun.xml");
+	//GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
 	//GPARTICLES.loadProject("projects/boids/boids.xml");
 
 

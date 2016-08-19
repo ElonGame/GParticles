@@ -35,7 +35,7 @@ void ComputeProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proje
 void ComputeProgram::printContents()
 {
 	std::cout << std::string(80, '-') << std::endl;
-	std::cout << "Program Type: Compute" << std::endl;
+	std::cout << "Type: Compute" << std::endl;
 
 	AbstractProgram::printContents();
 

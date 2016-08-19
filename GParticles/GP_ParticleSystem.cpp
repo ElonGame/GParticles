@@ -26,16 +26,26 @@ void GP_ParticleSystem::execute(glm::mat4 model, glm::mat4 view, glm::mat4 proje
 
 	glm::mat4 newModel = model * psModel;
 
-	emitter.execute(newModel, view, projection);
-	updater.execute(newModel, view, projection);
-	renderer.execute(newModel, view, projection);
+
+	for (auto p : programs)
+	{
+		p->execute(newModel, view, projection);
+	}
+
+	//emitter->execute(newModel, view, projection);
+	//updater->execute(newModel, view, projection);
+	//renderer->execute(newModel, view, projection);
 }
 
 void GP_ParticleSystem::printContents()
 {
-	emitter.printContents();
-	updater.printContents();
-	renderer.printContents();
+	for (auto p : programs)
+	{
+		p->printContents();
+	}
+	/*emitter->printContents();
+	updater->printContents();
+	renderer->printContents();*/
 }
 
 bool GP_ParticleSystem::isAlive()

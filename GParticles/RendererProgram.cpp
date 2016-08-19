@@ -56,7 +56,7 @@ void RendererProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proj
 void RendererProgram::printContents()
 {
 	std::cout << std::string(80, '-') << std::endl;
-	std::cout << "Program Type: Render" << std::endl;
+	std::cout << "Type: Render" << std::endl;
 
 	AbstractProgram::printContents();
 

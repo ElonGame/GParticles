@@ -62,7 +62,14 @@ void AbstractProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proj
 ///////////////////////////////////////////////////////////////////////////////
 void AbstractProgram::printContents()
 {
-	std::cout << "Program Handle: " << pHandle << std::endl;
+	std::cout << "Handle: " << pHandle << std::endl;
+	std::cout << "Tags: ";
+	for (auto tag : tags)
+	{
+		std::cout << tag << ", ";
+	}
+	std::cout << std::endl;
+
 
 	std::cout << "-- Atomics --" << std::endl;
 	for (auto aName : atomics)

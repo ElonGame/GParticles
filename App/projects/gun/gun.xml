@@ -42,7 +42,22 @@
 		</colliders>
 
 		<events>
-			<emission >
+			<!--event iterationStep=0>
+				<tag name="emission"/>
+				<tag name="debug"/>
+
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/gun/emission.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</event-->
+
+			<emission iterationStep=0>
+				<tag name="emission"/>
+				<tag name="debug"/>
+				
 				<override type="atomic" name="emissionAttempts" value=0/>
 
 				<file path="modules/utilities.glsl" />
@@ -63,7 +78,7 @@
 				<file path="templates/updateCollisionMain.glsl" />
 			</update>
 
-			<render>
+			<render iterationStep=0>
 				<rendertype type="billboard" path="assets/images/snow.png" />
 
 				<vertfile path="projects/gun/billboard.vert" />

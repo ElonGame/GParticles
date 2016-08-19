@@ -40,6 +40,8 @@ void GP_Loader::loadProject(std::string filePath)
 		GPARTICLES.pSystems.push_back(loadParticleSystem(psystemE));
 		GPARTICLES.pSystems.back().printContents();
 	}
+
+	// TODO: check if everything is well (tag order)
 }
 
 
@@ -538,10 +540,12 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 		Utils::exitMessage("Fatal Error", "Unable to load render event");
 	}
 
+	std::vector<AbstractProgram *> programs;
+	programs.push_back(new ComputeProgram(emission));
+	programs.push_back(new ComputeProgram(update));
+	programs.push_back(new RendererProgram(render));
 
-
-	return GP_ParticleSystem(	emission, update, render, psp.model,
-						psp.numWorkGroups, psp.lifetime, psp.looping);
+	return GP_ParticleSystem(programs, psp.model, psp.numWorkGroups, psp.lifetime, psp.looping);
 }
 
 
@@ -756,7 +760,21 @@ bool GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, 
 		uHeaders.push_back(u.second.name);
 	}
 
-	cp = ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, iterationStep, numWorkGroups, bHeaders);
+	// tags
+	TiXmlElement* tagE = eventE->FirstChildElement("tag");
+	std::vector<std::string> tags;
+	
+	if (tagE != NULL)
+	{
+		std::string tagName;
+		for (; tagE; tagE = tagE->NextSiblingElement("tag"))
+		{
+			tagE->QueryStringAttribute("name", &tagName);
+			tags.push_back(tagName);
+		}
+	}
+
+	cp = ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, iterationStep, numWorkGroups, bHeaders);
 
 	return true;
 }
@@ -992,7 +1010,21 @@ bool GP_Loader::loadRenderProgram(reservedResources &rr, TiXmlElement* eventE, R
 
 	glBindVertexArray(0);
 
-	rp = RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
+	// tags
+	TiXmlElement* tagE = eventE->FirstChildElement("tag");
+	std::vector<std::string> tags;
+
+	if (tagE != NULL)
+	{
+		std::string tagName;
+		for (; tagE; tagE = tagE->NextSiblingElement("tag"))
+		{
+			tagE->QueryStringAttribute("name", &tagName);
+			tags.push_back(tagName);
+		}
+	}
+
+	rp = RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 
 	return true;
 }

@@ -7,8 +7,9 @@ public:
 	ComputeProgram();
 	ComputeProgram(const GLuint ph, const GLuint mp, const resHeader &a,
 		const std::vector<std::string> &u, const std::string &psystemName,
-		const GLuint iStep, const GLuint nwg, const resHeader &b)
-		: AbstractProgram(ph, mp, a, u, psystemName, iStep), numWorkGroups(nwg), buffers(b)
+		const std::vector<std::string> &tgs, const GLuint iStep, const GLuint nwg,
+		const resHeader &b)
+		: AbstractProgram(ph, mp, a, u, psystemName, tgs, iStep), numWorkGroups(nwg), buffers(b)
 	{
 	};
 	~ComputeProgram();
