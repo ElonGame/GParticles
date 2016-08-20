@@ -41,10 +41,9 @@
 			<static type="plane" x=0 y=0 z=1 d=50 />
 		</colliders>
 
-		<stages>
+		<stages psystemstructure="free">
 			<stage iterationStep=0>
 				<tag name="emission"/>
-				<tag name="debug"/>
 
 				<!--listener uniform="state">
 					<when value="trigger">

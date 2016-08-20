@@ -541,12 +541,65 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 	}
 
 	std::vector<AbstractProgram *> programs;
+
+	// psystem structure states, required for validation if psStructure == forced
+	std::string psStructure = "forced";
+	stagesE->QueryStringAttribute("psystemstructure", &psStructure);
 	TiXmlElement* stageE = stagesE->FirstChildElement("stage");
+	if (psStructure == "forced")
+	{
+		auto loadUntilNext = [&](std::string current, std::string next)
+		{
+			for (bool exit = false; !exit && stageE; stageE = stageE->NextSiblingElement("stage"))
+			{
+				AbstractProgram *ap;
+
+				auto tags = getTags(stageE);
+
+				if (tags.find(current) == tags.end())
+				{
+					if (tags.find(next) != tags.end())
+					{
+						current = next;
+						exit = true;
+					}
+					else
+					{
+						std::string msg = "Forced particle system structure enabled.\nExpected tag " + current
+							+ " or " + next + " on line " + std::to_string(stageE->Row()) +
+							"\n\nDisable this with \' psystemstructure=\"free\" \' on the stages tag";
+
+						Utils::exitMessage("Invalid input", msg);
+					}
+				}
+
+				if (current == "emission" || current == "update")
+				{
+					ap = loadComputeProgram(psp.numWorkGroups, rr, tags, stageE);
+				}
+				else if (current == "render")
+				{
+					ap = loadRenderProgram(rr, tags, stageE);
+				}
+
+				programs.push_back(ap);
+			}
+		};
+
+		loadUntilNext("", "emission");
+
+		loadUntilNext("emission", "update");
+
+		loadUntilNext("update", "render");
+	}
+
+	// free structure stages (can still be used with forced structure, after required stages OK)
 	for (; stageE; stageE = stageE->NextSiblingElement("stage"))
 	{
 		AbstractProgram *ap;
 
 		auto tags = getTags(stageE);
+
 		if (tags.find("emission") != tags.end() ||
 			tags.find("update") != tags.end())
 		{
@@ -555,6 +608,13 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 		else if (tags.find("render") != tags.end())
 		{
 			ap = loadRenderProgram(rr, tags, stageE);
+		}
+		else
+		{
+			std::string msg = "Must provide Stage on line " + std::to_string(stageE->Row()) +
+				"with<tag name=\"x\"> where x can be:\n> emission\n> update\n> render";
+
+			Utils::exitMessage("Invalid input", msg);
 		}
 
 		programs.push_back(ap);
