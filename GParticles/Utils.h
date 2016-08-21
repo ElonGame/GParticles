@@ -5,12 +5,14 @@
 #include <unordered_map>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
-#include "GP_Atomic.h"
+//#include "GP_Atomic.h"
+#include "GP_AtomicBuffer.h"
 #include "GP_Uniform.h"
 #include "GP_Buffer.h"
 
 using resHeader = std::vector<std::pair<std::string, GLuint>>;
 using bufferUmap = std::unordered_map<std::string, GP_Buffer>;
+using atomicBufferUmap = std::unordered_map<std::string, GP_AtomicBuffer>;
 using atomicUmap = std::unordered_map<std::string, GP_Atomic>;
 using uniformUmap = std::unordered_map<std::string, GP_Uniform>;
 

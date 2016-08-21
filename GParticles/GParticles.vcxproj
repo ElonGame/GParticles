@@ -21,9 +21,9 @@
   <ItemGroup>
     <ClCompile Include="AbstractProgram.cpp" />
     <ClCompile Include="ComputeProgram.cpp" />
+    <ClCompile Include="GP_AtomicBuffer.cpp" />
     <ClCompile Include="GP_Data.cpp" />
     <ClCompile Include="GP_Systems.cpp" />
-    <ClCompile Include="GP_Atomic.cpp" />
     <ClCompile Include="GP_Buffer.cpp" />
     <ClCompile Include="GP_Uniform.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -41,9 +41,9 @@
   <ItemGroup>
     <ClInclude Include="AbstractProgram.h" />
     <ClInclude Include="ComputeProgram.h" />
+    <ClInclude Include="GP_AtomicBuffer.h" />
     <ClInclude Include="GP_Data.h" />
     <ClInclude Include="GP_Systems.h" />
-    <ClInclude Include="GP_Atomic.h" />
     <ClInclude Include="GP_Buffer.h" />
     <ClInclude Include="GP_Uniform.h" />
     <ClInclude Include="Mesh.h" />

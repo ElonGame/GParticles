@@ -49,10 +49,12 @@ void GP_Loader::loadProject(std::string filePath)
 ///////////////////////////////////////////////////////////////////////////////
 void GP_Loader::loadResources(TiXmlHandle resourcesH)
 {
-	auto lResources = [](TiXmlHandle globalResH, TiXmlHandle reservedResH)
+	GLuint currentOffset = 0;
+
+	auto lResources = [&currentOffset](TiXmlHandle globalResH, TiXmlHandle reservedResH)
 	{	// load global project resources
 		loadGlobalBuffers(globalResH);
-		loadGlobalAtomics(globalResH);
+		loadGlobalAtomics(globalResH, currentOffset);
 		loadGlobalUniforms(globalResH);
 		
 		// collect reserved resource default info
@@ -114,7 +116,7 @@ void GP_Loader::loadGlobalBuffers(TiXmlHandle globalResH)
 		globalBufferInfo.emplace(b.name, b);
 		GPDATA.addBuffer(b);
 
-		std::cout << "(GLOBAL) INIT: buffer " << b.name << " with number " << b.id
+		std::cout << "INITIALIZED: global buffer \"" << b.name << "\" with number " << b.id
 			<< ", " << b.elements << " elements of type " << b.type << std::endl; // DUMP
 	}
 }
@@ -122,7 +124,7 @@ void GP_Loader::loadGlobalBuffers(TiXmlHandle globalResH)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH)
+void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH, GLuint &currentOffset)
 {
 	// skip function if there are no atomic tags
 	TiXmlElement* atomicE = globalResH.FirstChild("atomic").ToElement();
@@ -131,7 +133,6 @@ void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH)
 		return;
 	}
 
-	// iterate through every atomic resource
 	for (; atomicE; atomicE = atomicE->NextSiblingElement("atomic"))
 	{
 		GP_Atomic a;
@@ -139,24 +140,31 @@ void GP_Loader::loadGlobalAtomics(TiXmlHandle globalResH)
 		// parse name and skip atomic loading if another has already been loaded with that name
 		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryStringAttribute("name", &a.name);},
 						atomicE, "Must provide atomic attribute with a name");
-		
+
 		if (GPDATA.getAtomic(a.name, a))
 		{
 			continue;
 		}
 
-		// parse atomic info, initialize and store it
+		// parse atomic reset/original value, add offset and store it
 		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryUnsignedAttribute("value", &a.resetValue);},
 						atomicE, "Must provide atomic attribute with a value > 0");
 
-		a.init();
+		a.offset = currentOffset;
+		currentOffset += 4;
 
 		globalAtomicInfo.emplace(a.name, a);
-		GPDATA.addAtomic(a);
 
-		std::cout << "(GLOBAL) INIT: atomic " << a.name << " with number " <<
-			a.id << " and starting value " << a.resetValue << std::endl; // DUMP
+		std::cout << "COLLECTED: global atomic \"" << a.name << "\" with offset " <<
+			a.offset << " and starting value " << a.resetValue << std::endl; // DUMP
 	}
+
+	// create global GP_AtomicBuffer and add it to GPDATA
+	GP_AtomicBuffer ab("Global", globalAtomicInfo);
+	GPDATA.addAtomicBuffer(ab);
+
+	std::cout << "INITIALIZED: atomic buffer \"" << ab.name << "\" with id " <<
+		ab.id << " and " << ab.atomics.size()  << " atomics" << std::endl; // DUMP
 }
 
 
@@ -269,7 +277,7 @@ void GP_Loader::loadGlobalUniforms(TiXmlHandle globalResH)
 		globalUniformInfo.emplace(u.name, u);
 		GPDATA.addUniform(u);
 
-		std::cout << "(GLOBAL) INIT: uniform " << u.name<< " of type " <<
+		std::cout << "INITIALIZED: global uniform \"" << u.name<< "\" of type " <<
 			u.type << " and value " << u.value[0].x << std::endl; // DUMP
 	}
 }
@@ -644,6 +652,7 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		GPDATA.addUniform(u);
 	}
 
+	GLuint currentOffset = 0;
 	for (auto resAtmInfo : reservedAtomicInfo)
 	{
 		GP_Atomic a = resAtmInfo;
@@ -651,16 +660,22 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		std::string originalname = a.name;
 		a.name = psystemName + "_" + a.name;
 
-		a.init();
+		a.offset = currentOffset;
+		currentOffset += 4;
 
 		rr.reservedAtomics.emplace(originalname, a);
-		GPDATA.addAtomic(a);
 	}
+
+	// create global GP_AtomicBuffer and add it to GPDATA
+	GP_AtomicBuffer ab(psystemName + "Reserved", rr.reservedAtomics);
+	GPDATA.addAtomicBuffer(ab);
+
+	std::cout << "INIT: atomic buffer " << ab.name << " with id " <<
+		ab.id << " and " << ab.atomics.size() << " atomics" << std::endl; // DUMP
 
 	// check and apply resource value overrides
 	loadInitialResourceOverrides(rr, psystemE);
 
-	// load default reserved atomics, uniforms and buffers
 	if (rr.reservedUniforms.find("maxParticles") == rr.reservedUniforms.end())
 	{
 		Utils::exitMessage("Fatal error", "maxParticles uniform instance definition required!");
@@ -736,7 +751,11 @@ void GP_Loader::loadIterationResourceOverrides(
 		{
 			aum.at(resName).reset = true;
 			aum.at(resName).resetValue = std::stoul(resValue, nullptr, 0);
-			GPDATA.addAtomic(aum.at(resName));
+			GP_AtomicBuffer ab;
+			GPDATA.getAtomicAtomicBuffer(resName, ab);
+			ab.atomics[resName].reset = true;
+			ab.atomics[resName].resetValue = std::stoul(resValue, nullptr, 0);
+			GPDATA.addAtomicBuffer(ab);
 		}
 		else if (resType == "uniform")
 		{ 
@@ -797,7 +816,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 	std::string psystemName;
 	stageE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 
-	std::string shaderSource = generateComputeHeader(cpBuffers, cpAtomics, cpUniforms, rr.spheres, rr.planes);
+	std::string shaderSource = generateComputeHeader(psystemName, cpBuffers, cpUniforms, rr.spheres, rr.planes);
 	shaderSource += createFinalShaderSource(fPaths, psystemName);
 
 
@@ -823,11 +842,9 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 		bHeaders.push_back(std::make_pair(b.second.name, b.second.binding));
 	}
 
-	resHeader aHeaders;
-	for (auto a : cpAtomics)
-	{
-		aHeaders.push_back(std::make_pair(a.second.name, a.second.binding));
-	}
+	resHeader abHeaders;
+	abHeaders.push_back(std::make_pair("Global", 0));
+	abHeaders.push_back(std::make_pair(psystemName + "Reserved", 1));
 
 	std::vector<std::string> uHeaders;
 	for (auto u : cpUniforms)
@@ -835,7 +852,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 		uHeaders.push_back(u.second.name);
 	}
 
-	return new ComputeProgram(cpHandle, rr.maxParticles, aHeaders, uHeaders,
+	return new ComputeProgram(cpHandle, rr.maxParticles, abHeaders, uHeaders,
 		psystemName, tags, iterationStep, numWorkGroups, bHeaders);
 }
 
@@ -926,10 +943,10 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 
 	// TODO: move to header generation
 	// create atomic binding points
-	int bindingPoint = 0;
+	int offsetCount = 0;
 	for (auto &atm : rendAtomics)
 	{
-		atm.second.binding = bindingPoint++;
+		atm.second.offset = offsetCount++;
 	}
 
 
@@ -941,8 +958,8 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 	stageE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 	auto loadAndAttach = [&](auto type, auto paths, auto in, auto out)
 	{
-		std::string shaderSource = generateRenderHeader(rendBuffers,
-								   rendAtomics, rendUniforms, in, out, rl.rendertype);
+		std::string shaderSource = generateRenderHeader(psystemName, rendBuffers,
+			rendUniforms, in, out, rl.rendertype);
 		shaderSource += createFinalShaderSource(paths, psystemName);
 		Shader shader(type, shaderSource, psystemName + "_" + stageE->ValueStr());
 		glAttachShader(rpHandle, shader.getId());
@@ -1056,11 +1073,9 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 		}
 	}
 
-	resHeader aHeaders;
-	for (auto a : rendAtomics)
-	{
-		aHeaders.push_back(std::make_pair(a.second.name, a.second.binding));
-	}
+	resHeader abHeaders;
+	abHeaders.push_back(std::make_pair("Global", 0));
+	abHeaders.push_back(std::make_pair(psystemName + "Reserved", 1));
 
 	std::vector<std::string> uHeaders;
 	for (auto u : rendUniforms)
@@ -1070,7 +1085,7 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 
 	glBindVertexArray(0);
 
-	return new RendererProgram(rpHandle, rr.maxParticles, aHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
+	return new RendererProgram(rpHandle, rr.maxParticles, abHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 }
 
 
@@ -1172,7 +1187,7 @@ std::string GP_Loader::createFinalShaderSource(std::vector<std::string> fPaths,
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GP_Loader::generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,
+std::string GP_Loader::generateRenderHeader(std::string psystemName, bufferUmap &buffers,
 	uniformUmap &uniforms, std::string in, std::string out, std::string renderType)
 {
 	std::string res =	"#version 430\n\n"
@@ -1182,13 +1197,24 @@ std::string GP_Loader::generateRenderHeader(bufferUmap &buffers, atomicUmap &ato
 
 	// atomic binding points need to be created first since their max value is 8
 	int i = 0;
-	for (auto &atm : atomics)
-	{
-		atm.second.binding = i++;
+	GP_AtomicBuffer ab;
+	GPDATA.getAtomicBuffer("Global", ab);
 
-		res += "layout(binding = " + std::to_string(i) +
-				", offset = 0) uniform atomic_uint " + atm.second.name + ";\n";
-	}
+	auto makeAtomicHeader = [&]()
+	{
+		for (auto &a : ab.atomics)
+		{
+			res += "layout(binding = " + std::to_string(i) + ", offset = " +
+				std::to_string(a.second.offset) + ") uniform atomic_uint " +
+				a.second.name + ";\n";
+		}
+	};
+
+	makeAtomicHeader();
+
+	i++;
+	GPDATA.getAtomicBuffer(psystemName + "Reserved", ab);
+	makeAtomicHeader();
 
 	res += "\n";
 
@@ -1243,7 +1269,7 @@ std::string GP_Loader::fillTemplate(std::string templatePath, std::string psyste
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms,
+std::string GP_Loader::generateComputeHeader(std::string psystemName, bufferUmap &buffers, uniformUmap &uniforms,
 											 std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes)
 {
 	std::string res =	"#version 430\n"
@@ -1256,13 +1282,24 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 
 	// atomic binding points need to be created first since their max value is 8
 	int i = 0;
-	for (auto &atm : atomics)
-	{
-		atm.second.binding = i;
+	GP_AtomicBuffer ab;
+	GPDATA.getAtomicBuffer("Global", ab);
 
-		res +=	"layout(binding = " + std::to_string(i++) +
-				", offset = 0) uniform atomic_uint " + atm.second.name +";\n";
-	}
+	auto makeAtomicHeader = [&]()
+	{	
+		for (auto &a : ab.atomics)
+		{
+			res += "layout(binding = " + std::to_string(i) + ", offset = " +
+				std::to_string(a.second.offset) + ") uniform atomic_uint " +
+				a.second.name + ";\n";
+		}
+	};
+
+	makeAtomicHeader();
+
+	i++;
+	GPDATA.getAtomicBuffer(psystemName + "Reserved", ab);
+	makeAtomicHeader();
 
 	res += "\n";
 
@@ -1289,8 +1326,6 @@ std::string GP_Loader::generateComputeHeader(bufferUmap &buffers, atomicUmap &at
 	}
 
 	// world colliders
-	//res += "\n\nvec4 sphere, plane;\nvec3 collisionPoint, normal;\n";
-
 	// spheres
 	if (!spheres.empty())
 	{

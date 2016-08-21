@@ -24,13 +24,15 @@ public:
 
 	// resource functions
 	void addBuffer(GP_Buffer b);
-	void addAtomic(GP_Atomic a);
+	void addAtomicBuffer(GP_AtomicBuffer &ab);
 	void addUniform(GP_Uniform u);
 	bool getBuffer(std::string name, GP_Buffer &b);
+	bool getAtomicBuffer(std::string name, GP_AtomicBuffer &ab);
+	bool getAtomicAtomicBuffer(std::string name, GP_AtomicBuffer &ab);
 	bool getAtomic(std::string name, GP_Atomic &a);
 	bool getUniform(std::string name, GP_Uniform &u);
 	bufferUmap getBufferMap();
-	atomicUmap getAtomicMap();
+	//atomicUmap getAtomicMap();
 	uniformUmap getUniformMap();
 
 	template <typename T>
@@ -55,7 +57,8 @@ private:
 
 	// resources
 	bufferUmap buffers;
-	atomicUmap atomics;
+	std::unordered_map<std::string, std::string> atomicAtomicBufferMap;
+	atomicBufferUmap atomicBuffers;
 	uniformUmap uniforms;
 
 	GP_Data() {};

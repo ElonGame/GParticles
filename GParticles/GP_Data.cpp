@@ -64,9 +64,14 @@ void GP_Data::addBuffer(GP_Buffer b)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Data::addAtomic(GP_Atomic a)
+void GP_Data::addAtomicBuffer(GP_AtomicBuffer & ab)
 {
-	atomics[a.name] = a;
+	atomicBuffers[ab.name] = ab;
+
+	for (auto a : ab.atomics)
+	{
+		atomicAtomicBufferMap[a.first] = ab.name;
+	}
 }
 
 
@@ -92,12 +97,52 @@ bool GP_Data::getBuffer(std::string name, GP_Buffer & b)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GP_Data::getAtomic(std::string name, GP_Atomic & a)
+bool GP_Data::getAtomicBuffer(std::string name, GP_AtomicBuffer & ab)
 {
-	if (atomics.find(name) == atomics.end() || atomics.empty())
+		if (atomicBuffers.find(name) == atomicBuffers.end() || atomicBuffers.empty())
+			return false;
+	
+		ab = atomicBuffers.at(name);
+		return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+bool GP_Data::getAtomicAtomicBuffer(std::string name, GP_AtomicBuffer & ab)
+{
+	// search for atomic corresponding atomicBuffer
+	if (atomicAtomicBufferMap.find(name) == atomicAtomicBufferMap.end() || atomicAtomicBufferMap.empty())
 		return false;
 
-	a = atomics.at(name);
+	std::string abName = atomicAtomicBufferMap.at(name);
+
+	return getAtomicBuffer(abName, ab);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+bool GP_Data::getAtomic(std::string atomicName, GP_Atomic & a)
+{
+	// search for atomic corresponding atomicBuffer
+	if (atomicAtomicBufferMap.find(atomicName) == atomicAtomicBufferMap.end() || atomicAtomicBufferMap.empty())
+		return false;
+
+	std::string atomicBufferName = atomicAtomicBufferMap.at(atomicName);
+
+	// confirm the atomicBuffer is present, fetch it
+	if (atomicBuffers.find(atomicBufferName) == atomicBuffers.end() || atomicBuffers.empty())
+		return false;
+
+	GP_AtomicBuffer ab = atomicBuffers.at(atomicBufferName);
+
+	// confirm the atomic being searched is present, fetch it
+	if (ab.atomics.find(atomicName) == ab.atomics.end() || ab.atomics.empty())
+		return false;
+
+	a = ab.atomics.at(atomicName);
+
 	return true;
 }
 
@@ -124,10 +169,10 @@ bufferUmap GP_Data::getBufferMap()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-atomicUmap GP_Data::getAtomicMap()
-{
-	return atomics;
-}
+//atomicUmap GP_Data::getAtomicMap()
+//{
+//	return atomics;
+//}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,26 +181,3 @@ uniformUmap GP_Data::getUniformMap()
 {
 	return uniforms;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//void GP_Data::processParticles(glm::mat4 view)
-//{
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//	for (int i = 0; i < pSystems.size(); i++)
-//	{
-//		if (pSystems[i].isAlive())
-//		{
-//			pSystems[i].execute(view);
-//		}
-//		else
-//		{
-//			std::swap(pSystems[i], pSystems.back());
-//			pSystems.pop_back();
-//		}
-//	}
-//
-//	glUseProgram(NULL);
-//}

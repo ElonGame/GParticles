@@ -7,6 +7,7 @@
 #include "tinyxml\tinyxml.h"
 #include "tinyxml\tinystr.h"
 
+
 struct reservedResources
 {
 	GLuint maxParticles;
@@ -74,7 +75,7 @@ private:
 
 	// resource loading functions
 	static void loadGlobalBuffers(TiXmlHandle globalResH);
-	static void loadGlobalAtomics(TiXmlHandle globalResH);
+	static void loadGlobalAtomics(TiXmlHandle globalResH, GLuint &currentOffset);
 	static void loadGlobalUniforms(TiXmlHandle globalResH);
 	static void loadIterationResourceOverrides(TiXmlElement* actionsElement, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum);
 	static void queryUniformValue(TiXmlElement* uElem, GP_Uniform &u);
@@ -108,8 +109,8 @@ private:
 	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
 	
 	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::string psystemName);
-	static std::string generateRenderHeader(bufferUmap &buffers, atomicUmap &atomics,uniformUmap &uniforms, std::string in, std::string out, std::string renderType);
-	static std::string generateComputeHeader(bufferUmap &buffers, atomicUmap &atomics, uniformUmap &uniforms, std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes);
+	static std::string generateRenderHeader(std::string psystemName, bufferUmap &buffers, uniformUmap &uniforms, std::string in, std::string out, std::string renderType);
+	static std::string generateComputeHeader(std::string psystemName, bufferUmap &buffers, uniformUmap &uniforms, std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes);
 	static std::string fileToString(std::string filePath);
 	static std::string fillTemplate(std::string templateHeader, std::string psystemName);
 	static void printShaderLog(GLuint shader);

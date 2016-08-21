@@ -1,13 +1,5 @@
 #include "AbstractProgram.h"
 
-AbstractProgram::AbstractProgram()
-{
-}
-
-AbstractProgram::~AbstractProgram()
-{
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,16 +63,16 @@ void AbstractProgram::printContents()
 	std::cout << std::endl;
 
 
-	std::cout << "-- Atomics --" << std::endl;
-	for (auto aName : atomics)
-	{
-		GP_Atomic a;
-		if (GPDATA.getAtomic(aName.first, a))
-		{
-			std::cout << a.name << " with id " << a.id << " and resetValue "
-				<< a.resetValue << std::endl;
-		}
-	}
+	std::cout << "-- Atomic Buffers --" << std::endl;
+	//for (auto aName : atomics)
+	//{
+	//	GP_Atomic a;
+	//	if (GPDATA.getAtomic(aName.first, a))
+	//	{
+	//		std::cout << a.name << " with offset " << a.offset << " and resetValue "
+	//			<< a.resetValue << std::endl;
+	//	}
+	//}
 
 	std::cout << "-- Uniforms --" << std::endl;
 	for (auto uName : uniforms)
@@ -99,13 +91,23 @@ void AbstractProgram::printContents()
 ///////////////////////////////////////////////////////////////////////////////
 void AbstractProgram::resetMarkedAtomics()
 {
-	for (auto aName : atomics)
+	GP_AtomicBuffer ab;
+	for (auto abHeader : atomicBuffers)
 	{
-		GP_Atomic a;
-		if (GPDATA.getAtomic(aName.first, a) && a.reset == true)
+		GPDATA.getAtomicBuffer(abHeader.first, ab);
+
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ab.id);
+
+		for (auto a : ab.atomics)
 		{
-			a.setCurrentValue(a.resetValue);
+			if (a.second.reset)
+			{
+				glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, a.second.offset,
+					sizeof(GLuint), &a.second.resetValue);
+			}
 		}
+
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 	}
 }
 
@@ -139,12 +141,12 @@ void AbstractProgram::removeTag(std::string tag)
 void AbstractProgram::bindResources()
 {
 	// bind atomics
-	for (auto aName : atomics)
+	for (auto abHeader : atomicBuffers)
 	{
-		GP_Atomic a;
-		if (GPDATA.getAtomic(aName.first, a))
+		GP_AtomicBuffer ab;
+		if (GPDATA.getAtomicBuffer(abHeader.first, ab))
 		{
-			a.bind(aName.second);
+			ab.bind(abHeader.second);
 		}
 	}
 
