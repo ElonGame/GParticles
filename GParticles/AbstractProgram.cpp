@@ -64,15 +64,11 @@ void AbstractProgram::printContents()
 
 
 	std::cout << "-- Atomic Buffers --" << std::endl;
-	//for (auto aName : atomics)
-	//{
-	//	GP_Atomic a;
-	//	if (GPDATA.getAtomic(aName.first, a))
-	//	{
-	//		std::cout << a.name << " with offset " << a.offset << " and resetValue "
-	//			<< a.resetValue << std::endl;
-	//	}
-	//}
+	for (auto ab : atomicBuffers)
+	{
+		std::cout << ab.first << " " << ab.second << std::endl;
+	}
+
 
 	std::cout << "-- Uniforms --" << std::endl;
 	for (auto uName : uniforms)

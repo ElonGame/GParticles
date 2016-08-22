@@ -8,12 +8,12 @@
 #include "tinyxml\tinystr.h"
 
 
-struct reservedResources
+struct instanceResources
 {
 	GLuint maxParticles;
-	bufferUmap reservedBuffers;
-	atomicUmap reservedAtomics;
-	uniformUmap reservedUniforms;
+	bufferUmap instanceBuffers;
+	atomicUmap instanceAtomics;
+	uniformUmap instanceUniforms;
 	std::vector<glm::vec4> spheres;
 	std::vector<glm::vec4> planes;
 };
@@ -68,10 +68,10 @@ private:
 	static atomicUmap globalAtomicInfo;
 	static uniformUmap globalUniformInfo;
 
-	// reserved resource info
-	static std::vector<GP_Buffer> reservedBufferInfo;
-	static std::vector<GP_Atomic> reservedAtomicInfo;
-	static std::vector<GP_Uniform> reservedUniformInfo;
+	// instance resource info
+	static std::vector<GP_Buffer> instanceBufferInfo;
+	static std::vector<GP_Atomic> instanceAtomicInfo;
+	static std::vector<GP_Uniform> instanceUniformInfo;
 
 	// resource loading functions
 	static void loadGlobalBuffers(TiXmlHandle globalResH);
@@ -81,15 +81,15 @@ private:
 	static void queryUniformValue(TiXmlElement* uElem, GP_Uniform &u);
 	static std::set<std::string> GP_Loader::getTags(TiXmlElement* stageE);
 
-	static void collectReservedResourceInfo(TiXmlHandle reservedResH);
-	static bool loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE);
-	static void collectColliders(reservedResources &rr, TiXmlElement* collidersE);
-	static void loadInitialResourceOverrides(reservedResources &rr, TiXmlElement* psystemE);
+	static void collectInstanceResourceInfo(TiXmlHandle instanceResH);
+	static bool loadInstanceResources(instanceResources &ir, TiXmlElement* psystemE);
+	static void collectColliders(instanceResources &ir, TiXmlElement* collidersE);
+	static void loadInitialResourceOverrides(instanceResources &ir, TiXmlElement* psystemE);
 
 
 	// program loading functions
-	static AbstractProgram* loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE);
-	static AbstractProgram* loadRenderProgram(reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE);
+	static AbstractProgram* loadComputeProgram(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
+	static AbstractProgram* loadRenderProgram(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
 	static void getRenderInfo(renderInfo &rl, TiXmlElement* stageE);
 
 	// project loading utility functions

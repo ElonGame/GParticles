@@ -3,9 +3,9 @@
 bufferUmap GP_Loader::globalBufferInfo;
 atomicUmap GP_Loader::globalAtomicInfo;
 uniformUmap GP_Loader::globalUniformInfo;
-std::vector<GP_Buffer> GP_Loader::reservedBufferInfo;
-std::vector<GP_Atomic> GP_Loader::reservedAtomicInfo;
-std::vector<GP_Uniform> GP_Loader::reservedUniformInfo;
+std::vector<GP_Buffer> GP_Loader::instanceBufferInfo;
+std::vector<GP_Atomic> GP_Loader::instanceAtomicInfo;
+std::vector<GP_Uniform> GP_Loader::instanceUniformInfo;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ void GP_Loader::loadProject(std::string filePath)
 	}
 
 
-	// load global resources and store reserved resources info
+	// load global resources and store instance resources info
 	loadResources(projectH.FirstChild("resources"));
 	 
 
@@ -40,8 +40,6 @@ void GP_Loader::loadProject(std::string filePath)
 		GPARTICLES.pSystems.push_back(loadParticleSystem(psystemE));
 		GPARTICLES.pSystems.back().printContents();
 	}
-
-	// TODO: check if everything is well (tag order)
 }
 
 
@@ -51,14 +49,14 @@ void GP_Loader::loadResources(TiXmlHandle resourcesH)
 {
 	GLuint currentOffset = 0;
 
-	auto lResources = [&currentOffset](TiXmlHandle globalResH, TiXmlHandle reservedResH)
+	auto lResources = [&currentOffset](TiXmlHandle globalResH, TiXmlHandle instanceResH)
 	{	// load global project resources
 		loadGlobalBuffers(globalResH);
 		loadGlobalAtomics(globalResH, currentOffset);
 		loadGlobalUniforms(globalResH);
 		
-		// collect reserved resource default info
-		collectReservedResourceInfo(reservedResH);
+		// collect instance resource default info
+		collectInstanceResourceInfo(instanceResH);
 	};
 
 	// start by processing current file
@@ -285,12 +283,12 @@ void GP_Loader::loadGlobalUniforms(TiXmlHandle globalResH)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
+void GP_Loader::collectInstanceResourceInfo(TiXmlHandle instanceResH)
 {
 	bool skipIter = false;
 
 	// collect buffer info
-	TiXmlElement* bufferE = reservedResH.FirstChild("buffer").ToElement();
+	TiXmlElement* bufferE = instanceResH.FirstChild("buffer").ToElement();
 	for (; bufferE; bufferE = bufferE->NextSiblingElement("buffer"))
 	{
 		GP_Buffer b;
@@ -299,9 +297,9 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("name", &b.name);},
 						bufferE, "Must provide buffer attribute with a name");
 
-		for (size_t i = 0; i < reservedBufferInfo.size() && !skipIter; i++)
+		for (size_t i = 0; i < instanceBufferInfo.size() && !skipIter; i++)
 		{
-			if (reservedBufferInfo[i].name == b.name)
+			if (instanceBufferInfo[i].name == b.name)
 				skipIter = true;
 		}
 
@@ -316,14 +314,14 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 		queryAttribute(	[&b](TiXmlElement* e) {return e->QueryStringAttribute("type", &b.type);},
 						bufferE, "Must provide buffer attribute with a type");
 
-		reservedBufferInfo.push_back(b);
+		instanceBufferInfo.push_back(b);
 
 		std::cout << "COLLECTED: buffer " << b.name << ", with " << b.elements
 			<< " elements and type " << b.type << std::endl; // DUMP
 	}
 
 	// collect atomic info
-	TiXmlElement* atomicE = reservedResH.FirstChild("atomic").ToElement();
+	TiXmlElement* atomicE = instanceResH.FirstChild("atomic").ToElement();
 	for (; atomicE; atomicE = atomicE->NextSiblingElement("atomic"))
 	{
 		GP_Atomic a;
@@ -332,9 +330,9 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 		queryAttribute(	[&a](TiXmlElement* e) {return e->QueryStringAttribute("name", &a.name);},
 						atomicE, "Must provide atomic attribute with a name");
 
-		for (size_t i = 0; i < reservedAtomicInfo.size() && !skipIter; i++)
+		for (size_t i = 0; i < instanceAtomicInfo.size() && !skipIter; i++)
 		{
-			if (reservedAtomicInfo[i].name == a.name)
+			if (instanceAtomicInfo[i].name == a.name)
 				skipIter = true;
 		}
 
@@ -346,14 +344,14 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 
 		atomicE->QueryUnsignedAttribute("value", &a.resetValue);
 
-		reservedAtomicInfo.push_back(a);
+		instanceAtomicInfo.push_back(a);
 
 		std::cout << "COLLECTED: atomic " << a.name << " with initial value "
 			<< a.resetValue << std::endl; // DUMP
 	}
 
 	// collect uniform info
-	TiXmlElement* uniformE = reservedResH.FirstChild("uniform").ToElement();
+	TiXmlElement* uniformE = instanceResH.FirstChild("uniform").ToElement();
 	for (; uniformE; uniformE = uniformE->NextSiblingElement("uniform"))
 	{
 		GP_Uniform u;
@@ -361,9 +359,9 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 		// parse name and skip uniform loading if another has already been loaded with that name
 		queryAttribute(	[&u](TiXmlElement* e) {return e->QueryStringAttribute("name", &u.name);},
 						uniformE, "Must provide uniform attribute with a name");
-		for (size_t i = 0; i < reservedUniformInfo.size() && !skipIter; i++)
+		for (size_t i = 0; i < instanceUniformInfo.size() && !skipIter; i++)
 		{
-			if (reservedUniformInfo[i].name == u.name)
+			if (instanceUniformInfo[i].name == u.name)
 				skipIter = true;
 		}
 
@@ -377,7 +375,7 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 						uniformE, "Must provide uniform attribute with a type");
 		queryUniformValue(uniformE, u);
 
-		reservedUniformInfo.push_back(u);
+		instanceUniformInfo.push_back(u);
 
 		std::cout << "COLLECTED: uniform " << u.name << ", with initial value "
 			<< u.value[0].x << " and type " << u.type << std::endl; // DUMP
@@ -387,7 +385,7 @@ void GP_Loader::collectReservedResourceInfo(TiXmlHandle reservedResH)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void GP_Loader::collectColliders(reservedResources &rr, TiXmlElement* collidersE)
+void GP_Loader::collectColliders(instanceResources &ir, TiXmlElement* collidersE)
 {
 	if (!collidersE)
 	{
@@ -415,12 +413,12 @@ void GP_Loader::collectColliders(reservedResources &rr, TiXmlElement* collidersE
 				Utils::exitMessage("Invalid Input", "Sphere radius must be > 0");
 			}
 
-			rr.spheres.push_back(value);
+			ir.spheres.push_back(value);
 		}
 		else if (type == "plane")
 		{
 			colliderE->QueryFloatAttribute("d", &value.w);
-			rr.planes.push_back(value);
+			ir.planes.push_back(value);
 		}
 	}
 }
@@ -507,10 +505,10 @@ void GP_Loader::loadProperties(TiXmlElement* propertiesE, psProperties &psp, loa
 ///////////////////////////////////////////////////////////////////////////////
 GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 {
-	// load particle system reserved resources
-	reservedResources rr;
-	loadReservedPSResources(rr, psystemE);
-	collectColliders(rr, psystemE->FirstChildElement("colliders"));
+	// load particle system instance resources
+	instanceResources ir;
+	loadInstanceResources(ir, psystemE);
+	collectColliders(ir, psystemE->FirstChildElement("colliders"));
 
 
 	// load psystem properties
@@ -583,11 +581,11 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 
 				if (current == "emission" || current == "update")
 				{
-					ap = loadComputeProgram(psp.numWorkGroups, rr, tags, stageE);
+					ap = loadComputeProgram(psp.numWorkGroups, ir, tags, stageE);
 				}
 				else if (current == "render")
 				{
-					ap = loadRenderProgram(rr, tags, stageE);
+					ap = loadRenderProgram(ir, tags, stageE);
 				}
 
 				programs.push_back(ap);
@@ -611,11 +609,11 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 		if (tags.find("emission") != tags.end() ||
 			tags.find("update") != tags.end())
 		{
-			ap = loadComputeProgram(psp.numWorkGroups, rr, tags, stageE);
+			ap = loadComputeProgram(psp.numWorkGroups, ir, tags, stageE);
 		}
 		else if (tags.find("render") != tags.end())
 		{
-			ap = loadRenderProgram(rr, tags, stageE);
+			ap = loadRenderProgram(ir, tags, stageE);
 		}
 		else
 		{
@@ -634,26 +632,26 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psystemE)
+bool GP_Loader::loadInstanceResources(instanceResources &ir, TiXmlElement* psystemE)
 {
 	// get psystem name
 	std::string psystemName;
 	queryAttribute(	[&psystemName](TiXmlElement* e) {return e->QueryStringAttribute("name", &psystemName);},
 					psystemE, "Must provide psystem tag with a name");
 
-	for (auto resUniInfo : reservedUniformInfo)
+	for (auto resUniInfo : instanceUniformInfo)
 	{
 		GP_Uniform u = resUniInfo;
 		
 		std::string originalname = u.name;
 		u.name = psystemName + "_" + u.name;
 
-		rr.reservedUniforms.emplace(originalname, u);
+		ir.instanceUniforms.emplace(originalname, u);
 		GPDATA.addUniform(u);
 	}
 
 	GLuint currentOffset = 0;
-	for (auto resAtmInfo : reservedAtomicInfo)
+	for (auto resAtmInfo : instanceAtomicInfo)
 	{
 		GP_Atomic a = resAtmInfo;
 
@@ -663,34 +661,34 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 		a.offset = currentOffset;
 		currentOffset += 4;
 
-		rr.reservedAtomics.emplace(originalname, a);
+		ir.instanceAtomics.emplace(originalname, a);
 	}
 
 	// create global GP_AtomicBuffer and add it to GPDATA
-	GP_AtomicBuffer ab(psystemName + "Reserved", rr.reservedAtomics);
+	GP_AtomicBuffer ab(psystemName + "Instance", ir.instanceAtomics);
 	GPDATA.addAtomicBuffer(ab);
 
 	std::cout << "INIT: atomic buffer " << ab.name << " with id " <<
 		ab.id << " and " << ab.atomics.size() << " atomics" << std::endl; // DUMP
 
 	// check and apply resource value overrides
-	loadInitialResourceOverrides(rr, psystemE);
+	loadInitialResourceOverrides(ir, psystemE);
 
-	if (rr.reservedUniforms.find("maxParticles") == rr.reservedUniforms.end())
+	if (ir.instanceUniforms.find("maxParticles") == ir.instanceUniforms.end())
 	{
 		Utils::exitMessage("Fatal error", "maxParticles uniform instance definition required!");
 	}
 
-	rr.maxParticles = (GLuint)rr.reservedUniforms.at("maxParticles").value[0].x;
-	for (auto resBufInfo : reservedBufferInfo)
+	ir.maxParticles = (GLuint)ir.instanceUniforms.at("maxParticles").value[0].x;
+	for (auto resBufInfo : instanceBufferInfo)
 	{
 		GP_Buffer b = resBufInfo;
 		std::string originalName = b.name;
 		b.name = psystemName + "_" + b.name;
 		
-		b.init(rr.maxParticles);
+		b.init(ir.maxParticles);
 
-		rr.reservedBuffers.emplace(originalName, b);
+		ir.instanceBuffers.emplace(originalName, b);
 		GPDATA.addBuffer(b);
 	}
 
@@ -701,7 +699,7 @@ bool GP_Loader::loadReservedPSResources(reservedResources &rr, TiXmlElement* psy
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // TODO: support uniform and atomic overriding (only uniform for now)
-void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElement * psystemE)
+void GP_Loader::loadInitialResourceOverrides(instanceResources & ir, TiXmlElement * psystemE)
 {
 	TiXmlElement* resE = psystemE->FirstChildElement("override");
 	std::string resType, resName;
@@ -714,10 +712,10 @@ void GP_Loader::loadInitialResourceOverrides(reservedResources & rr, TiXmlElemen
 						resE, "Must provide override tag with a type attribute");
 
 		// TODO: check res type
-		if (resType == "uniform" && rr.reservedUniforms.find(resName) != rr.reservedUniforms.end())
+		if (resType == "uniform" && ir.instanceUniforms.find(resName) != ir.instanceUniforms.end())
 		{
-			queryUniformValue(resE, rr.reservedUniforms.at(resName));
-			GPDATA.addUniform(rr.reservedUniforms.at(resName));
+			queryUniformValue(resE, ir.instanceUniforms.at(resName));
+			GPDATA.addUniform(ir.instanceUniforms.at(resName));
 		}
 	}
 }
@@ -768,13 +766,13 @@ void GP_Loader::loadIterationResourceOverrides(
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE)
+AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
 {
 	// parse and store program resource info for later binding
-	// start by adding the program reserved resources
-	atomicUmap cpAtomics = rr.reservedAtomics;
-	bufferUmap cpBuffers = rr.reservedBuffers;
-	uniformUmap cpUniforms = rr.reservedUniforms;
+	// start by adding the program instance resources
+	atomicUmap cpAtomics = ir.instanceAtomics;
+	bufferUmap cpBuffers = ir.instanceBuffers;
+	uniformUmap cpUniforms = ir.instanceUniforms;
 
 	// then, add the program global resources
 	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
@@ -816,7 +814,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 	std::string psystemName;
 	stageE->Parent()->Parent()->ToElement()->QueryStringAttribute("name", &psystemName);
 
-	std::string shaderSource = generateComputeHeader(psystemName, cpBuffers, cpUniforms, rr.spheres, rr.planes);
+	std::string shaderSource = generateComputeHeader(psystemName, cpBuffers, cpUniforms, ir.spheres, ir.planes);
 	shaderSource += createFinalShaderSource(fPaths, psystemName);
 
 
@@ -844,7 +842,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 
 	resHeader abHeaders;
 	abHeaders.push_back(std::make_pair("Global", 0));
-	abHeaders.push_back(std::make_pair(psystemName + "Reserved", 1));
+	abHeaders.push_back(std::make_pair(psystemName + "Instance", 1));
 
 	std::vector<std::string> uHeaders;
 	for (auto u : cpUniforms)
@@ -852,7 +850,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, reservedRes
 		uHeaders.push_back(u.second.name);
 	}
 
-	return new ComputeProgram(cpHandle, rr.maxParticles, abHeaders, uHeaders,
+	return new ComputeProgram(cpHandle, ir.maxParticles, abHeaders, uHeaders,
 		psystemName, tags, iterationStep, numWorkGroups, bHeaders);
 }
 
@@ -909,7 +907,7 @@ void GP_Loader::collectPaths(TiXmlElement* elem, const char *tag, std::vector<st
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<std::string> &tags, TiXmlElement* stageE)
+AbstractProgram* GP_Loader::loadRenderProgram(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
 {
 	// fill renderInfo struct with the final info to be processed
 	// starting with the original file
@@ -931,9 +929,9 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 
 
 	// parse and store program resource info for later binding
-	atomicUmap rendAtomics = rr.reservedAtomics;
-	bufferUmap rendBuffers = rr.reservedBuffers;
-	uniformUmap rendUniforms = rr.reservedUniforms;
+	atomicUmap rendAtomics = ir.instanceAtomics;
+	bufferUmap rendBuffers = ir.instanceBuffers;
+	uniformUmap rendUniforms = ir.instanceUniforms;
 
 	// then, add the program global resources
 	rendBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
@@ -1075,7 +1073,7 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 
 	resHeader abHeaders;
 	abHeaders.push_back(std::make_pair("Global", 0));
-	abHeaders.push_back(std::make_pair(psystemName + "Reserved", 1));
+	abHeaders.push_back(std::make_pair(psystemName + "Instance", 1));
 
 	std::vector<std::string> uHeaders;
 	for (auto u : rendUniforms)
@@ -1085,7 +1083,7 @@ AbstractProgram* GP_Loader::loadRenderProgram(reservedResources &rr, std::set<st
 
 	glBindVertexArray(0);
 
-	return new RendererProgram(rpHandle, rr.maxParticles, abHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
+	return new RendererProgram(rpHandle, ir.maxParticles, abHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 }
 
 
@@ -1213,7 +1211,7 @@ std::string GP_Loader::generateRenderHeader(std::string psystemName, bufferUmap 
 	makeAtomicHeader();
 
 	i++;
-	GPDATA.getAtomicBuffer(psystemName + "Reserved", ab);
+	GPDATA.getAtomicBuffer(psystemName + "Instance", ab);
 	makeAtomicHeader();
 
 	res += "\n";
@@ -1298,7 +1296,7 @@ std::string GP_Loader::generateComputeHeader(std::string psystemName, bufferUmap
 	makeAtomicHeader();
 
 	i++;
-	GPDATA.getAtomicBuffer(psystemName + "Reserved", ab);
+	GPDATA.getAtomicBuffer(psystemName + "Instance", ab);
 	makeAtomicHeader();
 
 	res += "\n";
