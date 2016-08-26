@@ -1,18 +1,18 @@
-#include "RendererProgram.h"
+#include "RenderStage.h"
 
 
-RendererProgram::RendererProgram()
+RenderStage::RenderStage()
 {
 }
 
 
-RendererProgram::~RendererProgram()
+RenderStage::~RenderStage()
 {
 }
 
-void RendererProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
+void RenderStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
-	AbstractProgram::execute(model, view, projection);
+	AbstractStage::execute(model, view, projection);
 
 	bindResources();
 
@@ -40,7 +40,7 @@ void RendererProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proj
 			GL_UNSIGNED_INT, 0, maxParticles);
 	}
 
-	AbstractProgram::resetMarkedAtomics();
+	AbstractStage::resetMarkedAtomics();
 
 	// unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -53,12 +53,12 @@ void RendererProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proj
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void RendererProgram::printContents()
+void RenderStage::printContents()
 {
 	std::cout << std::string(80, '-') << std::endl;
 	std::cout << "Type: Render" << std::endl;
 
-	AbstractProgram::printContents();
+	AbstractStage::printContents();
 
 	std::cout << "VAO: " << vao << std::endl;
 }
@@ -66,9 +66,9 @@ void RendererProgram::printContents()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void RendererProgram::bindResources()
+void RenderStage::bindResources()
 {
-	AbstractProgram::bindResources();
+	AbstractStage::bindResources();
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glBindVertexArray(vao);

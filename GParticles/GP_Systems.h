@@ -2,21 +2,23 @@
 #include "GP_ParticleSystem.h"
 #include "GP_Loader.h"
 
-#define GPARTICLES GP_Systems::get()
+#define GPSYSTEMS GP_Systems::getSingleton()
 
 class GP_Systems
 {
 public:
-	static GP_Systems& get();
+	static GP_Systems& getSingleton();
 	
-
-	std::vector<GP_ParticleSystem> pSystems;
-
 	void loadProject(std::string filePath);
 	void processParticles(glm::mat4 model = glm::mat4(), glm::mat4 view = glm::mat4(),
 							glm::mat4 projection = glm::mat4());
+	void addPSystem(GP_ParticleSystem &ps);
+	bool getPSystem(std::string name, GP_ParticleSystem &ps);
+	bool getPSystemStage(std::string psystemName, AbstractStage *&stage, std::vector<std::string> tags = std::vector<std::string>());
 
 private:
+	std::vector<GP_ParticleSystem> pSystems;
+
 	GP_Systems() {};
 };
 

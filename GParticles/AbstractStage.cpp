@@ -1,9 +1,9 @@
-#include "AbstractProgram.h"
+#include "AbstractStage.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
+void AbstractStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
 	// initialize lastStep on program's first execution
 	if (firstExec)
@@ -52,7 +52,7 @@ void AbstractProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proj
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::printContents()
+void AbstractStage::printContents()
 {
 	std::cout << "Handle: " << pHandle << std::endl;
 	std::cout << "Tags: ";
@@ -85,7 +85,7 @@ void AbstractProgram::printContents()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::resetMarkedAtomics()
+void AbstractStage::resetMarkedAtomics()
 {
 	GP_AtomicBuffer ab;
 	for (auto abHeader : atomicBuffers)
@@ -110,15 +110,23 @@ void AbstractProgram::resetMarkedAtomics()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool AbstractProgram::hasTag(std::string tag)
+bool AbstractStage::hasTag(std::string tag)
 {
-	return tags.find(tag) != tags.end();
+	for (auto t : tags)
+	{
+		if (t == tag)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::addTag(std::string tag)
+void AbstractStage::addTag(std::string tag)
 {
 	tags.insert(tag);
 }
@@ -126,7 +134,7 @@ void AbstractProgram::addTag(std::string tag)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::removeTag(std::string tag)
+void AbstractStage::removeTag(std::string tag)
 {
 	tags.erase(tag);
 }
@@ -134,7 +142,7 @@ void AbstractProgram::removeTag(std::string tag)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void AbstractProgram::bindResources()
+void AbstractStage::bindResources()
 {
 	// bind atomics
 	for (auto abHeader : atomicBuffers)

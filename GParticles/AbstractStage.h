@@ -3,16 +3,16 @@
 #include "Utils.h"
 #include "GP_Data.h"
 
-class AbstractProgram
+class AbstractStage
 {
 public:
-	AbstractProgram() {};
-	AbstractProgram(const GLuint ph, const GLuint mp, const resHeader &ab,
+	AbstractStage() {};
+	AbstractStage(const GLuint ph, const GLuint mp, const resHeader &ab,
 		const std::vector<std::string> &u, const std::string &psystemName,
 		const std::set<std::string> &tgs, const GLuint iStep)
 		: pHandle(ph), maxParticles(mp), atomicBuffers(ab), uniforms(u), tags(tgs),
 		psystem(psystemName), iterationStep(iStep), firstExec(true) {};
-	virtual ~AbstractProgram() {};
+	virtual ~AbstractStage() {};
 
 	virtual void execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection) = 0;
 	virtual void printContents() = 0;

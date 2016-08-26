@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractProgram.cpp" />
-    <ClCompile Include="ComputeProgram.cpp" />
+    <ClCompile Include="AbstractStage.cpp" />
+    <ClCompile Include="ComputeStage.cpp" />
     <ClCompile Include="GP_AtomicBuffer.cpp" />
     <ClCompile Include="GP_Data.cpp" />
     <ClCompile Include="GP_Systems.cpp" />
@@ -30,7 +30,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="GP_ParticleSystem.cpp" />
     <ClCompile Include="GP_Loader.cpp" />
-    <ClCompile Include="RendererProgram.cpp" />
+    <ClCompile Include="RenderStage.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="tinyxml\tinystr.cpp" />
@@ -39,8 +39,8 @@
     <ClCompile Include="tinyxml\tinyxmlparser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractProgram.h" />
-    <ClInclude Include="ComputeProgram.h" />
+    <ClInclude Include="AbstractStage.h" />
+    <ClInclude Include="ComputeStage.h" />
     <ClInclude Include="GP_AtomicBuffer.h" />
     <ClInclude Include="GP_Data.h" />
     <ClInclude Include="GP_Systems.h" />
@@ -50,7 +50,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="GP_ParticleSystem.h" />
     <ClInclude Include="GP_Loader.h" />
-    <ClInclude Include="RendererProgram.h" />
+    <ClInclude Include="RenderStage.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="tinyxml\tinystr.h" />

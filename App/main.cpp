@@ -100,7 +100,7 @@ int main(int argc, char* args[])
 		printf("Failed to initialize SDLWindow!\n");
 		return 1;
 	}
-
+	
 	// init opengl, devIL and set glViewPort
 	Utils::init();
 
@@ -111,14 +111,13 @@ int main(int argc, char* args[])
 
 
 	// load xml project file
-	//GPARTICLES.loadProject("projects/Tutorial_1/Tutorial_1.xml");
-	//GPARTICLES.loadProject("projects/Tutorial_2/Tutorial_2.xml");
-	//GPARTICLES.loadProject("projects/Tutorial_3/Tutorial_3.xml");
-	//GPARTICLES.loadProject("projects/Tutorial_4/Tutorial_4.xml");
-	//GPARTICLES.loadProject("projects/gun/gun.xml");
-	GPARTICLES.loadProject("projects/virusPuddles/_virusPuddles.xml");
-	//GPARTICLES.loadProject("projects/boids/boids.xml");
-
+	//GPSYSTEMS.loadProject("projects/Tutorial_1/Tutorial_1.xml");
+	//GPSYSTEMS.loadProject("projects/Tutorial_2/Tutorial_2.xml");
+	//GPSYSTEMS.loadProject("projects/Tutorial_3/Tutorial_3.xml");
+	//GPSYSTEMS.loadProject("projects/Tutorial_4/Tutorial_4.xml");
+	GPSYSTEMS.loadProject("projects/gun/_gun.xml");
+	//GPSYSTEMS.loadProject("projects/virusPuddles/_virusPuddles.xml");
+	//GPSYSTEMS.loadProject("projects/boids/boids.xml");
 
 	GP_Uniform u;
 	GPDATA.getUniform("animationAngle", u);
@@ -133,7 +132,7 @@ int main(int argc, char* args[])
 		glm::mat4 projection = glm::perspective(45.0f, windowRatio, 0.1f, 100.0f);
 
 		// process all particle system
-		GPARTICLES.processParticles(glm::mat4(), c.getViewMatrix(), projection);
+		GPSYSTEMS.processParticles(glm::mat4(), c.getViewMatrix(), projection);
 
 		window.swapWindow();
 	}

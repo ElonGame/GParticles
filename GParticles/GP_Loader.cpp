@@ -37,8 +37,10 @@ void GP_Loader::loadProject(std::string filePath)
 	TiXmlElement* psystemE = projectH.FirstChildElement("psystem").ToElement();
 	for (; psystemE; psystemE = psystemE->NextSiblingElement("psystem"))
 	{
-		GPARTICLES.pSystems.push_back(loadParticleSystem(psystemE));
-		GPARTICLES.pSystems.back().printContents();
+		GP_ParticleSystem ps = loadParticleSystem(psystemE);
+		ps.printContents();
+
+		GPSYSTEMS.addPSystem(ps);
 	}
 }
 
@@ -546,7 +548,7 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 		Utils::exitMessage("Fatal Error", "psystem must have a stages tag");
 	}
 
-	std::vector<AbstractProgram *> programs;
+	std::vector<AbstractStage *> stages;
 
 	// psystem structure states, required for validation if psStructure == forced
 	std::string psStructure = "forced";
@@ -558,7 +560,7 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 		{
 			for (bool exit = false; !exit && stageE; stageE = stageE->NextSiblingElement("stage"))
 			{
-				AbstractProgram *ap;
+				AbstractStage *ap;
 
 				auto tags = getTags(stageE);
 
@@ -581,14 +583,14 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 
 				if (current == "emission" || current == "update")
 				{
-					ap = loadComputeProgram(psp.numWorkGroups, ir, tags, stageE);
+					ap = loadComputeStage(psp.numWorkGroups, ir, tags, stageE);
 				}
 				else if (current == "render")
 				{
-					ap = loadRenderProgram(ir, tags, stageE);
+					ap = loadRenderStage(ir, tags, stageE);
 				}
 
-				programs.push_back(ap);
+				stages.push_back(ap);
 			}
 		};
 
@@ -602,18 +604,18 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 	// free structure stages (can still be used with forced structure, after required stages OK)
 	for (; stageE; stageE = stageE->NextSiblingElement("stage"))
 	{
-		AbstractProgram *ap;
+		AbstractStage *ap;
 
 		auto tags = getTags(stageE);
 
 		if (tags.find("emission") != tags.end() ||
 			tags.find("update") != tags.end())
 		{
-			ap = loadComputeProgram(psp.numWorkGroups, ir, tags, stageE);
+			ap = loadComputeStage(psp.numWorkGroups, ir, tags, stageE);
 		}
 		else if (tags.find("render") != tags.end())
 		{
-			ap = loadRenderProgram(ir, tags, stageE);
+			ap = loadRenderStage(ir, tags, stageE);
 		}
 		else
 		{
@@ -623,10 +625,13 @@ GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
 			Utils::exitMessage("Invalid input", msg);
 		}
 
-		programs.push_back(ap);
+		stages.push_back(ap);
 	}
 
-	return GP_ParticleSystem(programs, psp.model, psp.numWorkGroups, psp.lifetime, psp.looping);
+	std::string psystemName;
+	psystemE->QueryStringAttribute("name", &psystemName);
+
+	return GP_ParticleSystem(psystemName, stages, psp.model, psp.numWorkGroups, psp.lifetime, psp.looping);
 }
 
 
@@ -724,14 +729,14 @@ void GP_Loader::loadInitialResourceOverrides(instanceResources & ir, TiXmlElemen
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void GP_Loader::loadIterationResourceOverrides(
-	TiXmlElement * programE, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
+	TiXmlElement * stageE, atomicUmap &aum, bufferUmap &bum, uniformUmap &uum)
 {
-	if (programE == nullptr)
+	if (stageE == nullptr)
 	{
 		return;
 	}
 
-	TiXmlElement* resE = programE->FirstChildElement("override");
+	TiXmlElement* resE = stageE->FirstChildElement("override");
 	
 	if (resE == nullptr)
 	{
@@ -766,15 +771,15 @@ void GP_Loader::loadIterationResourceOverrides(
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
+AbstractStage* GP_Loader::loadComputeStage(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
 {
-	// parse and store program resource info for later binding
-	// start by adding the program instance resources
+	// parse and store stage resource info for later binding
+	// start by adding the stage instance resources
 	atomicUmap cpAtomics = ir.instanceAtomics;
 	bufferUmap cpBuffers = ir.instanceBuffers;
 	uniformUmap cpUniforms = ir.instanceUniforms;
 
-	// then, add the program global resources
+	// then, add the stage global resources
 	cpBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
 	cpAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
 	cpUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
@@ -833,7 +838,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, instanceRes
 		return false;
 	}
 	
-	// shaderprogram only requires the resource headers
+	// stage only requires the resource headers
 	resHeader bHeaders;
 	for (auto b : cpBuffers)
 	{
@@ -850,7 +855,7 @@ AbstractProgram* GP_Loader::loadComputeProgram(GLuint numWorkGroups, instanceRes
 		uHeaders.push_back(u.second.name);
 	}
 
-	return new ComputeProgram(cpHandle, ir.maxParticles, abHeaders, uHeaders,
+	return new ComputeStage(cpHandle, ir.maxParticles, abHeaders, uHeaders,
 		psystemName, tags, iterationStep, numWorkGroups, bHeaders);
 }
 
@@ -907,7 +912,7 @@ void GP_Loader::collectPaths(TiXmlElement* elem, const char *tag, std::vector<st
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-AbstractProgram* GP_Loader::loadRenderProgram(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
+AbstractStage* GP_Loader::loadRenderStage(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE)
 {
 	// fill renderInfo struct with the final info to be processed
 	// starting with the original file
@@ -928,12 +933,12 @@ AbstractProgram* GP_Loader::loadRenderProgram(instanceResources &ir, std::set<st
 
 
 
-	// parse and store program resource info for later binding
+	// parse and store stage resource info for later binding
 	atomicUmap rendAtomics = ir.instanceAtomics;
 	bufferUmap rendBuffers = ir.instanceBuffers;
 	uniformUmap rendUniforms = ir.instanceUniforms;
 
-	// then, add the program global resources
+	// then, add the stage global resources
 	rendBuffers.insert(globalBufferInfo.begin(), globalBufferInfo.end());
 	rendAtomics.insert(globalAtomicInfo.begin(), globalAtomicInfo.end());
 	rendUniforms.insert(globalUniformInfo.begin(), globalUniformInfo.end());
@@ -1083,7 +1088,7 @@ AbstractProgram* GP_Loader::loadRenderProgram(instanceResources &ir, std::set<st
 
 	glBindVertexArray(0);
 
-	return new RendererProgram(rpHandle, ir.maxParticles, abHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
+	return new RenderStage(rpHandle, ir.maxParticles, abHeaders, uHeaders, psystemName, tags, rl.iterationStep, vao, texture.getId(), model, rl.rendertype);
 }
 
 

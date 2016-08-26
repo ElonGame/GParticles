@@ -6,7 +6,7 @@ Most implementations of particle systems process data on the CPU and transfer th
 
 GParticles also provides a simple but powerful architecture that promotes reusability and modularity of functionality, with many utilities that let the user extend particle system behavior and configurations at different abstraction levels.
 
-Be sure to visit the GParticles wiki (<https://github.com/tiagoddinis/GParticles/wiki>) to lear more. There you can find a tutorial series, the xml project definition file documentation and more information about the library architecture and its components.
+Be sure to visit the GParticles wiki (<https://github.com/tiagoddinis/GParticles/wiki>) to learn more. There you can find a tutorial series, the xml project definition file documentation and more information about the library architecture and its components.
 
 Here are a few examples of what can be achieved with GParticles:
 * Virus puddles

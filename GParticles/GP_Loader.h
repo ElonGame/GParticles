@@ -87,9 +87,9 @@ private:
 	static void loadInitialResourceOverrides(instanceResources &ir, TiXmlElement* psystemE);
 
 
-	// program loading functions
-	static AbstractProgram* loadComputeProgram(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
-	static AbstractProgram* loadRenderProgram(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
+	// stage loading functions
+	static AbstractStage* loadComputeStage(GLuint numWorkGroups, instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
+	static AbstractStage* loadRenderStage(instanceResources &ir, std::set<std::string> &tags, TiXmlElement* stageE);
 	static void getRenderInfo(renderInfo &rl, TiXmlElement* stageE);
 
 	// project loading utility functions
@@ -106,7 +106,7 @@ private:
 
 
 	static void collectPaths(TiXmlElement* elem, const char *tag, std::vector<std::string> &target);
-	static bool loadShader(GLuint program, GLuint shader, TiXmlElement* fPathE);
+	static bool loadShader(GLuint stage, GLuint shader, TiXmlElement* fPathE);
 	
 	static std::string createFinalShaderSource(std::vector<std::string> fPaths, std::string psystemName);
 	static std::string generateRenderHeader(std::string psystemName, bufferUmap &buffers, uniformUmap &uniforms, std::string in, std::string out, std::string renderType);
@@ -114,7 +114,7 @@ private:
 	static std::string fileToString(std::string filePath);
 	static std::string fillTemplate(std::string templateHeader, std::string psystemName);
 	static void printShaderLog(GLuint shader);
-	static void printProgramLog(GLuint program);
+	static void printProgramLog(GLuint stage);
 
 
 	

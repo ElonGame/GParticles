@@ -1,19 +1,19 @@
-#include "ComputeProgram.h"
+#include "ComputeStage.h"
 
-ComputeProgram::ComputeProgram()
+ComputeStage::ComputeStage()
 {
 }
 
-ComputeProgram::~ComputeProgram()
+ComputeStage::~ComputeStage()
 {
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ComputeProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
+void ComputeStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
-	AbstractProgram::execute(model, view, projection);
+	AbstractStage::execute(model, view, projection);
 
 	bindResources();
 
@@ -22,7 +22,7 @@ void ComputeProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proje
 	glDispatchComputeGroupSizeARB(groupSize, 1, 1, numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-	AbstractProgram::resetMarkedAtomics();
+	AbstractStage::resetMarkedAtomics();
 
 	// unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -32,12 +32,12 @@ void ComputeProgram::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &proje
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ComputeProgram::printContents()
+void ComputeStage::printContents()
 {
 	std::cout << std::string(80, '-') << std::endl;
 	std::cout << "Type: Compute" << std::endl;
 
-	AbstractProgram::printContents();
+	AbstractStage::printContents();
 
 	std::cout << "-- Buffers --" << std::endl;
 	for (auto bName : buffers)
@@ -54,9 +54,9 @@ void ComputeProgram::printContents()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ComputeProgram::bindResources()
+void ComputeStage::bindResources()
 {
-	AbstractProgram::bindResources();
+	AbstractStage::bindResources();
 
 	// bind buffers
 	for (auto bName : buffers)

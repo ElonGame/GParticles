@@ -1,21 +1,20 @@
 #pragma once
-#include "AbstractProgram.h"
-#include <GL\glew.h>
+#include "AbstractStage.h"
 #include "Model.h"
 
-class RendererProgram : public AbstractProgram
+class RenderStage : public AbstractStage
 {
 public:
-	RendererProgram();
-	RendererProgram(const GLuint ph, const GLuint mp, const resHeader &a,
+	RenderStage();
+	RenderStage(const GLuint ph, const GLuint mp, const resHeader &a,
 		const std::vector<std::string> &u, const std::string &psystemName,
 		const std::set<std::string> &tgs, const GLuint iStep, const GLuint v,
 		const GLuint t, const Model &m, const std::string &rType)
-		: AbstractProgram(ph, mp, a, u, psystemName, tgs, iStep), vao(v),
+		: AbstractStage(ph, mp, a, u, psystemName, tgs, iStep), vao(v),
 		texture(t), geoModel(m), renderType(rType)
 	{
 	};
-	~RendererProgram();
+	~RenderStage();
 
 	void execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection);
 	void printContents();
