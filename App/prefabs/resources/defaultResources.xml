@@ -3,6 +3,7 @@
 
 	<instance>
 		<buffer name="lifetimes" elements=512 type="float" />
+		<buffer name="initialLifetimes" elements=512 type="float" />
 		<buffer name="lineLifetime" elements=512 type="float" />
 		<buffer name="positions" elements=512 type="vec4" />
 		<buffer name="lastPositions" elements=512 type="vec4" />

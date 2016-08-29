@@ -55,6 +55,24 @@ vec4 spherePositionGenerator(float maxRadius, bool positionsInVolume)
 
 
 
+// Returns particle position from a disc primitive
+////////////////////////////////////////////////////////////////////////////////
+vec4 discPositionGenerator(vec3 direction, float radius, bool positionsInDisc)
+{
+  vec3 perpendicular = normalize(cross(direction, vec3(0, 1, 0)));
+
+  float angle = randInRange(0, 450);
+
+  float dist = radius;
+  if (positionsInDisc)
+  	dist = randInRange(0, radius);
+
+	vec4 final = vec4(perpendicular * dist, 1);
+
+  return rotationMatrix(direction, radians(angle)) * final;
+}
+
+
 
 // Returns particle position from a plane primitive
 ////////////////////////////////////////////////////////////////////////////////

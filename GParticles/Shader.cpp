@@ -52,7 +52,7 @@ bool Shader::loadShader(const std::string sourceString)
 
 void Shader::dumpToFile()
 {
-	std::string finalName = "dumps/" + name + "_" + type + ".glsl";
+	std::string finalName = "dumps/" + name + "_" + type + "_" + std::to_string(id) + ".glsl";
 	std::ofstream out(finalName);
 	out << source;
 	out.close();

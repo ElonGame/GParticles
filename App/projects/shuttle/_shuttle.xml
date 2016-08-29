@@ -1,0 +1,208 @@
+<project>
+	<resources prefab="prefabs/resources/defaultResources.xml">
+		<instance>
+			<buffer name="initialPositions" elements=512 type="vec4" />
+			<buffer name="detachRotSpeed" elements=512 type="float" />
+		</instance>
+
+		<global>
+			<uniform name="animationAngle" type="float" />
+
+			<uniform name="elemScale" type="float" value=0.25 />
+
+			<uniform name="stg1Radius" type="float" value=8 />
+			<uniform name="stg1AngleInc" type="float" value=72 />
+			<uniform name="stg1ZOffset" type="float" value=4 />
+
+			<uniform name="stg3ZOffset" type="float" value=27.5 />
+		</global>
+	</resources>
+
+
+
+
+	<psystem name="stage1Prop">
+		<properties>
+			<position x=0 y=0 z=-50 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+			<numWorkGroups value=1 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=5 />
+
+		<stages psystemstructure="free">
+			<stage iterationStep=0>
+				<tag name="emission"/>
+				
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/shuttle/emissionSTG1.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="update"/>
+
+				<file path="projects/shuttle/updateSTG1.glsl" />
+				<file path="templates/updateMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
+				<rendertype type="model" path="assets/models/rocket/stage1.stl"/>
+
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/shuttle/modelSTG1.vert" />
+				<fragfile path="projects/shuttle/model.frag" />
+			</stage>
+		</stages>
+	</psystem>
+
+
+
+
+	<psystem name="stage2Prop">
+		<properties>
+			<position x=0 y=0 z=-50 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+			<numWorkGroups value=1 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=1 />
+
+		<stages psystemstructure="free">
+			<stage iterationStep=0>
+				<tag name="emission"/>
+				
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/shuttle/emissionSTG2.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
+				<rendertype type="model" path="assets/models/rocket/stage2.stl"/>
+				
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/shuttle/model.vert" />
+				<fragfile path="projects/shuttle/model.frag" />
+			</stage>
+		</stages>
+	</psystem>
+
+
+
+
+	<psystem name="stage3Prop">
+		<properties>
+			<position x=0 y=0 z=-50 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+			<numWorkGroups value=1 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=1 />
+
+		<stages psystemstructure="free">
+			<stage iterationStep=0>
+				<tag name="emission"/>
+				
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/shuttle/emissionSTG3.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
+				<rendertype type="model" path="assets/models/rocket/stage3.stl"/>
+				
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/shuttle/model.vert" />
+				<fragfile path="projects/shuttle/model.frag" />
+			</stage>
+		</stages>
+	</psystem>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<psystem name="stage1Trail">
+		<properties>
+			<position x=0 y=0 z=-50 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+			<numWorkGroups value=100 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=10000 />
+		<override type="uniform" name="toCreate" value=25 />
+
+		<stages>
+			<stage iterationStep=0>
+				<tag name="emission"/>
+				
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/shuttle/emissionSTG1Trail.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="update"/>
+
+				<file path="projects/shuttle/updateSTG1Trail.glsl" />
+				<file path="templates/updateMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/shuttle/point.vert" />
+				<fragfile path="projects/shuttle/point.frag" />
+			</stage>
+		</stages>
+	</psystem>
+
+
+
+
+
+
+
+</project>

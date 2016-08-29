@@ -1061,11 +1061,13 @@ AbstractStage* GP_Loader::loadRenderStage(instanceResources &ir, std::set<std::s
 
 
 	// add instance buffers to vao
+	int i = (rl.rendertype == "model") ? 3 : 0;
+
 	for (auto b : rendBuffers)
 	{
 		GLint location = glGetAttribLocation(rpHandle, b.second.name.c_str());
 		glBindBuffer(GL_ARRAY_BUFFER, b.second.id);
-		glEnableVertexAttribArray(location);
+		glEnableVertexAttribArray(i++);
 		GLuint elemType = (b.second.type == "float") ? 1 : 4;
 		glVertexAttribPointer(location, elemType, GL_FLOAT, 0, 0, 0);
 
