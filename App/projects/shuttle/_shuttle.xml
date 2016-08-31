@@ -6,6 +6,10 @@
 		</instance>
 
 		<global>
+			<uniform name="newStateRequest" type="float" value=1 />
+			<uniform name="canRequestChange" type="float" value=1 />
+			<uniform name="state" type="float" value=0 />
+
 			<uniform name="animationAngle" type="float" />
 
 			<uniform name="elemScale" type="float" value=0.25 />
@@ -15,6 +19,9 @@
 			<uniform name="stg1ZOffset" type="float" value=4 />
 
 			<uniform name="stg3ZOffset" type="float" value=27.5 />
+
+			<uniform name="trail1Lifetime" type="float" value=2 />
+			<uniform name="trail2Lifetime" type="float" value=2 />
 		</global>
 	</resources>
 
@@ -46,6 +53,7 @@
 
 			<stage iterationStep=0>
 				<tag name="update"/>
+				<tag name="paused"/>
 
 				<file path="projects/shuttle/updateSTG1.glsl" />
 				<file path="templates/updateMain.glsl" />
@@ -54,7 +62,7 @@
 			<stage iterationStep=0>
 				<tag name="render"/>
 
-				<rendertype type="model" path="assets/models/rocket/stage1.stl"/>
+				<rendertype type="model" path="assets/models/shuttle/stage1.stl"/>
 
 				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="projects/shuttle/modelSTG1.vert" />
@@ -90,12 +98,20 @@
 			</stage>
 
 			<stage iterationStep=0>
+				<tag name="update"/>
+				<tag name="paused"/>
+
+				<file path="projects/shuttle/updateSTG2.glsl" />
+				<file path="templates/updateMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
 				<tag name="render"/>
 
-				<rendertype type="model" path="assets/models/rocket/stage2.stl"/>
+				<rendertype type="model" path="assets/models/shuttle/stage2.stl"/>
 				
 				<vertfile path="modules/utilities.glsl" />
-				<vertfile path="projects/shuttle/model.vert" />
+				<vertfile path="projects/shuttle/modelSTG2.vert" />
 				<fragfile path="projects/shuttle/model.frag" />
 			</stage>
 		</stages>
@@ -130,7 +146,7 @@
 			<stage iterationStep=0>
 				<tag name="render"/>
 
-				<rendertype type="model" path="assets/models/rocket/stage3.stl"/>
+				<rendertype type="model" path="assets/models/shuttle/stage3.stl"/>
 				
 				<vertfile path="modules/utilities.glsl" />
 				<vertfile path="projects/shuttle/model.vert" />
@@ -158,7 +174,7 @@
 
 
 
-<psystem name="stage1Trail">
+	<psystem name="stage1Trail">
 		<properties>
 			<position x=0 y=0 z=-50 />
 			<rotation x=1 y=0 z=0 angle=0 />
@@ -168,7 +184,7 @@
 		</properties>
 
 		<override type="uniform" name="maxParticles" value=10000 />
-		<override type="uniform" name="toCreate" value=25 />
+		<override type="uniform" name="toCreate" value=500 />
 
 		<stages>
 			<stage iterationStep=0>
@@ -185,7 +201,7 @@
 			<stage iterationStep=0>
 				<tag name="update"/>
 
-				<file path="projects/shuttle/updateSTG1Trail.glsl" />
+				<file path="projects/shuttle/updateTrail.glsl" />
 				<file path="templates/updateMain.glsl" />
 			</stage>
 
@@ -200,7 +216,46 @@
 	</psystem>
 
 
+	<psystem name="stage2Trail">
+		<properties>
+			<position x=0 y=0 z=-50 />
+			<rotation x=1 y=0 z=0 angle=0 />
+			<scale x=1 y=1 z=1 />
+			<lifetime value=30 unit="seconds"/>
+			<numWorkGroups value=20 />
+		</properties>
 
+		<override type="uniform" name="maxParticles" value=2000 />
+		<override type="uniform" name="toCreate" value=100 />
+
+		<stages>
+			<stage iterationStep=0>
+				<tag name="emission"/>
+				
+				<override type="atomic" name="emissionAttempts" value=0/>
+
+				<file path="modules/utilities.glsl" />
+				<file path="modules/emission.glsl" />
+				<file path="projects/shuttle/emissionSTG2Trail.glsl" />
+				<file path="templates/emissionMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="update"/>
+
+				<file path="projects/shuttle/updateTrail.glsl" />
+				<file path="templates/updateMain.glsl" />
+			</stage>
+
+			<stage iterationStep=0>
+				<tag name="render"/>
+
+				<vertfile path="modules/utilities.glsl" />
+				<vertfile path="projects/shuttle/point.vert" />
+				<fragfile path="projects/shuttle/point.frag" />
+			</stage>
+		</stages>
+	</psystem>
 
 
 

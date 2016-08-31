@@ -7,7 +7,6 @@
 		<global>
 			<uniform name="gunPoint" type="vec4" />
 
-			<uniform name="reload" type="float" />
 
 			<atomic name="cooldownAttempts" value=0 />
 			<buffer name="cooldown" elements=1 type="float" />
@@ -21,7 +20,6 @@
 			<buffer name="holdTime" elements=1 type="float" />
 			<uniform name="delayPerCharge" type="float" value=0.1 />
 			<uniform name="superParticles" type="float" value=11 />
-			<uniform name="spaceHold" type="float" />
 			<uniform name="chargedAngle" type="float" value=1 />
 		</global>
 	</resources>
@@ -45,15 +43,7 @@
 			<stage iterationStep=0>
 				<tag name="emission"/>
 
-				<!--listener uniform="state">
-					<when value="trigger">
-						<action change="thrusters" to="false" />
-						<action addTag="disabled" />
-					</when>
-					<when value="explode">
-						<action change="explosion" to="true" />
-					</when>
-				</listener-->
+
 				
 				<override type="atomic" name="emissionAttempts" value=0/>
 
@@ -79,6 +69,7 @@
 
 			<stage iterationStep=10>
 				<tag name="update"/>
+				<tag name="removable"/>
 
 				<file path="projects/gun/custom.glsl" />
 			</stage>

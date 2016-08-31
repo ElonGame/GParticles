@@ -116,7 +116,7 @@ void singleShot()
 
 void doReload()
 {
-	if (@state[gid] == 3 && reload == 1)	
+	if (@state[gid] == 3 && rHold == 1)	
 	{
 		@state[gid] = 4;
 	}

@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
-//#include "GP_Atomic.h"
 #include "GP_AtomicBuffer.h"
 #include "GP_Uniform.h"
 #include "GP_Buffer.h"

@@ -22,8 +22,15 @@
 
 
 	<global>
+		<buffer name="events" elements=100 type="uint" />
+
 		<atomic name="randomCounter" value=0 />
+
 		<uniform name="mouseXY" type="vec2" />
+
+		<uniform name="spaceHold" type="float" />
+		<uniform name="rHold" type="float" />
+
 		<uniform name="camPos" type="vec4" />
 		<uniform name="camDir" type="vec4" />
 		<uniform name="camUp" type="vec4" />

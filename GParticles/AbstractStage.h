@@ -1,7 +1,9 @@
 #pragma once
 #include <set>
+#include <functional>
 #include "Utils.h"
 #include "GP_Data.h"
+
 
 class AbstractStage
 {
@@ -16,9 +18,13 @@ public:
 
 	virtual void execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection) = 0;
 	virtual void printContents() = 0;
+	void setStub(bool setStartStub, std::function<void(AbstractStage *)> s);
 	bool hasTag(std::string tag);
 	void addTag(std::string tag);
 	void removeTag(std::string tag);
+
+	std::function<void(AbstractStage *)> startStub;
+	std::function<void(AbstractStage *)> endStub;
 
 protected:
 	GLuint pHandle;
@@ -34,4 +40,5 @@ protected:
 
 	void bindResources();
 	void resetMarkedAtomics();
+	void useStub();
 };

@@ -1,4 +1,4 @@
 void update()
 {
-	//@positions[gid].xyz += @velocities[gid].xyz * @deltaTime;
+	@positions[gid].xyz += 3 * @velocities[gid].xyz * @deltaTime;
 }

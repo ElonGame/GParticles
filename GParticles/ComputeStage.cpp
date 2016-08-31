@@ -13,6 +13,11 @@ ComputeStage::~ComputeStage()
 ///////////////////////////////////////////////////////////////////////////////
 void ComputeStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
+	std::function<void(AbstractStage *)> incrementState = AbstractStage::startStub;
+
+	if (AbstractStage::startStub)
+		AbstractStage::startStub(this);
+
 	AbstractStage::execute(model, view, projection);
 
 	bindResources();
@@ -21,6 +26,9 @@ void ComputeStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &project
 	GLuint groupSize = (maxParticles + numWorkGroups - 1) / numWorkGroups;
 	glDispatchComputeGroupSizeARB(groupSize, 1, 1, numWorkGroups, 1, 1);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	if (AbstractStage::endStub)
+		AbstractStage::endStub(this);
 
 	AbstractStage::resetMarkedAtomics();
 

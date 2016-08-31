@@ -12,6 +12,9 @@ RenderStage::~RenderStage()
 
 void RenderStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
 {
+	if (AbstractStage::startStub)
+		AbstractStage::startStub(this);
+
 	AbstractStage::execute(model, view, projection);
 
 	bindResources();
@@ -41,6 +44,9 @@ void RenderStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projecti
 	}
 
 	AbstractStage::resetMarkedAtomics();
+
+	if (AbstractStage::endStub)
+		AbstractStage::endStub(this);
 
 	// unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

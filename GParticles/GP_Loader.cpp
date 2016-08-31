@@ -503,6 +503,7 @@ void GP_Loader::loadProperties(TiXmlElement* propertiesE, psProperties &psp, loa
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 GP_ParticleSystem GP_Loader::loadParticleSystem(TiXmlElement* psystemE)
@@ -1274,18 +1275,20 @@ std::string GP_Loader::fillTemplate(std::string templatePath, std::string psyste
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-std::string GP_Loader::generateComputeHeader(std::string psystemName, bufferUmap &buffers, uniformUmap &uniforms,
-											 std::vector<glm::vec4> spheres, std::vector<glm::vec4> planes)
+std::string GP_Loader::generateComputeHeader(std::string psystemName,
+	bufferUmap &buffers, uniformUmap &uniforms, std::vector<glm::vec4> spheres,
+	std::vector<glm::vec4> planes)
 {
-	std::string res =	"#version 430\n"
-						"#extension GL_ARB_compute_shader : enable\n"
-						"#extension GL_ARB_shader_storage_buffer_object : enable\n"
-						"#extension GL_ARB_compute_variable_group_size : enable\n\n"
-						"////////////////////////////////////////////////////////////////////////////////\n"
-						"// RESOURCES\n"
-						"////////////////////////////////////////////////////////////////////////////////\n\n";
+	std::string res =
+		"#version 430\n"
+		"#extension GL_ARB_compute_shader : enable\n"
+		"#extension GL_ARB_shader_storage_buffer_object : enable\n"
+		"#extension GL_ARB_compute_variable_group_size : enable\n\n"
+		"////////////////////////////////////////////////////////////////////////////////\n"
+		"// RESOURCES\n"
+		"////////////////////////////////////////////////////////////////////////////////\n\n";
 
-	// atomic binding points need to be created first since their max value is 8
+	// atomic binding points must be created first since their max value is 8
 	int i = 0;
 	GP_AtomicBuffer ab;
 	GPDATA.getAtomicBuffer("Global", ab);

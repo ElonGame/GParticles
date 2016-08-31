@@ -1,6 +1,6 @@
 void emission()
 {
-	@lifetimes[gid] = 10;
+	@lifetimes[gid] = 3600;
 	@colors[gid] = vec4(0.1,0.9,0.9,1);
 
 // positions around stage 2 propulsor

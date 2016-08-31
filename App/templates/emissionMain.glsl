@@ -9,7 +9,7 @@ void main()
 	{
 		// if max number of particles to be emitted on current iteration has
 		// not been reached, call emission and emit a new particle
-		if (atomicCounterIncrement(@emissionAttempts) < @toCreate)
+		if (atomicCounterIncrement(@emissionAttempts) < @toCreate * @deltaTime)
 		{
 			atomicCounterIncrement(@aliveParticles);
 
