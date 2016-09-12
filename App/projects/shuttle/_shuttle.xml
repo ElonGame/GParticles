@@ -1,11 +1,11 @@
 <project>
-	<resources prefab="prefabs/resources/defaultResources.xml">
-		<instance>
+	<prefab path="prefabs/resources/defaultResources.xml">
+		<inject slot="instance">
 			<buffer name="initialPositions" elements=512 type="vec4" />
 			<buffer name="detachRotSpeed" elements=512 type="float" />
-		</instance>
+		</inject>
 
-		<global>
+		<inject slot="global">
 			<uniform name="newStateRequest" type="float" value=1 />
 			<uniform name="canRequestChange" type="float" value=1 />
 			<uniform name="state" type="float" value=0 />
@@ -22,19 +22,20 @@
 
 			<uniform name="trail1Lifetime" type="float" value=2 />
 			<uniform name="trail2Lifetime" type="float" value=2 />
-		</global>
-	</resources>
+		</inject>
+	</prefab>
 
+	<prefab path="projects/shuttle/prefabs/psystemStructure.xml">
+		<inject slot="maxParticles"> <override type="uniform" name="maxParticles" value=5 /> </inject>
+		<inject slot="emissionFile"> <file path="projects/shuttle/emissionSTG1.glsl" /> </inject>
+		<inject slot="updateFile"> <file path="projects/shuttle/updateSTG1.glsl" /> </inject>
+		<inject slot="renderType"> <rendertype type="model" path="assets/models/shuttle/stage1.stl"/> </inject>
+		<inject slot="vertModelFile"> <vertfile path="projects/shuttle/modelSTG1.vert" /> </inject>
+	</prefab>
 
-
-
-	<psystem name="stage1Prop">
+	<!--psystem name="stage1Prop">
 		<properties>
 			<position x=0 y=0 z=-50 />
-			<rotation x=1 y=0 z=0 angle=0 />
-			<scale x=1 y=1 z=1 />
-			<lifetime value=30 unit="seconds"/>
-			<numWorkGroups value=1 />
 		</properties>
 
 		<override type="uniform" name="maxParticles" value=5 />
@@ -69,7 +70,7 @@
 				<fragfile path="projects/shuttle/model.frag" />
 			</stage>
 		</stages>
-	</psystem>
+	</psystem-->
 
 
 
@@ -77,10 +78,6 @@
 	<psystem name="stage2Prop">
 		<properties>
 			<position x=0 y=0 z=-50 />
-			<rotation x=1 y=0 z=0 angle=0 />
-			<scale x=1 y=1 z=1 />
-			<lifetime value=30 unit="seconds"/>
-			<numWorkGroups value=1 />
 		</properties>
 
 		<override type="uniform" name="maxParticles" value=1 />
@@ -123,10 +120,6 @@
 	<psystem name="stage3Prop">
 		<properties>
 			<position x=0 y=0 z=-50 />
-			<rotation x=1 y=0 z=0 angle=0 />
-			<scale x=1 y=1 z=1 />
-			<lifetime value=30 unit="seconds"/>
-			<numWorkGroups value=1 />
 		</properties>
 
 		<override type="uniform" name="maxParticles" value=1 />

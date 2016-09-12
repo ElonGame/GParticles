@@ -1,0 +1,39 @@
+<psystem name="stage1Prop">
+	<properties>
+		<position x=0 y=0 z=-50 />
+	</properties>
+
+	<slot name="maxParticles" />
+
+	<stages psystemstructure="free">
+		<stage iterationStep=0>
+			<tag name="emission"/>
+			
+			<override type="atomic" name="emissionAttempts" value=0/>
+
+			<file path="modules/utilities.glsl" />
+			<file path="modules/emission.glsl" />
+
+			<slot name="emissionFile" />
+			<file path="templates/emissionMain.glsl" />
+		</stage>
+
+		<stage iterationStep=0>
+			<tag name="update"/>
+			<tag name="paused"/>
+
+			<slot name="updateFile" />
+			<file path="templates/updateMain.glsl" />
+		</stage>
+
+		<stage iterationStep=0>
+			<tag name="render"/>
+
+			<slot name="renderType" />
+			<vertfile path="modules/utilities.glsl" />
+
+			<slot name="vertModelFile" />
+			<fragfile path="projects/shuttle/model.frag" />
+		</stage>
+	</stages>
+</psystem>

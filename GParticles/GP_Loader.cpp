@@ -10,10 +10,226 @@ std::vector<GP_Uniform> GP_Loader::instanceUniformInfo;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::injectPrefab(TiXmlElement *parentE, TiXmlElement *cursorE,
+	std::unordered_map<std::string, TiXmlElement*> &prefabInjections)
+{
+	std::string slotName;
+	
+	// <overridable attribute, used values for that attribute>
+	std::unordered_map<std::string, std::set<std::string>> usedAttrs;
+
+	while (cursorE)
+	{
+		// does current element refer to a slot?
+		if (cursorE->ValueStr() == "slot")
+		{
+			// slot name
+			queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("name", &slotName);},
+				cursorE, "Must provide slot tag with a name attribute");
+
+			// should override other tags with the same selected attribute values?
+			std::string overridableAttr;
+			cursorE->QueryStringAttribute("override", &overridableAttr);
+			if (usedAttrs.find(overridableAttr) == usedAttrs.end())
+			{
+				usedAttrs.emplace(overridableAttr, std::set<std::string>());
+			}
+
+			// check if there is an xml injection to replace it
+			TiXmlElement *injectE;
+			if (prefabInjections.find(slotName) != prefabInjections.end())
+			{
+				injectE = prefabInjections.at(slotName)->FirstChildElement();
+				for (; injectE; injectE = injectE->NextSiblingElement())
+				{
+					std::string attrValue = "";
+					for (auto ua : usedAttrs)
+					{
+						injectE->QueryStringAttribute(ua.first.c_str(), &attrValue);
+						if (attrValue != "")
+						{
+							usedAttrs.at(ua.first).insert(attrValue);
+						}
+					}
+
+
+					parentE->InsertBeforeChild(cursorE, *injectE);
+				}
+			}
+
+			injectE = cursorE;
+			cursorE = cursorE->NextSiblingElement();
+			parentE->RemoveChild(injectE);
+
+			continue;
+		}
+
+		// check if a tag should be overriden
+		std::string attrValue = "";
+		for (auto ua : usedAttrs)
+		{
+			cursorE->QueryStringAttribute(ua.first.c_str(), &attrValue);
+			if (attrValue != "" && usedAttrs.at(ua.first).find(attrValue) != usedAttrs.at(ua.first).end())
+			{
+				TiXmlElement *toRemove = cursorE;
+				cursorE = cursorE->NextSiblingElement();
+				parentE->RemoveChild(toRemove);
+
+				continue;
+			}
+		}
+
+
+		// if has child -> go down
+		TiXmlElement *childE = cursorE->FirstChildElement();
+		if (childE)
+		{
+			injectPrefab(cursorE, childE, prefabInjections);
+		}
+
+		cursorE = cursorE->NextSiblingElement();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::collectInjections(TiXmlElement *cursorE, std::unordered_map<std::string,
+	std::unordered_map<std::string, TiXmlElement*>> &injections)
+{
+	for (; cursorE; cursorE = cursorE->NextSiblingElement())
+	{
+		// is prefab ?
+		if (cursorE->ValueStr() == "prefab")
+		{
+			std::string prefabPath;
+			queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("path", &prefabPath);},
+				cursorE, "Must provide prefab tag with a path");
+
+			// if prefab path not collected yet
+			if (injections.find(prefabPath) == injections.end())
+			{
+				injections.emplace(prefabPath, std::unordered_map<std::string, TiXmlElement*>());
+			}
+
+			TiXmlElement *injectE = cursorE->FirstChildElement("inject");
+			std::string slotName;
+			for (; injectE; injectE = injectE->NextSiblingElement("inject"))
+			{
+				queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("slot", &slotName);},
+					injectE, "Must provide inject tag with a slot name");
+
+				injections.at(prefabPath).emplace(slotName, injectE);
+			}
+
+			continue;
+		}
+
+		// if has child -> go down
+		TiXmlElement *childE = cursorE->FirstChildElement();
+		if (childE)
+		{
+			collectInjections(childE, injections);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::applyInjections(TiXmlElement *root, TiXmlElement *childE, std::unordered_map<std::string,
+	std::unordered_map<std::string, TiXmlElement* >> &injections)
+{
+	TiXmlElement *parentE = childE;
+	while (parentE)
+	{
+		if (parentE->ValueStr() == "prefab")
+		{
+			std::string prefabPath;
+			queryAttribute([&](TiXmlElement* e) {return e->QueryStringAttribute("path", &prefabPath);},
+				parentE, "Must provide prefab tag with a path");
+
+			// open prefab file and inject it
+			TiXmlDocument prefabDoc(prefabPath);
+			if (!prefabDoc.LoadFile())
+			{
+				Utils::exitMessage(
+					"Fatal Error", "Failed to load file prefab.xml! Exiting...");
+			}
+
+			TiXmlHandle prefabDocH(&prefabDoc);
+			TiXmlElement *prefabRoot = prefabDocH.FirstChild().ToElement();
+
+			TiXmlElement *cursorE = prefabRoot->FirstChildElement();
+			injectPrefab(prefabRoot, cursorE, injections.at(prefabPath));
+
+			// replace prefab tag with prefab file contents + slot injections and save as a new file
+			TiXmlElement *dummy = parentE;
+			parentE = parentE->NextSiblingElement();
+			cursorE = prefabDoc.FirstChildElement();
+			root->ReplaceChild(dummy, *cursorE);
+
+			continue;
+		}
+
+		// if has child -> go down
+		TiXmlElement *newRootE = parentE->FirstChildElement();
+		if (newRootE)
+		{
+			applyInjections(parentE, newRootE, injections);
+		}
+
+		parentE = parentE->NextSiblingElement();
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void GP_Loader::processPrefabs(std::string newFilePath)
+{
+	// open original file
+	TiXmlDocument originalDoc(newFilePath + ".xml");
+	if (!originalDoc.LoadFile())
+	{
+		Utils::exitMessage(
+			"Fatal Error", "Failed to load file " + newFilePath + ".xml! Exiting...");
+	}
+
+	TiXmlHandle originalDocH(&originalDoc);
+	TiXmlElement *originalRoot = originalDocH.FirstChildElement("project").ToElement();
+	if (!originalRoot)
+	{
+		Utils::exitMessage(
+			"Invalid Input", "Input file must have an outer project tag");
+	}
+
+
+	// pass through original file and create <prefab, <slot, injection>> map
+	std::unordered_map<std::string, std::unordered_map<std::string, TiXmlElement*>> injections;
+	collectInjections(originalRoot, injections);
+
+
+	// TODO: Change this stupid way of doing things...
+	// (one pass through, instead of 1 replace loop every prefab (same level elements not copied))
+	// pass through original file again and replace prefabs
+	applyInjections(originalRoot, originalRoot->FirstChildElement(), injections);
+
+	originalDoc.SaveFile(newFilePath + "Generated.xml");
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void GP_Loader::loadProject(std::string filePath)
 {
+	std::string delimiter = ".xml";
+	std::string newFilePath = filePath.substr(0, filePath.find(delimiter));
+
+	processPrefabs(newFilePath);
+
 	// get tinyxml handle for project file
-	TiXmlDocument doc(filePath);
+	TiXmlDocument doc(newFilePath + "Generated.xml");
 	if (!doc.LoadFile())
 	{
 		Utils::exitMessage(

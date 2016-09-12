@@ -59,6 +59,11 @@ public:
 	static void loadProject(std::string filePath);
 
 private:
+	static void injectPrefab(TiXmlElement *parentE, TiXmlElement *cursorE, std::unordered_map<std::string, TiXmlElement*> &injections);
+	static void collectInjections(TiXmlElement *cursorE, std::unordered_map<std::string, std::unordered_map<std::string, TiXmlElement*>> &injections);
+	static void applyInjections(TiXmlElement *root, TiXmlElement *childE, std::unordered_map < std::string, std::unordered_map < std::string, TiXmlElement* >> &injections);
+	static void processPrefabs(std::string newFilePath);
+
 	static void loadResources(TiXmlHandle projectH);
 	static GP_ParticleSystem loadParticleSystem(TiXmlElement* psystemE);
 	static void loadProperties(TiXmlElement* propertiesE, psProperties &psp, loadFunctionInfo lfi);
