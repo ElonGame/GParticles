@@ -1,0 +1,6 @@
+<stage iterationStep=0>
+	<tag name="update"/>
+
+	<file path="projects/customizationTests/prefabs/sphereUpdate.glsl" />
+	<file path="templates/updateMain.glsl" />
+</stage>

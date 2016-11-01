@@ -38,18 +38,29 @@ int main(int argc, char* args[])
 	//GPSYSTEMS.loadProject("projects/Tutorial_4/Tutorial_4.xml");
 	//GPSYSTEMS.loadProject("projects/gun/_gun.xml");
 	//GPSYSTEMS.loadProject("projects/virusPuddles/_virusPuddles.xml");
-	GPSYSTEMS.loadProject("projects/shuttle/_shuttle.xml");
+	GPSYSTEMS.loadProject("projects/customizationTests/customizationTests.xml");
+	//GPSYSTEMS.loadProject("projects/shuttle/_shuttle.xml");
 	//GPSYSTEMS.loadProject("projects/boids/boids.xml");
 
 	// stage stubs can do anything on the CPU the user finds useful in between
 	// stage calls (e.g., changing uniforms, switching between shaders, ...)
 	setStageStubs();
 
-
+	Uint32 totalMS = 0;
+	Uint32 iterations = 0;
 	// process input events and particle systems
 	while (processEvents())
 	{
+		Uint32 start = SDL_GetTicks();
 		GPSYSTEMS.processParticles(glm::mat4(), c.getViewMatrix(), projection);
+		totalMS += SDL_GetTicks() - start;
+		iterations++;
+		if (totalMS > 1000)
+		{
+			SDL_SetWindowTitle(window.window, std::to_string(iterations * 1000.0f / (float)totalMS).c_str());
+			totalMS = 0;
+			iterations = 0;
+		}
 
 		window.swapWindow();
 	}

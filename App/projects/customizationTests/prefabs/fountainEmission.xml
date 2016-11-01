@@ -1,0 +1,12 @@
+<stage>
+	<tag name="emission"/>
+	
+	<override type="atomic" name="emissionAttempts" value=0/>
+
+	<file path="modules/utilities.glsl" />
+	<file path="modules/emission.glsl" />
+
+	<slot name="customFunction" override="override"/>
+	<file path="projects/customizationTests/prefabs/fountainEmission.glsl" override="true" />
+	<file path="templates/emissionMain.glsl" />
+</stage>

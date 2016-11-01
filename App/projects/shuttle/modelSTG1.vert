@@ -5,7 +5,7 @@ void main()
 	vec3 pos = @positions.xyz;
 	pos.z -= 14;
 
-	mat4 rotation = rotationMatrix(vec3(0,1,0), radians(mouseXY.x * 0.25));
+	mat4 rotation = rotationMatrix(vec3(0,1,0), radians(47/*mouseXY.x * 0.25*/));
 
   float a = distance(@initialPositions.xyz, @positions.xyz);
   vec3 right = normalize(cross(normalize(pos), vec3(0, 0, 1)));

@@ -1,0 +1,9 @@
+<stage>
+	<tag name="render"/>
+
+	<rendertype type="model" path="assets/models/sphere/sphere.obj" />
+
+	<vertfile path="modules/utilities.glsl" />
+	<vertfile path="projects/customizationTests/prefabs/model.vert" />
+	<fragfile path="projects/customizationTests/prefabs/model.frag" />
+</stage>

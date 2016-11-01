@@ -15,7 +15,7 @@
 		<atomic name="aliveParticles" />
 		<atomic name="emissionAttempts" />
 
-		<uniform name="maxParticles" type="float" value=10 />
+		<uniform name="maxParticles" type="float" value=512 />
 		<uniform name="toCreate" type="float" value=500 />
 		<uniform name="deltaTime" type="float" />
 	</instance>

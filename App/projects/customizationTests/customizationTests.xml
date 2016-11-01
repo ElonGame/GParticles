@@ -1,0 +1,32 @@
+<project>
+	<prefab path="prefabs/resources/defaultResources.xml" >
+		<inject slot="instance">
+			<buffer name="collided" elements=512 type="float" />
+		</inject>
+	</prefab>
+
+	<psystem name="mypsystem">
+		<properties>
+			<position x=0 y=0 z=-15 />
+			<numWorkGroups value=100 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=10000 />
+		<override type="uniform" name="toCreate" value=10000 />
+
+		<stages>
+<!-- Change between sphere configuration ... -->
+			<!--prefab path="projects/customizationTests/prefabs/sphereEmission.xml" /-->
+			<!--prefab path="projects/customizationTests/prefabs/sphereUpdate.xml" /-->
+
+<!-- ... and fountain configuration -->
+			<prefab path="projects/customizationTests/prefabs/fountainEmission.xml" />
+			<prefab path="projects/customizationTests/prefabs/fountainUpdate.xml" />
+
+<!-- Choose rendering method -->
+			<!--prefab path="projects/customizationTests/prefabs/pointRender.xml" /-->
+			<prefab path="projects/customizationTests/prefabs/billboardRender.xml" />
+			<!--prefab path="projects/customizationTests/prefabs/modelRender.xml" /-->
+		</stages>
+	</psystem>
+</project>

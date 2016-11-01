@@ -1013,7 +1013,6 @@ AbstractStage* GP_Loader::loadComputeStage(GLuint numWorkGroups, instanceResourc
 		if (fPaths.empty()) collectPaths(e, "file", fPaths);
 
 		e->QueryUnsignedAttribute("iterationStep", &iterationStep);
-
 	};
 	getComputeInfo(stageE);
 
@@ -1098,6 +1097,7 @@ void GP_Loader::getRenderInfo(renderInfo &rl, TiXmlElement* stageE)
 	}
 
 	// collect iterationStep
+	rl.iterationStep = 0;
 	stageE->QueryUnsignedAttribute("iterationStep", &rl.iterationStep);
 
 	// collect shader file paths

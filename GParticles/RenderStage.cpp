@@ -20,8 +20,8 @@ void RenderStage::execute(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projecti
 	bindResources();
 
 	// render
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-	glPointSize(3.0f);
+	/*glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	glPointSize(3.0f);*/
 
 	if (renderType != "model")
 	{

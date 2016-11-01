@@ -1,0 +1,6 @@
+<stage iterationStep=0>
+	<tag name="update"/>
+
+	<file path="projects/customizationTests/prefabs/fountainUpdate.glsl" />
+	<file path="projects/customizationTests/prefabs/fountainMain.glsl" />
+</stage>

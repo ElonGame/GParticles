@@ -12,7 +12,6 @@ void main()
 	{
 		@lifetimes[gid] = -1;
 		atomicCounterDecrement(@aliveParticles);
-
 		return;
 	}
 	

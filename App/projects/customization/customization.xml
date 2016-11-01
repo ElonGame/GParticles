@@ -1,0 +1,36 @@
+<project>
+	<prefab path="prefabs/resources/defaultResources.xml" >
+		<inject slot="instance">
+			<buffer name="collided" elements=512 type="float" />
+		</inject>
+	</prefab>
+
+	<psystem name="mypsystem">
+		<properties>
+			<position x=0 y=0 z=-15 />
+			<numWorkGroups value=100 />
+		</properties>
+
+		<override type="uniform" name="maxParticles" value=100000 />
+		<override type="uniform" name="toCreate" value=100000 />
+
+		<stages>
+			<prefab path="projects/customization/prefabs/defaultEmission.xml" >
+				<inject slot="customFunction">
+					<file path="projects/customization/customEmission.glsl" override="true" />
+				</inject>
+			</prefab>
+
+			<stage iterationStep=0>
+				<tag name="update"/>
+
+				<file path="projects/customization/update.glsl" />
+				<!--file path="templates/updateMain.glsl" /-->
+				<file path="projects/customization/customMain.glsl" />
+			</stage>
+
+
+			<prefab path="projects/customization/prefabs/pointRender.xml" />
+		</stages>
+	</psystem>
+</project>

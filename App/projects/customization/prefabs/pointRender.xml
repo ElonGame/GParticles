@@ -1,0 +1,7 @@
+<stage>
+	<tag name="render"/>
+
+	<vertfile path="modules/utilities.glsl" />
+	<vertfile path="projects/customization/prefabs/point.vert" />
+	<fragfile path="projects/customization/prefabs/point.frag" />
+</stage>
