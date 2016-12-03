@@ -1,0 +1,85 @@
+//////// INTRO
+Hello everyone, my name is Tiago Dinis. I'm in my last year of studying computer engineering at University of Minho and I'll be presenting GParticles: a flexible GPU-focused particle library.
+
+Because we'll be talking about particle systems, it's important to understand what a particle really is in computer graphics.
+
+A particle is an abstract entity that has both data and behaviour rules. A particle behaviour is simulated when the rules are used to process its data.
+They are used to model many effects which are otherwise hard to accomplish with conventional rendering techniques.
+//EXPAND? Circle particle with animation
+
+Fuzzy volumetric effects, systems with complex behaviours, such as the movements of flocking birds, natural phenomena, explosions... Particle systems can be combined to greatly increase the immersion of a virtual scene.
+
+
+~~~~ 1 MIN
+//////// PREVIOUS WORK
+What has been done up until today? Considering particle systems have been around since 1983, the answer is: alot. So we had to focus, and we focused on Real-time, because we preferred interactivity, Stateful systems, because we wanted to store particle data throughout iterations, which allows interactions with the environment and diferring particle simulation paths, simulated on the GPU, because we want to use our graphics cards and have more particles on screen.
+
+(and focusing on the most recent techniques)
+So, applying this huge filter to previous work we find that the first big rise of this type of particle systems came with the use of fragment shaders, FBOs and textures to store particle data.
+With the precision increase brought by floating-point textures, GPU particle systems started being taken more seriously.
+
+Good examples showcasing floating-point textures are two user made plugins: Kvant/Spray for Unity, and ParticlesGPU for VVVV which is a huge multipurpose multimedia toolkit.
+
+With the introduction of compute shaders and shader storage buffers in 2012, new possibilities opened up for GPU particle systems. Compute shaders work as single-stage programs, separate from the traditional GPU pipeline, and are used to compute arbitrary data. They were a very good fit and a massive improvement on previous ways to process particle data.
+
+In 2014 Gareth Thomas gave an overview of a compute-based particle system architecture and how some common functionality, such as collisions, sorting and rendering could be achieved.
+
+Also worth noting is the doom remake that came out May this year. It's the first videogame to use Compute Shaders for particle system simulations.
+
+From our research however we found that all related works suffer from, at least, two of these problems:
+-> they are attached to big frameworks, forcing us to use and learn a specific development environment;
+-> they offer limited control, usually through a predefined set of parameters;
+-> they provide poor to no documentation whatsoever;
+
+
+~~~~ 4:30 MIN
+//////// GOALS
+Taking this into account we set out to create a GPU-centric library. Besides being able to have more particles on screen at real-time, we also wanted to explore ways to work-around particle system design limitations, which are harder to deal with when we are working with the GPU.
+
+We would also like to create an extendable architecture, that allowed full control over the systems at different scales.
+
+We also strived to keep everything as simple as it could be, in terms of code, usability and integration with applications.
+
+and so... GParticles came to be! ... in C++ and OpenGL.
+
+
+~~~~ 5:30 MIN
+//////// ARCHITECTURE
+
+Let's take a look at its architecture, starting with how particle data is handled.
+
+In GParticles there are three types of data resources:
+Buffers: are mainly used to represent particle properties, like their positions, moving directions, ...
+Atomics: Hardware atomic counters that keep track of important numbers that are acessed concurrently, like the number of alive particles or how many have been processed so far. Atomics can only be incremented and decremented by one.
+Uniforms: refer to imutable global parameters during shader execution (Global gravitic force, is the spacebar key pressed?) 
+And that is it.
+
+Next we have stages. Stages are a sub process of a particle system simulation. Although not required, most systems in GParticles follow the 3 stage convention. The first stage is responsible for emitting particles, the second updates their data following behaviour rules, and the render stages dictates how they appear on screen.
+
+A stage has ...
+
+A particle system is just a collection stages and useful global properties.
+
+Both particle systems and the actual data resources are aggregated in high-level components, 2 separate singletons, named GPSYSTEMS and GPDATA respectively. They work as facade for the developer API needs.
+
+Iteration Example
+
+
+//////// EXTENSIBILITY
+TODO: What each thing does
+
+The first level of exetensibility is the xml project definition file. At this level it's possible to alter project configurations, parameter values  and use a special prefab tag to easily exchange between sets of particle system data and behavior logic. It's a great tool for quick prototyping and many particle engines stay at this level.
+
+The application API is the most advanced level, requires. It allows users to
+
+Shader files are the level GParticles aims for. It allows users to customize particle systems to great effect with little effort.
+
+
+
+
+//////// TEMPLATES
+A template is a file that should contain operations we are likely to reuse in many particle system stages. GParticles comes with
+
+
+//////// PERFORMANCE
+Just an ideia of GParticles overload. The results are encouraging, considering there no otimization is done.

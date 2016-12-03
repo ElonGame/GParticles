@@ -14,19 +14,19 @@
 		<override type="uniform" name="maxParticles" value=10000 />
 		<override type="uniform" name="toCreate" value=10000 />
 
-		<stages>
+		<stages psystemstructure="free">
 <!-- Change between sphere configuration ... -->
-			<!--prefab path="projects/customizationTests/prefabs/sphereEmission.xml" /-->
-			<!--prefab path="projects/customizationTests/prefabs/sphereUpdate.xml" /-->
+			<prefab path="projects/customizationTests/prefabs/sphereEmission.xml" />
+			<prefab path="projects/customizationTests/prefabs/sphereUpdate.xml" />
 
 <!-- ... and fountain configuration -->
-			<prefab path="projects/customizationTests/prefabs/fountainEmission.xml" />
-			<prefab path="projects/customizationTests/prefabs/fountainUpdate.xml" />
+			<!--prefab path="projects/customizationTests/prefabs/fountainEmission.xml" />
+			<prefab path="projects/customizationTests/prefabs/fountainUpdate.xml" /-->
 
 <!-- Choose rendering method -->
 			<!--prefab path="projects/customizationTests/prefabs/pointRender.xml" /-->
-			<prefab path="projects/customizationTests/prefabs/billboardRender.xml" />
-			<!--prefab path="projects/customizationTests/prefabs/modelRender.xml" /-->
+			<!--prefab path="projects/customizationTests/prefabs/billboardRender.xml" /-->
+			<prefab path="projects/customizationTests/prefabs/modelRender.xml" />
 		</stages>
 	</psystem>
 </project>

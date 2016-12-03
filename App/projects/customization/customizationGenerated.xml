@@ -34,7 +34,7 @@
             <numWorkGroups value="100" />
         </properties>
         <override type="uniform" name="maxParticles" value="100000" />
-        <override type="uniform" name="toCreate" value="100000" />
+        <override type="uniform" name="toCreate" value="10000" />
         <stages>
             <stage>
                 <tag name="emission" />

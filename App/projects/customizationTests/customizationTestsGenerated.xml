@@ -31,41 +31,38 @@
     <psystem name="mypsystem">
         <properties>
             <position x="0" y="0" z="-15" />
-            <numWorkGroups value="1000" />
+            <numWorkGroups value="100" />
         </properties>
         <override type="uniform" name="maxParticles" value="10000" />
         <override type="uniform" name="toCreate" value="10000" />
-        <stages>
+        <stages psystemstructure="free">
             <!-- Change between sphere configuration ... -->
-            <!--prefab path="projects/customizationTests/prefabs/sphereEmission.xml" /-->
-            <!--prefab path="projects/customizationTests/prefabs/sphereUpdate.xml" /-->
-            <!-- ... and fountain configuration -->
             <stage>
                 <tag name="emission" />
                 <override type="atomic" name="emissionAttempts" value="0" />
                 <file path="modules/utilities.glsl" />
                 <file path="modules/emission.glsl" />
-                <file path="projects/customizationTests/prefabs/fountainEmission.glsl" override="true" />
+                <file path="projects/customizationTests/prefabs/sphereEmission.glsl" override="true" />
                 <file path="templates/emissionMain.glsl" />
             </stage>
             <stage iterationStep="0">
                 <tag name="update" />
-                <file path="projects/customizationTests/prefabs/fountainUpdate.glsl" />
-                <file path="projects/customizationTests/prefabs/fountainMain.glsl" />
+                <file path="projects/customizationTests/prefabs/sphereUpdate.glsl" />
+                <file path="templates/updateMain.glsl" />
             </stage>
+            <!-- ... and fountain configuration -->
+            <!--prefab path="projects/customizationTests/prefabs/fountainEmission.xml" />
+			<prefab path="projects/customizationTests/prefabs/fountainUpdate.xml" /-->
             <!-- Choose rendering method -->
             <!--prefab path="projects/customizationTests/prefabs/pointRender.xml" /-->
-            <stage iterationStep="0">
+            <!--prefab path="projects/customizationTests/prefabs/billboardRender.xml" /-->
+            <stage>
                 <tag name="render" />
-                <rendertype type="billboard" path="assets/images/snow.png" />
-                <vertfile path="projects/customization/prefabs/billboard.vert" />
-                <geomfile path="modules/utilities.glsl" />
-                <geomfile path="modules/billboard.glsl" />
-                <geomfile path="projects/customization/prefabs/billboard.geom" />
-                <geomfile path="templates/billboardMain.glsl" />
-                <fragfile path="projects/customization/prefabs/billboard.frag" />
+                <rendertype type="model" path="assets/models/cube/cube.obj" />
+                <vertfile path="modules/utilities.glsl" />
+                <vertfile path="projects/customizationTests/prefabs/model.vert" />
+                <fragfile path="projects/customizationTests/prefabs/model.frag" />
             </stage>
-            <!--prefab path="projects/customizationTests/prefabs/modelRender.xml" /-->
         </stages>
     </psystem>
 </project>

@@ -38,7 +38,8 @@ int main(int argc, char* args[])
 	//GPSYSTEMS.loadProject("projects/Tutorial_4/Tutorial_4.xml");
 	//GPSYSTEMS.loadProject("projects/gun/_gun.xml");
 	//GPSYSTEMS.loadProject("projects/virusPuddles/_virusPuddles.xml");
-	GPSYSTEMS.loadProject("projects/customizationTests/customizationTests.xml");
+	//GPSYSTEMS.loadProject("projects/customizationTests/customizationTests.xml");
+	GPSYSTEMS.loadProject("projects/customization/customization.xml");
 	//GPSYSTEMS.loadProject("projects/shuttle/_shuttle.xml");
 	//GPSYSTEMS.loadProject("projects/boids/boids.xml");
 

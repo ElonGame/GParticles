@@ -1,7 +1,7 @@
 <stage>
 	<tag name="render"/>
 
-	<rendertype type="model" path="assets/models/sphere/sphere.obj" />
+	<rendertype type="model" path="assets/models/cube/cube.obj" />
 
 	<vertfile path="modules/utilities.glsl" />
 	<vertfile path="projects/customizationTests/prefabs/model.vert" />
